@@ -26,3 +26,7 @@ class WorkbookTests(unittest.TestCase):
         wb = Workbook()
         self.assertEqual(len(wb), 0)
         self.assertEqual(len(wb.get_sheet_names()), 0)
+
+    def test_creating_workbook_has_version_1_12_28(self):
+        wb = Workbook()
+        self.assertEqual(wb.version, "1.12.28")
