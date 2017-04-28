@@ -38,6 +38,26 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(len(self.wb), 1)
         self.assertEqual(self.wb.get_sheet_names(), [title])
 
+    def test_creating_sheet_appends_to_list_of_sheets(self):
+        titles = ['Title1', 'Title2']
+        for title in titles:
+            ws = self.wb.create_sheet(title)
+        self.assertEqual(len(self.wb), 2)
+        self.assertEqual(self.wb.get_sheet_names(), titles)
+
+    def test_prepending_new_sheet(self):
+        titles = ['Title1', 'Title2']
+        for title in titles:
+            ws = self.wb.create_sheet(title)
+        self.assertEqual(self.wb.get_sheet_names(), titles)
+
+    def test_inserting_new_sheet(self):
+        titles = ['Title1', 'Title3', 'Title2']
+        ws = self.wb.create_sheet(titles[0])
+        ws = self.wb.create_sheet(titles[2])
+        ws = self.wb.create_sheet(titles[1], 1)
+        self.assertEqual(self.wb.get_sheet_names(), titles)
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):

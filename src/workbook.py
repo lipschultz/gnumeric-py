@@ -155,17 +155,20 @@ class Workbook:
     def sheetnames(self):
         return self.get_sheet_names()
 
-    def create_sheet(self, title):
+    def create_sheet(self, title, index=-1):
         '''
         Create a new worksheet
         :param title: Title, or name, or worksheet
+        :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
         :return: The worksheet
         '''
         sheet_name_element = ElementTree.fromstring(NEW_SHEET_NAME).getchildren()[0]
         sheet_element = ElementTree.fromstring(NEW_SHEET).getchildren()[0]
 
-        self.__sheet_name_elements().append(sheet_name_element)
-        self.__sheet_elements().append(sheet_element)
+        if index < 0:
+            index = len(self) + index + 1
+        self.__sheet_name_elements().insert(index, sheet_name_element)
+        self.__sheet_elements().insert(index, sheet_element)
 
         ws = Sheet(sheet_name_element, sheet_element, self)
         ws.title = title
