@@ -77,3 +77,9 @@ class Workbook:
 
     def __len__(self):
         return len(self.__sheet_elements())
+
+    def get_sheet_names(self):
+        '''
+        The list of sheet names, in the order they occur in the workbook.
+        '''
+        return [s.text for s in self.__sheet_name_elements()]
