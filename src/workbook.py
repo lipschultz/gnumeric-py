@@ -151,6 +151,10 @@ class Workbook:
         '''
         return [s.text for s in self.__sheet_name_elements()]
 
+    @property
+    def sheetnames(self):
+        return self.get_sheet_names()
+
     def create_sheet(self, title):
         '''
         Create a new worksheet
