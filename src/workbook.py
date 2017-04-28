@@ -173,3 +173,44 @@ class Workbook:
         ws = Sheet(sheet_name_element, sheet_element, self)
         ws.title = title
         return ws
+
+
+
+
+    def get_active_sheet(self):
+        #current/active sheet
+        raise NotImplementedError
+
+    @property
+    def active(self):
+        return self.get_active_sheet()
+
+    @property
+    def chartsheets(self):
+        #list of chart sheets
+        raise NotImplementedError
+
+    def get_index(self, ws):
+        #get the index of the worksheet
+        raise NotImplementedError
+
+    def index(self, ws):
+        return self.get_index(ws)
+
+    def get_sheet_by_name(self, name):
+        raise NotImplementedError
+
+    def remove_sheet(self, ws):
+        #remove the worksheet from the workbook
+        raise NotImplementedError
+
+    def remove(self, ws):
+        return self.remove_sheet(ws)
+
+    def save(self, filename):
+        raise NotImplementedError
+
+    @property
+    def worksheets(self):
+        #get list of worksheets
+        raise NotImplementedError
