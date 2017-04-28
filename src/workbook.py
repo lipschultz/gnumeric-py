@@ -141,7 +141,6 @@ class Workbook:
         self._ns = ALL_NAMESPACES
         self.creation_date = datetime.now()
 
-
     def __creation_date_element(self):
         return self.__root.find('office:document-meta/office:meta/meta:creation-date', self._ns)
 
@@ -208,16 +207,14 @@ class Workbook:
         ws.title = title
         return ws
 
-
-
-
-    def get_active_sheet(self):
-        #current/active sheet
-        raise NotImplementedError
-
-    @property
-    def active(self):
-        return self.get_active_sheet()
+    def get_sheet_by_index(self, index):
+        '''
+        Get the sheet at the specified index.
+        '''
+        return Sheet(self.__sheet_name_elements()[index],
+                     self.__sheet_elements()[index],
+                     self
+                     )
 
     @property
     def chartsheets(self):

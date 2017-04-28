@@ -77,6 +77,18 @@ class WorkbookTests(unittest.TestCase):
         self.wb.creation_date = creation_date
         self.assertEqual(self.wb.creation_date, creation_date)
 
+    def test_getting_sheet_by_index_with_positive_index(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 3
+        ws = self.wb.get_sheet_by_index(index)
+        self.assertEqual(ws, worksheets[index])
+
+    def test_getting_sheet_by_index_with_negative_index(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = -2
+        ws = self.wb.get_sheet_by_index(index)
+        self.assertEqual(ws, worksheets[index])
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):
