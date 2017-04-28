@@ -20,6 +20,7 @@ import unittest
 from datetime import datetime
 
 from src.workbook import Workbook
+from src.exceptions import DuplicateTitleException
 
 
 class WorkbookTests(unittest.TestCase):
@@ -38,6 +39,12 @@ class WorkbookTests(unittest.TestCase):
         ws = self.wb.create_sheet(title)
         self.assertEqual(len(self.wb), 1)
         self.assertEqual(self.wb.get_sheet_names(), [title])
+
+    def test_creating_sheet_with_name_used_by_another_sheet_raises_exception(self):
+        title = 'Title'
+        self.wb.create_sheet(title)
+        with self.assertRaises(DuplicateTitleException):
+            self.wb.create_sheet(title)
 
     def test_creating_sheet_appends_to_list_of_sheets(self):
         titles = ['Title1', 'Title2']

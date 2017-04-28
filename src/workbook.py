@@ -19,6 +19,7 @@ from datetime import datetime
 from lxml import etree
 import dateutil.parser
 
+from src.exceptions import DuplicateTitleException
 from src.sheet import Sheet
 
 EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
@@ -189,8 +190,12 @@ class Workbook:
         Create a new worksheet
         :param title: Title, or name, or worksheet
         :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
+        :raises DuplicateTitleException: When a sheet with the same title already exists in the workbook
         :return: The worksheet
         '''
+        if title in self.sheetnames:
+            raise DuplicateTitleException('A sheet titled "%s" already exists' % (title))
+
         sheet_name_element = etree.fromstring(NEW_SHEET_NAME).getchildren()[0]
         sheet_element = etree.fromstring(NEW_SHEET).getchildren()[0]
 
