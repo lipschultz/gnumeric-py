@@ -210,6 +210,7 @@ class Workbook:
     def get_sheet_by_index(self, index):
         '''
         Get the sheet at the specified index.
+        :raises IndexError: When index is out of bounds
         '''
         return Sheet(self.__sheet_name_elements()[index],
                      self.__sheet_elements()[index],

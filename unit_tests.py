@@ -89,6 +89,12 @@ class WorkbookTests(unittest.TestCase):
         ws = self.wb.get_sheet_by_index(index)
         self.assertEqual(ws, worksheets[index])
 
+    def test_getting_sheet_out_of_bounds_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        with self.assertRaises(IndexError):
+            self.wb.get_sheet_by_index(len(worksheets)+10)
+
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):
