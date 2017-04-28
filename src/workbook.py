@@ -15,11 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-from xml.etree import ElementTree
+from lxml import etree
 
 from src.sheet import Sheet
 
-EMPTY_WORKBOOK = '''<?xml version="1.0" encoding="UTF-8"?>
+EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
 <gnm:Workbook xmlns:gnm="http://www.gnumeric.org/v10.dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gnumeric.org/v9.xsd">
   <gnm:Version Epoch="1" Major="12" Minor="28" Full="1.12.28"/>
   <gnm:Attributes>
@@ -58,10 +58,9 @@ EMPTY_WORKBOOK = '''<?xml version="1.0" encoding="UTF-8"?>
   <gnm:UIData SelectedTab="0"/>
 </gnm:Workbook>
 '''
-DEFAULT_NAMESPACE = {'gnm': 'http://www.gnumeric.org/v10.dtd'}
 
-NEW_SHEET_NAME = '''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>'''
-NEW_SHEET = '''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
+NEW_SHEET_NAME = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>'''
+NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Sheet DisplayFormulas="0" HideZero="0" HideGrid="0" HideColHeader="0" HideRowHeader="0" DisplayOutlines="1" OutlineSymbolsBelow="1" OutlineSymbolsRight="1" Visibility="GNM_SHEET_VISIBILITY_VISIBLE" GridColor="0:0:0">
   <gnm:Name></gnm:Name>
   <gnm:MaxCol>-1</gnm:MaxCol>
@@ -128,8 +127,8 @@ NEW_SHEET = '''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http:/
 
 class Workbook:
     def __init__(self):
-        self.__root = ElementTree.fromstring(EMPTY_WORKBOOK)
-        self._ns = DEFAULT_NAMESPACE
+        self.__root = etree.fromstring(EMPTY_WORKBOOK)
+        self._ns = self.__root.nsmap
 
     @property
     def version(self):
@@ -162,8 +161,8 @@ class Workbook:
         :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
         :return: The worksheet
         '''
-        sheet_name_element = ElementTree.fromstring(NEW_SHEET_NAME).getchildren()[0]
-        sheet_element = ElementTree.fromstring(NEW_SHEET).getchildren()[0]
+        sheet_name_element = etree.fromstring(NEW_SHEET_NAME).getchildren()[0]
+        sheet_element = etree.fromstring(NEW_SHEET).getchildren()[0]
 
         if index < 0:
             index = len(self) + index + 1
