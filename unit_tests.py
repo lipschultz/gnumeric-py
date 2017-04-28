@@ -92,3 +92,19 @@ class SheetTests(unittest.TestCase):
         ws = self.wb.create_sheet('OldTitle')
         ws.title = title
         self.assertEqual(ws.title, title)
+
+    def test_equality_of_same_worksheet_is_true(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws == ws)
+
+    def test_different_worksheets_are_not_equal(self):
+        ws1 = self.wb.create_sheet('Title1')
+        ws2 = self.wb.create_sheet('Title2')
+        self.assertFalse(ws1 == ws2)
+
+    def test_worksheets_with_same_name_but_from_different_books_not_equal(self):
+        wb2 = Workbook()
+        title = 'Title'
+        ws = self.wb.create_sheet(title)
+        ws2 = wb2.create_sheet(title)
+        self.assertFalse(ws == ws2)
