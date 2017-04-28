@@ -22,11 +22,34 @@ from src.workbook import Workbook
 
 
 class WorkbookTests(unittest.TestCase):
+    def setUp(self):
+        self.wb = Workbook()
+
     def test_creating_empty_workbook_has_zero_sheets(self):
-        wb = Workbook()
-        self.assertEqual(len(wb), 0)
-        self.assertEqual(len(wb.get_sheet_names()), 0)
+        self.assertEqual(len(self.wb), 0)
+        self.assertEqual(len(self.wb.get_sheet_names()), 0)
 
     def test_creating_workbook_has_version_1_12_28(self):
-        wb = Workbook()
-        self.assertEqual(wb.version, "1.12.28")
+        self.assertEqual(self.wb.version, "1.12.28")
+
+    def test_creating_sheet_in_empty_book_adds_sheet_to_book(self):
+        title = 'Title'
+        ws = self.wb.create_sheet(title)
+        self.assertEqual(len(self.wb), 1)
+        self.assertEqual(self.wb.get_sheet_names(), [title])
+
+
+class SheetTests(unittest.TestCase):
+    def setUp(self):
+        self.wb = Workbook()
+
+    def test_creating_sheet_stores_title(self):
+        title = 'NewTitle'
+        ws = self.wb.create_sheet(title)
+        self.assertEqual(ws.title, title)
+
+    def test_changing_title(self):
+        title = 'NewTitle'
+        ws = self.wb.create_sheet('OldTitle')
+        ws.title = title
+        self.assertEqual(ws.title, title)
