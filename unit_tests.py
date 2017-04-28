@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import unittest
+from datetime import datetime
 
 from src.workbook import Workbook
 
@@ -57,6 +58,17 @@ class WorkbookTests(unittest.TestCase):
         ws = self.wb.create_sheet(titles[2])
         ws = self.wb.create_sheet(titles[1], 1)
         self.assertEqual(self.wb.get_sheet_names(), titles)
+
+    def test_creation_date_on_new_workbook(self):
+        before = datetime.now()
+        wb = Workbook()
+        after = datetime.now()
+        self.assertTrue(before < wb.creation_date < after)
+
+    def test_setting_creation_date(self):
+        creation_date = datetime.now()
+        self.wb.creation_date = creation_date
+        self.assertEqual(self.wb.creation_date, creation_date)
 
 
 class SheetTests(unittest.TestCase):

@@ -15,7 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from datetime import datetime
 from lxml import etree
+import dateutil.parser
 
 from src.sheet import Sheet
 
@@ -58,6 +60,13 @@ EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
   <gnm:UIData SelectedTab="0"/>
 </gnm:Workbook>
 '''
+ALL_NAMESPACES = {'gnm' : "http://www.gnumeric.org/v10.dtd",
+                  'xsi' : "http://www.w3.org/2001/XMLSchema-instance",
+                  'office' : "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+                  'xlink' : "http://www.w3.org/1999/xlink",
+                  'dc' : "http://purl.org/dc/elements/1.1/",
+                  'meta' : "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
+                  'ooo' : "http://openoffice.org/2004/office"}
 
 NEW_SHEET_NAME = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>'''
 NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
@@ -128,18 +137,39 @@ NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http:
 class Workbook:
     def __init__(self):
         self.__root = etree.fromstring(EMPTY_WORKBOOK)
-        self._ns = self.__root.nsmap
+        self._ns = ALL_NAMESPACES
+        self.creation_date = datetime.now()
 
-    @property
-    def version(self):
-        version = self.__root.find('gnm:Version', self._ns)
-        return version.get('Full')
+
+    def __creation_date_element(self):
+        return self.__root.find('office:document-meta/office:meta/meta:creation-date', self._ns)
 
     def __sheet_name_elements(self):
         return self.__root.find('gnm:SheetNameIndex', self._ns)
 
     def __sheet_elements(self):
         return self.__root.find('gnm:Sheets', self._ns)
+
+    @property
+    def version(self):
+        version = self.__root.find('gnm:Version', self._ns)
+        return version.get('Full')
+
+    def get_creation_date(self):
+        '''
+        Date the workbook was created
+        '''
+        creation_element = self.__creation_date_element()
+        return dateutil.parser.parse(creation_element.text)
+
+    def set_creation_date(self, creation_datetime):
+        '''
+        :param creation_datetime: A datetime object representing when this workbook was created
+        '''
+        creation_element = self.__creation_date_element()
+        creation_element.text = creation_datetime.isoformat()
+
+    creation_date = property(get_creation_date, set_creation_date)
 
     def __len__(self):
         return len(self.__sheet_elements())
