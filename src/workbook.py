@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from datetime import datetime
 from lxml import etree
 import dateutil.parser
+import gzip
 
 from src.exceptions import DuplicateTitleException, WrongWorkbookException
 from src.sheet import Sheet
@@ -306,12 +307,24 @@ class Workbook:
         '''
         return [self.get_sheet_by_index(i) for i in range(len(self))]
 
+    def save(self, filepath, compress=9):
+        '''
+        Save the workbook to `filepath`.
+        :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still
+            write it as a gzip-compressed Gnumeric file) and 9 (slowest but most compressed; default).  A `False` value
+            will write a uncompressed Gnumeric file.
+        '''
+        xml = etree.tostring(self.__root)
+        if compress:
+            with gzip.open(filepath, mode='wb') as fout:
+                fout.write(xml)
+        else:
+            with open(filepath, mode='wb') as fout:
+                fout.write(xml)
+
     @property
     def chartsheets(self):
         #list of chart sheets
-        raise NotImplementedError
-
-    def save(self, filename):
         raise NotImplementedError
 
     @property
