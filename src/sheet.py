@@ -36,5 +36,11 @@ class Sheet:
 
     title = property(get_title, set_title)
 
+    @property
+    def workbook(self):
+        return self.__workbook
+
     def __eq__(self, other):
-        return self.__sheet_name == other.__sheet_name and self.__sheet == other.__sheet
+        return (self.__workbook == other.__workbook and
+                self.__sheet_name == other.__sheet_name and
+                self.__sheet == other.__sheet)

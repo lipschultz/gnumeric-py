@@ -20,12 +20,19 @@ import unittest
 from datetime import datetime
 
 from src.workbook import Workbook
-from src.exceptions import DuplicateTitleException
+from src.exceptions import DuplicateTitleException, WrongWorkbookException
 
 
 class WorkbookTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
+
+    def test_equality_of_same_workbook(self):
+        self.assertTrue(self.wb == self.wb)
+
+    def test_different_workbooks_are_not_equal(self):
+        wb2 = Workbook()
+        self.assertFalse(self.wb == wb2)
 
     def test_creating_empty_workbook_has_zero_sheets(self):
         self.assertEqual(len(self.wb), 0)
@@ -170,3 +177,7 @@ class SheetTests(unittest.TestCase):
         ws = self.wb.create_sheet(title)
         ws2 = wb2.create_sheet(title)
         self.assertFalse(ws == ws2)
+
+    def test_getting_workbook(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertEqual(ws.workbook, self.wb)
