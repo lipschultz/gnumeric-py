@@ -137,10 +137,13 @@ NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http:
 
 
 class Workbook:
-    def __init__(self):
-        self.__root = etree.fromstring(EMPTY_WORKBOOK)
+    def __init__(self, workbook_root_element=None):
         self._ns = ALL_NAMESPACES
-        self.creation_date = datetime.now()
+        if workbook_root_element is None:
+            self.__root = etree.fromstring(EMPTY_WORKBOOK)
+            self.creation_date = datetime.now()
+        else:
+            self.__root = workbook_root_element
 
     def __creation_date_element(self):
         return self.__root.find('office:document-meta/office:meta/meta:creation-date', self._ns)
@@ -321,6 +324,22 @@ class Workbook:
         else:
             with open(filepath, mode='wb') as fout:
                 fout.write(xml)
+
+    @classmethod
+    def load_workbook(clas, filepath):
+        '''
+        Open the given filepath and return the workbook.
+        '''
+        if filepath.endswith('.xml'):
+            open_method = open
+        else:
+            open_method = gzip.open
+
+        with open_method(filepath, mode='rb') as fin:
+            contents = fin.read()
+
+        root = etree.fromstring(contents)
+        return Workbook(root)
 
     @property
     def chartsheets(self):

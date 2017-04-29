@@ -19,6 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from datetime import datetime
 
+from dateutil.tz import tzutc
+
 from src.workbook import Workbook
 from src.exceptions import DuplicateTitleException, WrongWorkbookException
 
@@ -232,6 +234,18 @@ class WorkbookTests(unittest.TestCase):
     def test_getting_all_sheets(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         self.assertEqual(self.wb.sheets, worksheets)
+
+    def test_loading_compressed_file(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!'])
+        self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
+        self.assertEqual(wb.version, '1.12.28')
+
+    def test_loading_uncompressed_file(self):
+        wb = Workbook.load_workbook('samples/sheet-names.xml')
+        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!'])
+        self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
+        self.assertEqual(wb.version, '1.12.28')
 
 
 class SheetTests(unittest.TestCase):
