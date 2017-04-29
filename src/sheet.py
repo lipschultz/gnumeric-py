@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-
+from src import cell
 
 SHEET_TYPE_REGULAR = None
 SHEET_TYPE_OBJECT = 'object'
@@ -25,6 +25,9 @@ class Sheet:
         self._sheet_name = sheet_name_element
         self._sheet = sheet_element
         self.__workbook = workbook
+
+    def __get_cells(self):
+        return self._sheet.find('gnm:Cells', self.__workbook._ns)
 
     @property
     def workbook(self):
@@ -50,6 +53,47 @@ class Sheet:
          - `SHEET_TYPE_OBJECT` if an object (e.g. graph) worksheet
         '''
         return self._sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
+
+    @property
+    def max_column(self):
+        '''
+        The maximum column that still holds data
+        :return: `int`
+        '''
+        return int(self._sheet.find('gnm:MaxCol', self.__workbook._ns).text)
+
+    @property
+    def max_row(self):
+        '''
+        The maximum row that still holds data
+        :return: `int`
+        '''
+        return int(self._sheet.find('gnm:MaxRow', self.__workbook._ns).text)
+
+    @property
+    def min_column(self):
+        '''
+        The minimum column that still holds data
+        :return: `int`
+        '''
+        cells = self.__get_cells()
+        return min([cell.Cell(c).column for c in cells])
+
+    @property
+    def min_row(self):
+        '''
+        The minimum row that still holds data
+        :return: `int`
+        '''
+        cells = self.__get_cells()
+        return min([cell.Cell(c).row for c in cells])
+
+    def calculate_dimension(self):
+        '''
+        The minimum bounding rectangle that contains all data in the worksheet
+        :return: A four-tuple of ints: (min_row, min_col, max_row, max_col)
+        '''
+        return (self.min_row, self.min_column, self.max_row, self.max_column)
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and

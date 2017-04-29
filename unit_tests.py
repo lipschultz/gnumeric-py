@@ -310,3 +310,29 @@ class SheetTests(unittest.TestCase):
     def test_type_is_object(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
         self.assertEqual(wb['Graph1'].type, sheet.SHEET_TYPE_OBJECT)
+
+    def test_getting_min_row(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_index(1)
+        self.assertEqual(ws.min_row, 6)
+
+    def test_getting_min_col_when_min_col_0(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_index(1)
+        self.assertEqual(ws.min_column, 3)
+
+    def test_getting_max_row(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_index(1)
+        self.assertEqual(ws.max_row, 12)
+
+    def test_getting_max_col(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_index(1)
+        self.assertEqual(ws.max_column, 9)
+
+    def test_calculate_dimension(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_index(1)
+        self.assertEqual(ws.calculate_dimension(), (6, 3, 12, 9))
+
