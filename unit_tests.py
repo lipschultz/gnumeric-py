@@ -106,6 +106,39 @@ class WorkbookTests(unittest.TestCase):
             self.wb.get_sheet_by_name('NotASheet')
 
 
+    def test_getting_sheet_with_getitem_using_positive_index(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 3
+        ws = self.wb[index]
+        self.assertEqual(ws, worksheets[index])
+
+    def test_getting_sheet_with_getitem_using_negative_index(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = -2
+        ws = self.wb[index]
+        self.assertEqual(ws, worksheets[index])
+
+    def test_getting_sheet_with_getitem_out_of_bounds_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        with self.assertRaises(IndexError):
+            self.wb[len(worksheets)+10]
+
+    def test_getting_sheet_with_getitem_using_bad_key_type_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        with self.assertRaises(TypeError):
+            self.wb[2.0]
+
+    def test_getting_sheet_with_getitem_by_name(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws = self.wb['Title'+str(index)]
+        self.assertEqual(ws, worksheets[index])
+
+    def test_getting_sheet_with_getitem_using_nonexistent_name_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        with self.assertRaises(KeyError):
+            self.wb['NotASheet']
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):

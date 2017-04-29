@@ -229,6 +229,21 @@ class Workbook:
         except ValueError:
             raise KeyError('No sheet named "%s" exists' % (name))
 
+    def __getitem__(self, key):
+        '''
+        Get a worksheet by name or by index.  If `key` is a string, then it is treated as a worksheet's name.  If it is
+         an int, then it's treated as an index.
+
+         Raises a `TypeError` if key is not and `int` or a `str`.  Can also raise the exceptions that
+         `get_sheet_by_index` and `get_sheet_by_name` raise.
+        '''
+        if isinstance(key, str):
+            return self.get_sheet_by_name(key)
+        elif isinstance(key, int):
+            return self.get_sheet_by_index(key)
+        else:
+            raise TypeError("Unexpected type (%s) for key: %s" % (type(key), str(key)))
+
     @property
     def chartsheets(self):
         #list of chart sheets
