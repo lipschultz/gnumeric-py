@@ -229,6 +229,10 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(len(self.wb), len(worksheets))
         self.assertEqual(len(self.wb.sheetnames), len(worksheets))
 
+    def test_getting_all_sheets(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        self.assertEqual(self.wb.sheets, worksheets)
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):

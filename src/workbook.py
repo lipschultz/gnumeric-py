@@ -299,6 +299,12 @@ class Workbook:
         '''
         self.remove(key)
 
+    @property
+    def sheets(self):
+        '''
+        Get a list of all sheets in the workbook.
+        '''
+        return [self.get_sheet_by_index(i) for i in range(len(self))]
 
     @property
     def chartsheets(self):
