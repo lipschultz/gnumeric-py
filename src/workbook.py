@@ -217,6 +217,18 @@ class Workbook:
                      self
                      )
 
+    def get_sheet_by_name(self, name):
+        '''
+        Get the sheet with the specified title/name
+        :raises KeyError: When not worksheet with that name exists
+        '''
+        names = self.sheetnames
+        try:
+            idx = names.index(name)
+            return self.get_sheet_by_index(idx)
+        except ValueError:
+            raise KeyError('No sheet named "%s" exists' % (name))
+
     @property
     def chartsheets(self):
         #list of chart sheets
@@ -228,9 +240,6 @@ class Workbook:
 
     def index(self, ws):
         return self.get_index(ws)
-
-    def get_sheet_by_name(self, name):
-        raise NotImplementedError
 
     def remove_sheet(self, ws):
         #remove the worksheet from the workbook

@@ -94,6 +94,17 @@ class WorkbookTests(unittest.TestCase):
         with self.assertRaises(IndexError):
             self.wb.get_sheet_by_index(len(worksheets)+10)
 
+    def test_getting_sheet_by_name(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws = self.wb.get_sheet_by_name('Title'+str(index))
+        self.assertEqual(ws, worksheets[index])
+
+    def test_getting_sheet_with_nonexistent_name_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        with self.assertRaises(KeyError):
+            self.wb.get_sheet_by_name('NotASheet')
+
 
 
 class SheetTests(unittest.TestCase):
