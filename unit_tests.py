@@ -99,19 +99,18 @@ class WorkbookTests(unittest.TestCase):
     def test_getting_sheet_out_of_bounds_raises_exception(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         with self.assertRaises(IndexError):
-            self.wb.get_sheet_by_index(len(worksheets)+10)
+            self.wb.get_sheet_by_index(len(worksheets) + 10)
 
     def test_getting_sheet_by_name(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
-        ws = self.wb.get_sheet_by_name('Title'+str(index))
+        ws = self.wb.get_sheet_by_name('Title' + str(index))
         self.assertEqual(ws, worksheets[index])
 
     def test_getting_sheet_with_nonexistent_name_raises_exception(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         with self.assertRaises(KeyError):
             self.wb.get_sheet_by_name('NotASheet')
-
 
     def test_getting_sheet_with_getitem_using_positive_index(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
@@ -128,7 +127,7 @@ class WorkbookTests(unittest.TestCase):
     def test_getting_sheet_with_getitem_out_of_bounds_raises_exception(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         with self.assertRaises(IndexError):
-            self.wb[len(worksheets)+10]
+            self.wb[len(worksheets) + 10]
 
     def test_getting_sheet_with_getitem_using_bad_key_type_raises_exception(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
@@ -138,7 +137,7 @@ class WorkbookTests(unittest.TestCase):
     def test_getting_sheet_with_getitem_by_name(self):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
-        ws = self.wb['Title'+str(index)]
+        ws = self.wb['Title' + str(index)]
         self.assertEqual(ws, worksheets[index])
 
     def test_getting_sheet_with_getitem_using_nonexistent_name_raises_exception(self):
@@ -159,6 +158,76 @@ class WorkbookTests(unittest.TestCase):
         ws2 = wb2.create_sheet(title)
         with self.assertRaises(WrongWorkbookException):
             self.wb.get_index(ws2)
+
+    def test_deleting_worksheet(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws2 = worksheets[index]
+        title = ws2.title
+        self.wb.remove_sheet(ws2)
+        self.assertEqual(len(self.wb), len(worksheets) - 1)
+        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
+        self.assertNotIn(title, self.wb.sheetnames)
+        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+
+    def test_deleting_worksheet_twice_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws2 = worksheets[index]
+        title = ws2.title
+        self.wb.remove_sheet(ws2)
+        with self.assertRaises(ValueError):
+            self.wb.remove_sheet(ws2)
+
+    def test_deleting_worksheet_from_another_workbook_raises_exception(self):
+        wb2 = Workbook()
+        [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        ws2 = wb2.create_sheet('Title2')
+
+        with self.assertRaises(ValueError):
+            self.wb.remove_sheet(ws2)
+
+    def test_deleting_worksheet_by_name(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws2 = worksheets[index]
+        title = ws2.title
+        self.wb.remove_sheet_by_name(title)
+        self.assertEqual(len(self.wb), len(worksheets) - 1)
+        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
+        self.assertNotIn(title, self.wb.sheetnames)
+        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+
+    def test_deleting_worksheet_by_non_existent_name_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        title = "NotATitle"
+
+        with self.assertRaises(KeyError):
+            self.wb.remove_sheet_by_name(title)
+
+        self.assertEqual(len(self.wb), len(worksheets))
+        self.assertEqual(len(self.wb.sheetnames), len(worksheets))
+
+    def test_deleting_worksheet_by_index(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws2 = worksheets[index]
+        title = ws2.title
+        self.wb.remove_sheet_by_index(index)
+        self.assertEqual(len(self.wb), len(worksheets) - 1)
+        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
+        self.assertNotIn(title, self.wb.sheetnames)
+        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+
+    def test_deleting_worksheet_by_out_of_bounds_index_raises_exception(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = len(worksheets) + 10
+
+        with self.assertRaises(IndexError):
+            self.wb.remove_sheet_by_index(index)
+
+        self.assertEqual(len(self.wb), len(worksheets))
+        self.assertEqual(len(self.wb.sheetnames), len(worksheets))
 
 
 class SheetTests(unittest.TestCase):

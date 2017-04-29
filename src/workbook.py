@@ -244,11 +244,6 @@ class Workbook:
         else:
             raise TypeError("Unexpected type (%s) for key: %s" % (type(key), str(key)))
 
-    @property
-    def chartsheets(self):
-        #list of chart sheets
-        raise NotImplementedError
-
     def get_index(self, ws):
         '''
         Given a worksheet, find its index in the workbook.
@@ -261,12 +256,54 @@ class Workbook:
     def index(self, ws):
         return self.get_index(ws)
 
+    def remove_sheet_by_name(self, name):
+        '''
+        Remove the worksheet named `name` from the workbook.  See `get_sheet_by_name` and `remove_sheet` for exceptions
+        thrown.
+        '''
+        self.remove_sheet(self.get_sheet_by_name(name))
+
+    def remove_sheet_by_index(self, index):
+        '''
+        Remove the worksheet at `index` from the workbook.  See `get_sheet_by_index` and `remove_sheet` for exceptions
+        thrown.
+        '''
+        self.remove_sheet(self.get_sheet_by_index(index))
+
     def remove_sheet(self, ws):
-        #remove the worksheet from the workbook
-        raise NotImplementedError
+        '''
+        Remove the worksheet from the workbook.
+        '''
+        try:
+            self.__sheet_name_elements().remove(ws._sheet_name)
+            self.__sheet_elements().remove(ws._sheet)
+        except ValueError:
+            raise ValueError("Worksheet is not part of workbook")
 
     def remove(self, ws):
-        return self.remove_sheet(ws)
+        '''
+        Remove the specified worksheet
+        :param ws: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
+        '''
+        if isinstance(ws, int):
+            self.remove_sheet_by_index(ws)
+        elif isinstance(ws, str):
+            self.remove_sheet_by_name(ws)
+        else:
+            self.remove_sheet(ws)
+
+    def __delitem__(self, key):
+        '''
+        Remove the specified worksheet
+        :param key: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
+        '''
+        self.remove(key)
+
+
+    @property
+    def chartsheets(self):
+        #list of chart sheets
+        raise NotImplementedError
 
     def save(self, filename):
         raise NotImplementedError

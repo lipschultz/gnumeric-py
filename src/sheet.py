@@ -19,19 +19,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 class Sheet:
     def __init__(self, sheet_name_element, sheet_element, workbook):
-        self.__sheet_name = sheet_name_element
-        self.__sheet = sheet_element
+        self._sheet_name = sheet_name_element
+        self._sheet = sheet_element
         self.__workbook = workbook
 
     def get_title(self):
         '''
         The title, or name, of the worksheet
         '''
-        return self.__sheet_name.text
+        return self._sheet_name.text
 
     def set_title(self, title):
-        sheet_name = self.__sheet.find('gnm:Name', self.__workbook._ns)
-        sheet_name.text = self.__sheet_name.text = title
+        sheet_name = self._sheet.find('gnm:Name', self.__workbook._ns)
+        sheet_name.text = self._sheet_name.text = title
 
     title = property(get_title, set_title)
 
@@ -41,5 +41,5 @@ class Sheet:
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and
-                self.__sheet_name == other.__sheet_name and
-                self.__sheet == other.__sheet)
+                self._sheet_name == other._sheet_name and
+                self._sheet == other._sheet)
