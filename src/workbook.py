@@ -61,13 +61,13 @@ EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
   <gnm:UIData SelectedTab="0"/>
 </gnm:Workbook>
 '''
-ALL_NAMESPACES = {'gnm' : "http://www.gnumeric.org/v10.dtd",
-                  'xsi' : "http://www.w3.org/2001/XMLSchema-instance",
-                  'office' : "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
-                  'xlink' : "http://www.w3.org/1999/xlink",
-                  'dc' : "http://purl.org/dc/elements/1.1/",
-                  'meta' : "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
-                  'ooo' : "http://openoffice.org/2004/office"}
+ALL_NAMESPACES = {'gnm': "http://www.gnumeric.org/v10.dtd",
+                  'xsi': "http://www.w3.org/2001/XMLSchema-instance",
+                  'office': "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+                  'xlink': "http://www.w3.org/1999/xlink",
+                  'dc': "http://purl.org/dc/elements/1.1/",
+                  'meta': "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
+                  'ooo': "http://openoffice.org/2004/office"}
 
 NEW_SHEET_NAME = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>'''
 NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
