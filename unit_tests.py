@@ -146,6 +146,20 @@ class WorkbookTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.wb['NotASheet']
 
+    def test_getting_index_of_worksheet(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        index = 2
+        ws2 = worksheets[index]
+        self.assertEqual(self.wb.get_index(ws2), index)
+
+    def test_getting_index_of_worksheet_from_different_workbook_but_with_name_raises_exception(self):
+        wb2 = Workbook()
+        title = 'Title'
+        ws = self.wb.create_sheet(title)
+        ws2 = wb2.create_sheet(title)
+        with self.assertRaises(WrongWorkbookException):
+            self.wb.get_index(ws2)
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):

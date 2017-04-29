@@ -19,7 +19,7 @@ from datetime import datetime
 from lxml import etree
 import dateutil.parser
 
-from src.exceptions import DuplicateTitleException
+from src.exceptions import DuplicateTitleException, WrongWorkbookException
 from src.sheet import Sheet
 
 EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
@@ -250,8 +250,13 @@ class Workbook:
         raise NotImplementedError
 
     def get_index(self, ws):
-        #get the index of the worksheet
-        raise NotImplementedError
+        '''
+        Given a worksheet, find its index in the workbook.
+        '''
+        index = self.sheetnames.index(ws.title)
+        if ws != self.get_sheet_by_index(index):
+            raise WrongWorkbookException("The worksheet does not belong to this workbook.")
+        return index
 
     def index(self, ws):
         return self.get_index(ws)
