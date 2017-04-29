@@ -20,6 +20,7 @@ from lxml import etree
 import dateutil.parser
 import gzip
 
+from src import sheet
 from src.exceptions import DuplicateTitleException, WrongWorkbookException
 from src.sheet import Sheet
 
@@ -310,6 +311,20 @@ class Workbook:
         '''
         return [self.get_sheet_by_index(i) for i in range(len(self))]
 
+    @property
+    def chartsheets(self):
+        '''
+        Get list of only the chart sheets in the workbook.
+        '''
+        return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_OBJECT]
+
+    @property
+    def worksheets(self):
+        '''
+        Get list of only the non-chart sheets in the workbook.
+        '''
+        return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_REGULAR]
+
     def save(self, filepath, compress=9):
         '''
         Save the workbook to `filepath`.
@@ -340,13 +355,3 @@ class Workbook:
 
         root = etree.fromstring(contents)
         return Workbook(root)
-
-    @property
-    def chartsheets(self):
-        #list of chart sheets
-        raise NotImplementedError
-
-    @property
-    def worksheets(self):
-        #get list of worksheets
-        raise NotImplementedError

@@ -22,6 +22,7 @@ from datetime import datetime
 from dateutil.tz import tzutc
 
 from src.workbook import Workbook
+from src import sheet
 from src.exceptions import DuplicateTitleException, WrongWorkbookException
 
 
@@ -235,15 +236,34 @@ class WorkbookTests(unittest.TestCase):
         worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         self.assertEqual(self.wb.sheets, worksheets)
 
+    def test_getting_all_sheets_of_mixed_type(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.sheets
+        selected_ws = [wb.get_sheet_by_name(n) for n in
+                       ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1')]
+        self.assertEqual(ws, selected_ws)
+
+    def test_getting_worksheets_only(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.worksheets
+        selected_ws = [wb.get_sheet_by_name(n) for n in ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!')]
+        self.assertEqual(ws, selected_ws)
+
+    def test_getting_chartsheets_only(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.chartsheets
+        selected_ws = [wb.get_sheet_by_name(n) for n in ('Graph1',)]
+        self.assertEqual(ws, selected_ws)
+
     def test_loading_compressed_file(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!'])
+        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1'])
         self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
         self.assertEqual(wb.version, '1.12.28')
 
     def test_loading_uncompressed_file(self):
         wb = Workbook.load_workbook('samples/sheet-names.xml')
-        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!'])
+        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1'])
         self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
         self.assertEqual(wb.version, '1.12.28')
 
@@ -282,3 +302,11 @@ class SheetTests(unittest.TestCase):
     def test_getting_workbook(self):
         ws = self.wb.create_sheet('Title')
         self.assertEqual(ws.workbook, self.wb)
+
+    def test_type_is_regular(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        self.assertEqual(wb['Sheet1'].type, sheet.SHEET_TYPE_REGULAR)
+
+    def test_type_is_object(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        self.assertEqual(wb['Graph1'].type, sheet.SHEET_TYPE_OBJECT)

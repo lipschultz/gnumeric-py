@@ -17,11 +17,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 
+SHEET_TYPE_REGULAR = None
+SHEET_TYPE_OBJECT = 'object'
+
 class Sheet:
     def __init__(self, sheet_name_element, sheet_element, workbook):
         self._sheet_name = sheet_name_element
         self._sheet = sheet_element
         self.__workbook = workbook
+
+    @property
+    def workbook(self):
+        return self.__workbook
 
     def get_title(self):
         '''
@@ -36,8 +43,13 @@ class Sheet:
     title = property(get_title, set_title)
 
     @property
-    def workbook(self):
-        return self.__workbook
+    def type(self):
+        '''
+        The type of sheet:
+         - `SHEET_TYPE_REGULAR` if a regular worksheet
+         - `SHEET_TYPE_OBJECT` if an object (e.g. graph) worksheet
+        '''
+        return self._sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and
