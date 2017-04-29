@@ -23,7 +23,7 @@ from dateutil.tz import tzutc
 
 from src.workbook import Workbook
 from src import sheet
-from src.exceptions import DuplicateTitleException, WrongWorkbookException
+from src.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
 
 
 class WorkbookTests(unittest.TestCase):
@@ -316,7 +316,7 @@ class SheetTests(unittest.TestCase):
         ws = wb.get_sheet_by_index(1)
         self.assertEqual(ws.min_row, 6)
 
-    def test_getting_min_col_when_min_col_0(self):
+    def test_getting_min_col(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
         ws = wb.get_sheet_by_index(1)
         self.assertEqual(ws.min_column, 3)
@@ -331,8 +331,40 @@ class SheetTests(unittest.TestCase):
         ws = wb.get_sheet_by_index(1)
         self.assertEqual(ws.max_column, 9)
 
+
+    def test_getting_min_row_raises_exception_on_chartsheet(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Graph1')
+        with self.assertRaises(UnsupportedOperationException):
+            val = ws.min_row
+
+    def test_getting_min_col_raises_exception_on_chartsheet(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Graph1')
+        with self.assertRaises(UnsupportedOperationException):
+            val = ws.min_column
+
+    def test_getting_max_row_raises_exception_on_chartsheet(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Graph1')
+        with self.assertRaises(UnsupportedOperationException):
+            val = ws.max_row
+
+    def test_getting_max_col_raises_exception_on_chartsheet(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Graph1')
+        with self.assertRaises(UnsupportedOperationException):
+            val = ws.max_column
+
+
     def test_calculate_dimension(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
         ws = wb.get_sheet_by_index(1)
         self.assertEqual(ws.calculate_dimension(), (6, 3, 12, 9))
+
+    def test_calculate_dimension_raises_exception_on_chartsheet(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Graph1')
+        with self.assertRaises(UnsupportedOperationException):
+            ws.calculate_dimension()
 

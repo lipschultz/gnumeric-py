@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 from src import cell
+from src.exceptions import UnsupportedOperationException
 
 SHEET_TYPE_REGULAR = None
 SHEET_TYPE_OBJECT = 'object'
@@ -57,42 +58,55 @@ class Sheet:
     @property
     def max_column(self):
         '''
-        The maximum column that still holds data
+        The maximum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have max column')
         return int(self._sheet.find('gnm:MaxCol', self.__workbook._ns).text)
 
     @property
     def max_row(self):
         '''
-        The maximum row that still holds data
+        The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have max row')
         return int(self._sheet.find('gnm:MaxRow', self.__workbook._ns).text)
 
     @property
     def min_column(self):
         '''
-        The minimum column that still holds data
+        The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have min column')
         cells = self.__get_cells()
         return min([cell.Cell(c).column for c in cells])
 
     @property
     def min_row(self):
         '''
-        The minimum row that still holds data
+        The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have min row')
         cells = self.__get_cells()
         return min([cell.Cell(c).row for c in cells])
 
     def calculate_dimension(self):
         '''
         The minimum bounding rectangle that contains all data in the worksheet
+
+        Raises UnsupportedOperationException when the sheet is a chartsheet.
+
         :return: A four-tuple of ints: (min_row, min_col, max_row, max_col)
         '''
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
 
     def __eq__(self, other):

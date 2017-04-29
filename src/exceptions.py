@@ -25,3 +25,8 @@ class DuplicateTitleException(Exception):
 class WrongWorkbookException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class UnsupportedOperationException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
