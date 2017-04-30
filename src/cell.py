@@ -16,6 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+VALUE_TYPE_EXPR = -10
+VALUE_TYPE_EMPTY = 10
+VALUE_TYPE_BOOLEAN = 20
+VALUE_TYPE_INTEGER = 30
+VALUE_TYPE_FLOAT = 40
+VALUE_TYPE_ERROR = 50
+VALUE_TYPE_STRING = 60
+VALUE_TYPE_CELLRANGE = 70
+VALUE_TYPE_ARRAY = 80
+
 
 class Cell:
     def __init__(self, cell_element):
