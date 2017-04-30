@@ -29,6 +29,7 @@ from src.exceptions import DuplicateTitleException, WrongWorkbookException, Unsu
 class WorkbookTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
 
     def test_equality_of_same_workbook(self):
         self.assertTrue(self.wb == self.wb)
@@ -237,29 +238,27 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(self.wb.sheets, worksheets)
 
     def test_getting_all_sheets_of_mixed_type(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.sheets
-        selected_ws = [wb.get_sheet_by_name(n) for n in
-                       ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1')]
+        ws = self.loaded_wb.sheets
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
+                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!', 'Graph1')]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_worksheets_only(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.worksheets
-        selected_ws = [wb.get_sheet_by_name(n) for n in ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!')]
+        ws = self.loaded_wb.worksheets
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
+                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!')]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_chartsheets_only(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.chartsheets
-        selected_ws = [wb.get_sheet_by_name(n) for n in ('Graph1',)]
+        ws = self.loaded_wb.chartsheets
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in ('Graph1',)]
         self.assertEqual(ws, selected_ws)
 
     def test_loading_compressed_file(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1'])
-        self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
-        self.assertEqual(wb.version, '1.12.28')
+        self.assertEqual(self.loaded_wb.sheetnames,
+                         ['Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!', 'Graph1'])
+        self.assertEqual(self.loaded_wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
+        self.assertEqual(self.loaded_wb.version, '1.12.28')
 
     def test_loading_uncompressed_file(self):
         wb = Workbook.load_workbook('samples/sheet-names.xml')
@@ -271,6 +270,7 @@ class WorkbookTests(unittest.TestCase):
 class SheetTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
 
     def test_creating_sheet_stores_title(self):
         title = 'NewTitle'
@@ -304,107 +304,89 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(ws.workbook, self.wb)
 
     def test_type_is_regular(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        self.assertEqual(wb['Sheet1'].type, sheet.SHEET_TYPE_REGULAR)
+        self.assertEqual(self.loaded_wb['Sheet1'].type, sheet.SHEET_TYPE_REGULAR)
 
     def test_type_is_object(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        self.assertEqual(wb['Graph1'].type, sheet.SHEET_TYPE_OBJECT)
+        self.assertEqual(self.loaded_wb['Graph1'].type, sheet.SHEET_TYPE_OBJECT)
 
     def test_getting_min_row(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_index(1)
+        ws = self.loaded_wb.get_sheet_by_index(1)
         self.assertEqual(ws.min_row, 6)
 
     def test_getting_min_col(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_index(1)
+        ws = self.loaded_wb.get_sheet_by_index(1)
         self.assertEqual(ws.min_column, 3)
 
     def test_getting_max_row(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_index(1)
+        ws = self.loaded_wb.get_sheet_by_index(1)
         self.assertEqual(ws.max_row, 12)
 
     def test_getting_max_col(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_index(1)
+        ws = self.loaded_wb.get_sheet_by_index(1)
         self.assertEqual(ws.max_column, 9)
 
     def test_getting_min_row_raises_exception_on_chartsheet(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Graph1')
+        ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             val = ws.min_row
 
     def test_getting_min_col_raises_exception_on_chartsheet(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Graph1')
+        ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             val = ws.min_column
 
     def test_getting_max_row_raises_exception_on_chartsheet(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Graph1')
+        ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             val = ws.max_row
 
     def test_getting_max_col_raises_exception_on_chartsheet(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Graph1')
+        ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             val = ws.max_column
 
     def test_calculate_dimension(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_index(1)
+        ws = self.loaded_wb.get_sheet_by_index(1)
         self.assertEqual(ws.calculate_dimension(), (6, 3, 12, 9))
 
     def test_calculate_dimension_raises_exception_on_chartsheet(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Graph1')
+        ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             ws.calculate_dimension()
 
     def test_get_cell_at_index(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         c00 = ws.cell(1, 0)
         self.assertEqual(c00.row, 1)
         self.assertEqual(c00.column, 0)
         self.assertEqual(c00.text, '2')
 
     def test_get_non_existent_cell_at_index_creates_cell_with_None_text(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         c02 = ws.cell(0, 2)
         self.assertEqual(c02.row, 0)
         self.assertEqual(c02.column, 2)
         self.assertEqual(c02.text, None)
 
     def test_getting_non_existent_cell_outside_bounding_rectangle_does_not_increase_rectangle(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
         ws.cell(15, 30)
         self.assertEqual(ws.calculate_dimension(), old_dimensions)
 
     def test_get_non_existent_cell_with_create_False_raises_exception(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         with self.assertRaises(IndexError):
             ws.cell(0, 2, False)
             # TODO: should also confirm that the cell is not created
 
     def test_get_cell_text_at_index(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         c00 = ws.cell_text(1, 0)
         self.assertEqual(c00, '2')
 
     def test_get_text_of_non_existent_cell_raises_exception(self):
-        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
-        ws = wb.get_sheet_by_name('Sheet1')
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         with self.assertRaises(IndexError):
             ws.cell_text(0, 2)
             # TODO: should also confirm that the cell is not created
