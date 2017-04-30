@@ -28,8 +28,9 @@ VALUE_TYPE_ARRAY = 80
 
 
 class Cell:
-    def __init__(self, cell_element):
+    def __init__(self, cell_element, worksheet):
         self.__cell = cell_element
+        self.__worksheet = worksheet
 
     @property
     def column(self):
@@ -44,3 +45,11 @@ class Cell:
         The row this cell belongs to (0-indexed).
         '''
         return int(self.__cell.get('Row'))
+
+    @property
+    def text(self):
+        '''
+        Returns the raw value stored in the cell.  The text will be `None` if the cell is empty.
+        :return: str
+        '''
+        return self.__cell.text

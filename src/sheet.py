@@ -15,11 +15,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from lxml import etree
+
 from src import cell
 from src.exceptions import UnsupportedOperationException
 
+NEW_CELL = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
+<gnm:Cell Row="%(row)a" Col="%(col)a" ValueType="%(value_type)a"/>
+</gnm:ROOT>'''
+
 SHEET_TYPE_REGULAR = None
 SHEET_TYPE_OBJECT = 'object'
+
 
 class Sheet:
     def __init__(self, sheet_name_element, sheet_element, workbook):
@@ -84,7 +91,7 @@ class Sheet:
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have min column')
         cells = self.__get_cells()
-        return min([cell.Cell(c).column for c in cells])
+        return min([cell.Cell(c, self).column for c in cells])
 
     @property
     def min_row(self):
@@ -95,7 +102,7 @@ class Sheet:
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have min row')
         cells = self.__get_cells()
-        return min([cell.Cell(c).row for c in cells])
+        return min([cell.Cell(c, self).row for c in cells])
 
     def calculate_dimension(self):
         '''
@@ -108,6 +115,32 @@ class Sheet:
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
+
+    def cell(self, row_idx, col_idx, create=True):
+        '''
+        Returns a Cell object for the cell at the specific row and column.
+
+        If the cell does not exist, then an empty cell will be created and returned, unless `create` is `False` (in
+        which case, `IndexError` is raised).  Note that the cell will not be added to the worksheet until it is not
+        empty (since Gnumeric does not seem to store empty cells).
+        '''
+        cells = self.__get_cells()
+        cell_found = cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row_idx, col_idx), self.__workbook._ns)
+        if cell_found is None:
+            if create:
+                cell_found = etree.fromstring(
+                        NEW_CELL % {b'row': row_idx, b'col': col_idx,
+                                    b'value_type': cell.VALUE_TYPE_EMPTY}).getchildren()[0]
+            else:
+                raise IndexError('No cell exists at position (%d, %d)' % (row_idx, col_idx))
+
+        return cell.Cell(cell_found, self)
+
+    def cell_text(self, row_idx, col_idx):
+        '''
+        Returns a the cell's text at the specific row and column.
+        '''
+        return self.cell(row_idx, col_idx, create=False).text
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and

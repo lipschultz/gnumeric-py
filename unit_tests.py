@@ -331,7 +331,6 @@ class SheetTests(unittest.TestCase):
         ws = wb.get_sheet_by_index(1)
         self.assertEqual(ws.max_column, 9)
 
-
     def test_getting_min_row_raises_exception_on_chartsheet(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
         ws = wb.get_sheet_by_name('Graph1')
@@ -356,7 +355,6 @@ class SheetTests(unittest.TestCase):
         with self.assertRaises(UnsupportedOperationException):
             val = ws.max_column
 
-
     def test_calculate_dimension(self):
         wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
         ws = wb.get_sheet_by_index(1)
@@ -368,3 +366,45 @@ class SheetTests(unittest.TestCase):
         with self.assertRaises(UnsupportedOperationException):
             ws.calculate_dimension()
 
+    def test_get_cell_at_index(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        c00 = ws.cell(1, 0)
+        self.assertEqual(c00.row, 1)
+        self.assertEqual(c00.column, 0)
+        self.assertEqual(c00.text, '2')
+
+    def test_get_non_existent_cell_at_index_creates_cell_with_None_text(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        c02 = ws.cell(0, 2)
+        self.assertEqual(c02.row, 0)
+        self.assertEqual(c02.column, 2)
+        self.assertEqual(c02.text, None)
+
+    def test_getting_non_existent_cell_outside_bounding_rectangle_does_not_increase_rectangle(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        old_dimensions = ws.calculate_dimension()
+        ws.cell(15, 30)
+        self.assertEqual(ws.calculate_dimension(), old_dimensions)
+
+    def test_get_non_existent_cell_with_create_False_raises_exception(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell(0, 2, False)
+            # TODO: should also confirm that the cell is not created
+
+    def test_get_cell_text_at_index(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        c00 = ws.cell_text(1, 0)
+        self.assertEqual(c00, '2')
+
+    def test_get_text_of_non_existent_cell_raises_exception(self):
+        wb = Workbook.load_workbook('samples/sheet-names.gnumeric')
+        ws = wb.get_sheet_by_name('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell_text(0, 2)
+            # TODO: should also confirm that the cell is not created
