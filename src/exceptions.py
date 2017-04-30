@@ -38,3 +38,12 @@ class WrongWorkbookException(Exception):
 class UnsupportedOperationException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
+
+
+class UnrecognizedCellTypeException(Exception):
+    '''
+    The type of cell cannot be determined.
+    '''
+
+    def __init__(self, msg):
+        super().__init__(msg)

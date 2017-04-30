@@ -15,6 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from lxml import etree
+
+from src.exceptions import UnrecognizedCellTypeException
 
 VALUE_TYPE_EXPR = -10
 VALUE_TYPE_EMPTY = 10
@@ -53,3 +56,25 @@ class Cell:
         :return: str
         '''
         return self.__cell.text
+
+    @property
+    def type(self):
+        '''
+        Returns the type of value stored in the cell:
+         - VALUE_TYPE_EXPR = -10
+         - VALUE_TYPE_EMPTY = 10
+         - VALUE_TYPE_BOOLEAN = 20
+         - VALUE_TYPE_INTEGER = 30
+         - VALUE_TYPE_FLOAT = 40
+         - VALUE_TYPE_ERROR = 50
+         - VALUE_TYPE_STRING = 60
+         - VALUE_TYPE_CELLRANGE = 70
+         - VALUE_TYPE_ARRAY = 80
+        '''
+        value_type = self.__cell.get('ValueType')
+        if value_type is not None:
+            return int(value_type)
+        elif self.__cell.get('ExprID') is not None or self.text.startswith('='):
+            return VALUE_TYPE_EXPR
+        else:
+            raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')

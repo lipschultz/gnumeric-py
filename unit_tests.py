@@ -22,7 +22,7 @@ from datetime import datetime
 from dateutil.tz import tzutc
 
 from src.workbook import Workbook
-from src import sheet
+from src import sheet, cell
 from src.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
 
 
@@ -390,3 +390,31 @@ class SheetTests(unittest.TestCase):
         with self.assertRaises(IndexError):
             ws.cell_text(0, 2)
             # TODO: should also confirm that the cell is not created
+
+
+class CellTests(unittest.TestCase):
+    def setUp(self):
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
+
+    def test_cell_types(self):
+        ws = self.loaded_wb.get_sheet_by_name('CellTypes')
+        for row in range(ws.max_row + 1):
+            expected_type = ws.cell(row, 0).text
+            if expected_type == 'Integer':
+                expected_type = cell.VALUE_TYPE_INTEGER
+            elif expected_type == 'Float':
+                expected_type = cell.VALUE_TYPE_FLOAT
+            elif expected_type == 'Equation':
+                expected_type = cell.VALUE_TYPE_EXPR
+            elif expected_type == 'Boolean':
+                expected_type = cell.VALUE_TYPE_BOOLEAN
+            elif expected_type == 'String':
+                expected_type = cell.VALUE_TYPE_STRING
+            elif expected_type == 'Error':
+                expected_type = cell.VALUE_TYPE_ERROR
+            elif expected_type == 'Empty':
+                expected_type = cell.VALUE_TYPE_EMPTY
+
+            test_cell = ws.cell(row, 1)
+            self.assertEqual(test_cell.type, expected_type, str(test_cell.text) + ' (row=' + str(row) + ') has type '
+                             + str(test_cell.type) + ', but expected ' + str(expected_type))
