@@ -18,11 +18,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
 class DuplicateTitleException(Exception):
+    '''
+    A workbook cannot contain multiple sheets with the same name/title.
+    '''
+
     def __init__(self, msg):
         super().__init__(msg)
 
 
 class WrongWorkbookException(Exception):
+    '''
+    A sheet or cell from one workbook being using in another workbook.
+    '''
+
     def __init__(self, msg):
         super().__init__(msg)
 
