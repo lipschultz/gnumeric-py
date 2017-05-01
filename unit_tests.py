@@ -418,3 +418,22 @@ class CellTests(unittest.TestCase):
             test_cell = ws.cell(row, 1)
             self.assertEqual(test_cell.type, expected_type, str(test_cell.text) + ' (row=' + str(row) + ') has type '
                              + str(test_cell.type) + ', but expected ' + str(expected_type))
+
+    def test_get_cell_values(self):
+        ws = self.loaded_wb.get_sheet_by_name('CellTypes')
+        for row in range(ws.max_row + 1):
+            test_cell = ws.cell(row, 1)
+
+            expected_value = test_cell.text
+            if test_cell.type == cell.VALUE_TYPE_INTEGER:
+                expected_value = int(expected_value)
+            elif test_cell.type == cell.VALUE_TYPE_FLOAT:
+                expected_value = float(expected_value)
+            elif test_cell.type == cell.VALUE_TYPE_BOOLEAN:
+                expected_value = bool(expected_value)
+            elif test_cell.type == cell.VALUE_TYPE_EMPTY:
+                expected_value = None
+
+            self.assertEqual(test_cell.get_value(), expected_value,
+                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.type)
+                             + ', but expected ' + str(expected_value))

@@ -78,3 +78,17 @@ class Cell:
             return VALUE_TYPE_EXPR
         else:
             raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
+
+    def get_value(self):
+        '''
+        Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
+        '''
+        value = self.text
+        if self.type == VALUE_TYPE_BOOLEAN:
+            return bool(value)
+        elif self.type == VALUE_TYPE_INTEGER:
+            return int(value)
+        elif self.type == VALUE_TYPE_FLOAT:
+            return float(value)
+        else:
+            return value
