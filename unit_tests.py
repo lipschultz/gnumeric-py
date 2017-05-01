@@ -502,3 +502,8 @@ class CellTests(unittest.TestCase):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(17, cell.VALUE_TYPE_STRING)
         self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+
+    def test_setting_value_infers_type(self):
+        test_cell = self.ws.cell(0, 0)
+        test_cell.value = 17
+        self.assertEqual(test_cell.type, cell.VALUE_TYPE_INTEGER)
