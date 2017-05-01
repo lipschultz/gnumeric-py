@@ -79,6 +79,14 @@ class Cell:
         else:
             raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
 
+    def __set_type(self, value_type):
+        if value_type == VALUE_TYPE_EXPR:
+            if 'ValueType' in self.__cell.keys():
+                self.__cell.attrib.pop('ValueType')
+            # TODO: How should expression IDs be handled?
+        else:
+            self.__cell.set('ValueType', str(value_type))
+
     def get_value(self):
         '''
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
@@ -92,3 +100,48 @@ class Cell:
             return float(value)
         else:
             return value
+
+    def set_value(self, value, value_type='infer'):
+        '''
+        Sets the value stored in the cell.
+
+        If `value_type` is:
+        - one of the `VALUE_TYPE_` constants, then that value type will be used
+        - ``keep'`, then the cell will keep its type
+        - `'infer'`, then it tries to guess the type based on the value being set:
+            - if `value` is of type `bool`, then `VALUE_TYPE_BOOLEAN`
+            - if `value` is of type `int`, then `VALUE_TYPE_INTEGER`
+            - if `value` is of type `float`, then `VALUE_TYPE_FLOAT`
+            - if `value` is an empty string or `None`, then `VALUE_TYPE_EMPTY`
+            - if `value` is a string and starts with `=`, then `VALUE_TYPE_EXPR`
+            - if `value` is anything else, then `VALUE_TYPE_STRING`
+
+        The default `value_type` is `'infer'`.
+
+        Warning: This method does no type checking, so it is possible to save a string into a cell whose type is
+        `VALUE_TYPE_INTEGER`.  This could result in problems when opening the workbook in Gnumeric.
+        '''
+        val_types = {bool: VALUE_TYPE_BOOLEAN, int: VALUE_TYPE_INTEGER, float: VALUE_TYPE_FLOAT}
+        if value_type == 'infer':
+            if type(value) in val_types:
+                value_type = val_types[type(value)]
+            elif value in ('', None):
+                value_type = VALUE_TYPE_EMPTY
+            elif value[0] == '=':
+                value_type = VALUE_TYPE_EXPR
+            elif self.type in (
+            VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT, VALUE_TYPE_ERROR):
+                value_type = VALUE_TYPE_STRING
+            else:
+                value_type = self.type
+        elif value_type == 'keep':
+            value_type = self.type
+
+        if value_type == VALUE_TYPE_BOOLEAN:
+            self.__cell.text = str(bool(value)).upper()
+        elif value_type == VALUE_TYPE_EMPTY:
+            self.__cell.text = None
+        else:
+            self.__cell.text = str(value)
+
+        self.__set_type(value_type)
