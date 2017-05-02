@@ -28,9 +28,34 @@ def write_workbook_with_one_worksheet(out_dir):
     wb.save(os.path.join(out_dir, filename))
 
 
+def test_order_of_cells_in_worksheet_does_not_matter(out_dir):
+    filename = 'cell_order_worksheet.gnumeric'
+    wb = workbook.Workbook()
+    ws = wb.create_sheet('CellOrder')
+
+    cell = ws.cell(2, 2)
+    cell.value = "3:C"
+    cell = ws.cell(0, 2)
+    cell.value = "1:C"
+    cell = ws.cell(0, 0)
+    cell.value = "1:A"
+    cell = ws.cell(0, 1)
+    cell.value = "1:B"
+    cell = ws.cell(1, 2)
+    cell.value = "2:C"
+    cell = ws.cell(1, 1)
+    cell.value = "2:B"
+
+    wb.save(os.path.join(out_dir, filename))
+
+def test_assigning_wrong_value_type_to_cell(out_dir):
+    pass
+
+
 if __name__ == '__main__':
     test_dir = 'test_output'
     if not os.path.exists(test_dir):
         os.mkdir(test_dir)
 
     write_workbook_with_one_worksheet(test_dir)
+    test_order_of_cells_in_worksheet_does_not_matter(test_dir)
