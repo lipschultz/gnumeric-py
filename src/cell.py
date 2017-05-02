@@ -53,7 +53,7 @@ class Cell:
     def text(self):
         '''
         Returns the raw value stored in the cell.  The text will be `None` if the cell is empty.
-        :return: str
+        :return: str or `None`
         '''
         return self.__cell.text
 
