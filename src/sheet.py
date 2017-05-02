@@ -37,6 +37,17 @@ class Sheet:
     def __get_cells(self):
         return self._sheet.find('gnm:Cells', self.__workbook._ns)
 
+    def __create_and_get_new_cell(self, row_idx, col_idx):
+        '''
+        Creates a new cell, adds it to the worksheet, and returns it.
+        '''
+        new_cell = etree.fromstring(
+                NEW_CELL % {b'row': row_idx, b'col': col_idx,
+                            b'value_type': cell.VALUE_TYPE_EMPTY}).getchildren()[0]
+        cells = self.__get_cells()
+        cells.append(new_cell)
+        return new_cell
+
     @property
     def workbook(self):
         return self.__workbook
@@ -128,9 +139,7 @@ class Sheet:
         cell_found = cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row_idx, col_idx), self.__workbook._ns)
         if cell_found is None:
             if create:
-                cell_found = etree.fromstring(
-                        NEW_CELL % {b'row': row_idx, b'col': col_idx,
-                                    b'value_type': cell.VALUE_TYPE_EMPTY}).getchildren()[0]
+                cell_found = self.__create_and_get_new_cell(row_idx, col_idx)
             else:
                 raise IndexError('No cell exists at position (%d, %d)' % (row_idx, col_idx))
 
