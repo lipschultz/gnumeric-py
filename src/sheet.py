@@ -29,6 +29,10 @@ SHEET_TYPE_OBJECT = 'object'
 
 
 class Sheet:
+    __EMPTY_CELL_XPATH_SELECTOR = ('@ValueType="'
+                                   + str(cell.VALUE_TYPE_EMPTY)
+                                   + '" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)')
+
     def __init__(self, sheet_name_element, sheet_element, workbook):
         self._sheet_name = sheet_name_element
         self._sheet = sheet_element
@@ -36,6 +40,16 @@ class Sheet:
 
     def __get_cells(self):
         return self._sheet.find('gnm:Cells', self.__workbook._ns)
+
+    def __get_empty_cells(self):
+        all_cells = self.__get_cells()
+        return all_cells.xpath('./gnm:Cell[' + self.__EMPTY_CELL_XPATH_SELECTOR + ']',
+                               namespaces=self.__workbook._ns)
+
+    def __get_non_empty_cells(self):
+        all_cells = self.__get_cells()
+        return all_cells.xpath('./gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
+                               namespaces=self.__workbook._ns)
 
     def __create_and_get_new_cell(self, row_idx, col_idx):
         '''
@@ -81,7 +95,9 @@ class Sheet:
         '''
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have max column')
-        return int(self._sheet.find('gnm:MaxCol', self.__workbook._ns).text)
+
+        content_cells = self.__get_non_empty_cells()
+        return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).column for c in content_cells)
 
     @property
     def max_row(self):
@@ -91,7 +107,9 @@ class Sheet:
         '''
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have max row')
-        return int(self._sheet.find('gnm:MaxRow', self.__workbook._ns).text)
+
+        content_cells = self.__get_non_empty_cells()
+        return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).row for c in content_cells)
 
     @property
     def min_column(self):
@@ -101,8 +119,8 @@ class Sheet:
         '''
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have min column')
-        cells = self.__get_cells()
-        return min([cell.Cell(c, self).column for c in cells])
+        content_cells = self.__get_non_empty_cells()
+        return -1 if len(content_cells) == 0 else min([cell.Cell(c, self).column for c in content_cells])
 
     @property
     def min_row(self):
@@ -112,8 +130,8 @@ class Sheet:
         '''
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have min row')
-        cells = self.__get_cells()
-        return min([cell.Cell(c, self).row for c in cells])
+        content_cells = self.__get_non_empty_cells()
+        return -1 if len(content_cells) == 0 else min([cell.Cell(c, self).row for c in content_cells])
 
     def calculate_dimension(self):
         '''
@@ -150,6 +168,21 @@ class Sheet:
         Returns a the cell's text at the specific row and column.
         '''
         return self.cell(row_idx, col_idx, create=False).text
+
+    def _prepare_for_saving(self):
+        """
+        Ensures sheet is in a state for saving.
+        """
+
+        # Delete empty cells
+        all_cells = self.__get_cells()
+        empty_cells = self.__get_empty_cells()
+        for empty_cell in empty_cells:
+            all_cells.remove(empty_cell)
+
+        # Update max col and row
+        self._sheet.find('gnm:MaxCol', self.__workbook._ns).text = str(self.max_column)
+        self._sheet.find('gnm:MaxRow', self.__workbook._ns).text = str(self.max_row)
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and

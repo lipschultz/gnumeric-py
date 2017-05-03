@@ -374,6 +374,36 @@ class SheetTests(unittest.TestCase):
         ws.cell(15, 30)
         self.assertEqual(ws.calculate_dimension(), old_dimensions)
 
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_empty_string_does_not_increase_rectangle(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        old_dimensions = ws.calculate_dimension()
+        c = ws.cell(15, 30)
+        c.set_value("")
+        self.assertEqual(ws.calculate_dimension(), old_dimensions)
+
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_None_does_not_increase_rectangle(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        old_dimensions = ws.calculate_dimension()
+        c = ws.cell(15, 30)
+        c.set_value(None)
+        self.assertEqual(ws.calculate_dimension(), old_dimensions)
+
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_string_does_increase_rectangle(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        old_dimensions = ws.calculate_dimension()
+        c = ws.cell(15, 30)
+        c.set_value("new value")
+        new_dimensions = old_dimensions[:2] + (15, 30)
+        self.assertEqual(ws.calculate_dimension(), new_dimensions)
+
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_expression_does_increase_rectangle(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        old_dimensions = ws.calculate_dimension()
+        c = ws.cell(15, 30)
+        c.set_value("=max(A1:A5)")
+        new_dimensions = old_dimensions[:2] + (15, 30)
+        self.assertEqual(ws.calculate_dimension(), new_dimensions)
+
     def test_get_non_existent_cell_with_create_False_raises_exception(self):
         ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         with self.assertRaises(IndexError):
