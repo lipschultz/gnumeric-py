@@ -147,3 +147,9 @@ class Cell:
         self.__set_type(value_type)
 
     value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
+
+    def __str__(self):
+        return repr(self.value)
+
+    def __repr__(self):
+        return 'Cell[%s, (%d, %d), ws="%s"]' % (str(self), self.row, self.column, self.__worksheet.title)

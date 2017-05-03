@@ -188,3 +188,6 @@ class Sheet:
         return (self.__workbook == other.__workbook and
                 self._sheet_name == other._sheet_name and
                 self._sheet == other._sheet)
+
+    def __str__(self):
+        return self.title
