@@ -182,9 +182,10 @@ class Sheet:
             cells = self.__get_non_empty_cells()
         return [cell.Cell(c, self) for c in cells]
 
-    def _prepare_for_saving(self):
+    def _clean_data(self):
         """
-        Ensures sheet is in a state for saving.
+        Performs housekeeping on the data.  Only necessary when contents are being written to file.  Should not be
+        called directly -- the workbook will call this automatically when writing to file.
         """
 
         # Delete empty cells

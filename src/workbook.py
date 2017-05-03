@@ -332,7 +332,7 @@ class Workbook:
             write it as a gzip-compressed Gnumeric file) and 9 (slowest but most compressed; default).  A `False` value
             will write a uncompressed Gnumeric file.
         '''
-        [s._prepare_for_saving() for s in self.sheets]
+        [s._clean_data() for s in self.sheets]
         xml = etree.tostring(self.__root)
         if compress:
             with gzip.open(filepath, mode='wb') as fout:
