@@ -110,7 +110,7 @@ class Sheet:
         :return: `int`
         """
         key = '{%s}Cols' % (self.__workbook._ns['gnm'])
-        return int(self._sheet_name.get(key))-1
+        return int(self._sheet_name.get(key)) - 1
 
     @property
     def max_row(self):
@@ -131,7 +131,7 @@ class Sheet:
         :return: `int`
         """
         key = '{%s}Rows' % (self.__workbook._ns['gnm'])
-        return int(self._sheet_name.get(key))-1
+        return int(self._sheet_name.get(key)) - 1
 
     @property
     def min_column(self):
@@ -175,6 +175,13 @@ class Sheet:
         which case, `IndexError` is raised).  Note that the cell will not be added to the worksheet until it is not
         empty (since Gnumeric does not seem to store empty cells).
         '''
+        if row_idx < 0 or self.max_allowed_row < row_idx:
+            raise IndexError('Row (' + str(row_idx) + ') for cell is out of allowed bounds of [0, '
+                             + str(self.max_allowed_row) + ']')
+        elif col_idx < 0 or self.max_allowed_column < col_idx:
+            raise IndexError('Column (' + str(col_idx) + ') for cell is out of allowed bounds of [0, '
+                             + str(self.max_allowed_column) + ']')
+
         cells = self.__get_cells()
         cell_found = cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row_idx, col_idx), self.__workbook._ns)
         if cell_found is None:

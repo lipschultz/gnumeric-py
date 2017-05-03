@@ -491,6 +491,27 @@ class SheetTests(unittest.TestCase):
         ws = self.loaded_wb.get_sheet_by_index(0)
         self.assertEqual(ws.max_allowed_row, 65535)
 
+    def test_get_cell_above_allowed_column(self):
+        ws = self.wb.create_sheet('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell(0, ws.max_allowed_column + 5)
+
+    def test_get_cell_below_0_column(self):
+        ws = self.wb.create_sheet('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell(0, -1)
+
+    def test_get_cell_above_allowed_row(self):
+        ws = self.wb.create_sheet('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell(ws.max_allowed_row + 5, 0)
+
+    def test_get_cell_below_0_row(self):
+        ws = self.wb.create_sheet('Sheet1')
+        with self.assertRaises(IndexError):
+            ws.cell(-1, 0)
+
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):
