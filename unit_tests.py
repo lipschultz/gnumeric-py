@@ -532,3 +532,13 @@ class CellTests(unittest.TestCase):
         test_cell = self.ws.cell(0, 0)
         test_cell.value = 17
         self.assertEqual(test_cell.type, cell.VALUE_TYPE_INTEGER)
+
+    def test_cells_equal(self):
+        test_cell1 = self.ws.cell(0, 0)
+        test_cell2 = self.ws.cell(0, 0)
+        self.assertTrue(test_cell1 == test_cell2)
+
+    def test_cells_unequal(self):
+        test_cell1 = self.ws.cell(0, 0)
+        test_cell2 = self.ws.cell(1, 0)
+        self.assertFalse(test_cell1 == test_cell2)

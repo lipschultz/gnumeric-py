@@ -83,7 +83,7 @@ class Cell:
         if value_type == VALUE_TYPE_EXPR:
             if 'ValueType' in self.__cell.keys():
                 self.__cell.attrib.pop('ValueType')
-            # TODO: How should expression IDs be handled?
+                # TODO: How should expression IDs be handled?
         else:
             self.__cell.set('ValueType', str(value_type))
 
@@ -130,7 +130,7 @@ class Cell:
             elif value[0] == '=':
                 value_type = VALUE_TYPE_EXPR
             elif self.type in (
-            VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT, VALUE_TYPE_ERROR):
+                    VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT, VALUE_TYPE_ERROR):
                 value_type = VALUE_TYPE_STRING
             else:
                 value_type = self.type
@@ -153,3 +153,7 @@ class Cell:
 
     def __repr__(self):
         return 'Cell[%s, (%d, %d), ws="%s"]' % (str(self), self.row, self.column, self.__worksheet.title)
+
+    def __eq__(self, other):
+        return (isinstance(other, Cell)
+                and self.__worksheet == other.__worksheet and self.row == other.row and self.column == other.column)
