@@ -51,6 +51,10 @@ class Sheet:
         return all_cells.xpath('./gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
                                namespaces=self.__workbook._ns)
 
+    def __get_expression_id_cells(self):
+        all_cells = self.__get_cells()
+        return all_cells.xpath('./gnm:Cell[@ExprID]', namespaces=self.__workbook._ns)
+
     def __create_and_get_new_cell(self, row_idx, col_idx):
         '''
         Creates a new cell, adds it to the worksheet, and returns it.
@@ -181,6 +185,19 @@ class Sheet:
         else:
             cells = self.__get_non_empty_cells()
         return [cell.Cell(c, self) for c in cells]
+
+    def get_expression_map(self):
+        """
+        In each worksheet, Gnumeric stores an expression/formula once (in the cell it's first used), then references it
+        by an id in all other cells that use the expression.  This method will return a dict of
+        expression ids -> ((cell_row, cell_col), expression).
+
+        Note that this might not return all expressions in the worksheet.  If an expression is only used once, then it
+        may not have an id and thus will not be returned by this method.
+        """
+        cells = self.__get_expression_id_cells()
+        return dict([(c.get('ExprID'), ((int(c.get('Row')), int(c.get('Col'))), c.text)) for c in cells
+                     if c.text is not None])
 
     def _clean_data(self):
         """

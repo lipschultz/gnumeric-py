@@ -240,13 +240,13 @@ class WorkbookTests(unittest.TestCase):
     def test_getting_all_sheets_of_mixed_type(self):
         ws = self.loaded_wb.sheets
         selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
-                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!', 'Graph1')]
+                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!', 'Graph1')]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_worksheets_only(self):
         ws = self.loaded_wb.worksheets
         selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
-                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!')]
+                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!')]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_chartsheets_only(self):
@@ -256,7 +256,7 @@ class WorkbookTests(unittest.TestCase):
 
     def test_loading_compressed_file(self):
         self.assertEqual(self.loaded_wb.sheetnames,
-                         ['Sheet1', 'BoundingRegion', 'CellTypes', 'Mine & Yours Sheet[s]!', 'Graph1'])
+                         ['Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!', 'Graph1'])
         self.assertEqual(self.loaded_wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
         self.assertEqual(self.loaded_wb.version, '1.12.28')
 
@@ -469,6 +469,20 @@ class SheetTests(unittest.TestCase):
         cells.add(c)
 
         self.assertEqual(set(ws.get_cell_collection(True)), cells)
+
+    def test_get_expression_map_from_worksheet_with_expressions(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_map = {'1': ((1, 1), '=sum(A2:A10)'),
+                        '2': ((2, 1), '=counta(A$1:A$65536)'),
+                        '3': ((3, 1), '=product(BoundingRegion!D7:J13)')
+                        }
+        self.assertEqual(ws.get_expression_map(), expected_map)
+
+    def test_get_expression_map_from_worksheet_with_no_expressions(self):
+        ws = self.loaded_wb.get_sheet_by_name('BoundingRegion')
+        expected_map = {}
+        self.assertEqual(ws.get_expression_map(), expected_map)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):
