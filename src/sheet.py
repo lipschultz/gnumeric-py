@@ -104,6 +104,15 @@ class Sheet:
         return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).column for c in content_cells)
 
     @property
+    def max_allowed_column(self):
+        """
+        The maximum column allowed in the worksheet.
+        :return: `int`
+        """
+        key = '{%s}Cols' % (self.__workbook._ns['gnm'])
+        return int(self._sheet_name.get(key))-1
+
+    @property
     def max_row(self):
         '''
         The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
@@ -114,6 +123,15 @@ class Sheet:
 
         content_cells = self.__get_non_empty_cells()
         return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).row for c in content_cells)
+
+    @property
+    def max_allowed_row(self):
+        """
+        The maximum row allowed in the worksheet.
+        :return: `int`
+        """
+        key = '{%s}Rows' % (self.__workbook._ns['gnm'])
+        return int(self._sheet_name.get(key))-1
 
     @property
     def min_column(self):

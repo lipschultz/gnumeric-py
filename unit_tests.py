@@ -483,6 +483,14 @@ class SheetTests(unittest.TestCase):
         expected_map = {}
         self.assertEqual(ws.get_expression_map(), expected_map)
 
+    def test_get_max_allowed_column(self):
+        ws = self.loaded_wb.get_sheet_by_index(0)
+        self.assertEqual(ws.max_allowed_column, 255)
+
+    def test_get_max_allowed_row(self):
+        ws = self.loaded_wb.get_sheet_by_index(0)
+        self.assertEqual(ws.max_allowed_row, 65535)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):
