@@ -509,11 +509,6 @@ class CellTests(unittest.TestCase):
         test_cell.set_value('asdf')
         self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
 
-    def test_set_cell_value_infer_string(self):
-        test_cell = self.ws.cell(0, 0)
-        test_cell.set_value('asdf')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
-
     def test_cell_type_changes_when_value_changes(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('asdf')
