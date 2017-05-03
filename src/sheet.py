@@ -169,6 +169,19 @@ class Sheet:
         '''
         return self.cell(row_idx, col_idx, create=False).text
 
+    def get_cell_collection(self, include_empty=False):
+        """
+        Return all cells as a list.  The cells may be unordered.
+
+        If `include_empty` is False (default), then only cells with content will be included.  If `include_empty` is
+        True, then empty cells that have been created will be included.
+        """
+        if include_empty:
+            cells = self.__get_cells()
+        else:
+            cells = self.__get_non_empty_cells()
+        return [cell.Cell(c, self) for c in cells]
+
     def _prepare_for_saving(self):
         """
         Ensures sheet is in a state for saving.

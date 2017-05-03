@@ -421,6 +421,54 @@ class SheetTests(unittest.TestCase):
             ws.cell_text(0, 2)
             # TODO: should also confirm that the cell is not created
 
+    def test_get_content_cells(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+        cells.add(c)
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+
+        c = ws.cell(0, 4)
+        c.set_value('=max(A1:A5)')
+        cells.add(c)
+
+        self.assertEqual(set(ws.get_cell_collection()), cells)
+
+    def test_get_content_cells_including_empty(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+        cells.add(c)
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+        cells.add(c)
+
+        c = ws.cell(0, 4)
+        c.set_value('=max(A1:A5)')
+        cells.add(c)
+
+        self.assertEqual(set(ws.get_cell_collection(True)), cells)
 
 class CellTests(unittest.TestCase):
     def setUp(self):

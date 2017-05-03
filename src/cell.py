@@ -157,3 +157,6 @@ class Cell:
     def __eq__(self, other):
         return (isinstance(other, Cell)
                 and self.__worksheet == other.__worksheet and self.row == other.row and self.column == other.column)
+
+    def __hash__(self):
+        return hash(self.__cell)
