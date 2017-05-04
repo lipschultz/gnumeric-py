@@ -634,6 +634,13 @@ class SheetTests(unittest.TestCase):
 
         self.assertEqual(row, [])
 
+    def test_get_empty_row_and_create_cells_returns_cells_for_all_columns(self):
+        ws = self.wb.create_sheet('Title')
+        row = ws.get_row(0, create_cells=True)
+        row = [r for r in row]
+
+        self.assertEqual(len(row), ws.max_allowed_column + 1)
+
     def test_get_row_with_values_returns_only_existing_cells_in_sorted_order(self):
         ws = self.wb.create_sheet('Title')
 
