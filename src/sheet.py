@@ -219,7 +219,7 @@ class Sheet:
         Sort the cells according to indices.  If `row_major` is True, then sorting will occur by row first, then within
         each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
         then by row within each column.
-        
+
         :returns: A list of Cell objects
         """
         return self.__sort_cells([cell.Cell(c, self) for c in cell_elements], row_major)
@@ -254,6 +254,45 @@ class Sheet:
             return self.__sort_cells(cells, sort=='row')
         else:
             return cells
+
+    def get_row(self, row, min_col=0, max_col=None, create_cells=False):
+        """
+        Get the cells in the specified row (index starting at 0).
+
+        Use `min_col` and `max_col` to specify the range of cells within the row.  `min_col` defaults to 0.  `max_col`
+        defaults to `None`, meaning go to the last cell with a value in the row.  These bounds are inclusive.
+
+        If `create_cells` is `True`, then any cells in the row that don't exist, will be created.  If `False` (the
+        default), then only already-existing cells will be returned.  Note that existing cells that are empty will be
+        returned if `create_cells` is `False`.
+
+        Raises `IndexError` if `row` is outside of the valid range for rows, or if `min_col` or `max_col` is outside
+        the valid range for columns.
+        :return: generator
+        """
+        if max_col is None:
+            max_col = self.max_allowed_column
+
+        if not self.is_valid_row(row):
+            raise IndexError('Row (' + str(row) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_row) + ']')
+        elif not self.is_valid_column(min_col):
+            raise IndexError('Min column (' + str(min_col) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_column) + ']')
+        elif not self.is_valid_column(max_col):
+            raise IndexError('Max column (' + str(max_col) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_column) + ']')
+
+        existing_cells = self.__get_cells().xpath(
+                './gnm:Cell[@Row="' + str(row) + '" and "' + str(min_col) + '"<=@Col and @Col<="' + str(max_col) + '"]',
+                namespaces=self.__workbook._ns)
+        cells = self.__sort_cell_elements(existing_cells, False)
+
+        if create_cells:
+            cell_map = dict([(c.column, c) for c in cells])
+            return (cell_map[i] if i in cell_map else self.cell(row, i) for i in range(min_col, max_col+1))
+        else:
+            return (c for c in cells)
 
     def get_expression_map(self):
         """

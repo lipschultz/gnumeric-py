@@ -627,6 +627,61 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(ordered_cells[5].row, 2)
         self.assertEqual(ordered_cells[5].column, 2)
 
+    def test_get_empty_row(self):
+        ws = self.wb.create_sheet('Title')
+        row = ws.get_row(0)
+        row = [r for r in row]
+
+        self.assertEqual(row, [])
+
+    def test_get_row_with_values_returns_only_existing_cells_in_sorted_order(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 0)
+        cell.value = "3:C"
+        cell = ws.cell(0, 3)
+        cell.value = "1:D"
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+
+        row = ws.get_row(0)
+        self.assertEquals([r.text for r in row], ["1:A", "1:B", "1:D"])
+
+    def test_get_row_within_range_only_returns_cells_within_that_range(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 0)
+        cell.value = "3:C"
+
+        cell = ws.cell(0, 3)
+        cell.value = "1:D"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+
+        row = ws.get_row(0, 1, 2)
+        self.assertEquals([r.text for r in row], ["1:B"])
+
+    def test_get_row_and_create_cells_will_return_all_cells_in_sorted_order(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 0)
+        cell.value = "3:C"
+        cell = ws.cell(0, 3)
+        cell.value = "1:D"
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+
+        row = ws.get_row(0, max_col=10, create_cells=True)
+        self.assertEquals([r.text for r in row], ["1:A", "1:B", None, "1:D"] + [None]*7)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):
