@@ -511,6 +511,45 @@ class SheetTests(unittest.TestCase):
         with self.assertRaises(IndexError):
             ws.cell(-1, 0)
 
+    def test_valid_column_below_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertFalse(ws.is_valid_column(-1))
+
+    def test_valid_column_at_lower_bound(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_column(0))
+
+    def test_valid_column_within_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_column(1))
+
+    def test_valid_column_at_upper_bound(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_column(ws.max_allowed_column))
+
+    def test_valid_column_above_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertFalse(ws.is_valid_column(ws.max_allowed_column + 1))
+
+    def test_valid_row_below_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertFalse(ws.is_valid_row(-1))
+
+    def test_valid_row_at_lower_bound(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_row(0))
+
+    def test_valid_row_within_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_row(1))
+
+    def test_valid_row_at_upper_bound(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertTrue(ws.is_valid_row(ws.max_allowed_row))
+
+    def test_valid_row_above_range(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertFalse(ws.is_valid_row(ws.max_allowed_row + 1))
 
 
 class CellTests(unittest.TestCase):

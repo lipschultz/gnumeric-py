@@ -167,6 +167,20 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
 
+    def is_valid_column(self, column):
+        """
+        Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns False
+        :return: bool
+        """
+        return 0 <= column <= self.max_allowed_column
+
+    def is_valid_row(self, row):
+        """
+        Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns False
+        :return: bool
+        """
+        return 0 <= row <= self.max_allowed_row
+
     def cell(self, row_idx, col_idx, create=True):
         '''
         Returns a Cell object for the cell at the specific row and column.
@@ -175,10 +189,10 @@ class Sheet:
         which case, `IndexError` is raised).  Note that the cell will not be added to the worksheet until it is not
         empty (since Gnumeric does not seem to store empty cells).
         '''
-        if row_idx < 0 or self.max_allowed_row < row_idx:
+        if not self.is_valid_row(row_idx):
             raise IndexError('Row (' + str(row_idx) + ') for cell is out of allowed bounds of [0, '
                              + str(self.max_allowed_row) + ']')
-        elif col_idx < 0 or self.max_allowed_column < col_idx:
+        elif not self.is_valid_column(col_idx):
             raise IndexError('Column (' + str(col_idx) + ') for cell is out of allowed bounds of [0, '
                              + str(self.max_allowed_column) + ']')
 
