@@ -105,6 +105,19 @@ class Sheet:
         content_cells = self.__get_non_empty_cells()
         return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).column for c in content_cells)
 
+    def max_column_in_row(self, row):
+        """
+        Get the last column in `row` that has a value.  Returns -1 if there the row is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have max column')
+
+        content_cells = self.__get_non_empty_cells()
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [c.column for c in content_cells if c.row == row]
+        return -1 if len(content_cells) == 0 else max(content_cells)
+
     @property
     def max_allowed_column(self):
         """

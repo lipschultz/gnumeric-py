@@ -682,6 +682,27 @@ class SheetTests(unittest.TestCase):
         row = ws.get_row(0, max_col=10, create_cells=True)
         self.assertEquals([r.text for r in row], ["1:A", "1:B", None, "1:D"] + [None]*7)
 
+    def test_max_column_in_empty_row_is_negative_one(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertEqual(ws.max_column_in_row(0), -1)
+
+    def test_max_column_in_row(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 0)
+        cell.value = "3:C"
+
+        cell = ws.cell(0, 3)
+        cell.value = "1:D"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+
+        self.assertEqual(ws.max_column_in_row(0), 3)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):
