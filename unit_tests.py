@@ -627,6 +627,48 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(ordered_cells[5].row, 2)
         self.assertEqual(ordered_cells[5].column, 2)
 
+    def test_max_row_in_empty_row_is_negative_one(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertEqual(ws.max_row_in_column(0), -1)
+
+    def test_min_row_in_empty_row_is_negative_one(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertEqual(ws.min_row_in_column(0), -1)
+
+    def test_max_row_in_column(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+
+        cell = ws.cell(3, 0)
+        cell.value = "4:A"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(1, 0)
+        cell.value = "2:A"
+
+        self.assertEqual(ws.max_row_in_column(0), 3)
+
+    def test_min_row_in_column(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+
+        cell = ws.cell(3, 0)
+        cell.value = "4:A"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(1, 0)
+        cell.value = "2:A"
+
+        self.assertEqual(ws.min_row_in_column(0), 0)
+
     def test_get_empty_row(self):
         ws = self.wb.create_sheet('Title')
         row = ws.get_row(0)
@@ -693,6 +735,10 @@ class SheetTests(unittest.TestCase):
         ws = self.wb.create_sheet('Title')
         self.assertEqual(ws.max_column_in_row(0), -1)
 
+    def test_min_column_in_empty_row_is_negative_one(self):
+        ws = self.wb.create_sheet('Title')
+        self.assertEqual(ws.min_column_in_row(0), -1)
+
     def test_max_column_in_row(self):
         ws = self.wb.create_sheet('Title')
 
@@ -709,6 +755,23 @@ class SheetTests(unittest.TestCase):
         cell.value = "1:B"
 
         self.assertEqual(ws.max_column_in_row(0), 3)
+
+    def test_min_column_in_row(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 0)
+        cell.value = "3:C"
+
+        cell = ws.cell(0, 3)
+        cell.value = "1:D"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+
+        self.assertEqual(ws.min_column_in_row(0), 0)
 
 
 class CellTests(unittest.TestCase):

@@ -107,7 +107,7 @@ class Sheet:
 
     def max_column_in_row(self, row):
         """
-        Get the last column in `row` that has a value.  Returns -1 if there the row is empty.  Raises
+        Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
         if self.type == SHEET_TYPE_OBJECT:
@@ -139,6 +139,19 @@ class Sheet:
         content_cells = self.__get_non_empty_cells()
         return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).row for c in content_cells)
 
+    def max_row_in_column(self, column):
+        """
+        Get the last row in `column` that has a value.  Returns -1 if the column is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have max row')
+
+        content_cells = self.__get_non_empty_cells()
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [c.row for c in content_cells if c.column == column]
+        return -1 if len(content_cells) == 0 else max(content_cells)
+
     @property
     def max_allowed_row(self):
         """
@@ -147,6 +160,19 @@ class Sheet:
         """
         key = '{%s}Rows' % (self.__workbook._ns['gnm'])
         return int(self._sheet_name.get(key)) - 1
+
+    def min_column_in_row(self, row):
+        """
+        Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have min column')
+
+        content_cells = self.__get_non_empty_cells()
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [c.column for c in content_cells if c.row == row]
+        return -1 if len(content_cells) == 0 else min(content_cells)
 
     @property
     def min_column(self):
@@ -181,6 +207,19 @@ class Sheet:
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
+
+    def min_row_in_column(self, column):
+        """
+        Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have min row')
+
+        content_cells = self.__get_non_empty_cells()
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [c.row for c in content_cells if c.column == column]
+        return -1 if len(content_cells) == 0 else min(content_cells)
 
     def is_valid_column(self, column):
         """
