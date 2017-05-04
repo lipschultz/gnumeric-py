@@ -551,6 +551,82 @@ class SheetTests(unittest.TestCase):
         ws = self.wb.create_sheet('Title')
         self.assertFalse(ws.is_valid_row(ws.max_allowed_row + 1))
 
+    def test_get_cells_sorted_row_major(self):
+        ws = self.wb.create_sheet('CellOrder')
+
+        all_cells = set()
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+        all_cells.add(cell)
+        cell = ws.cell(0, 2)
+        cell.value = "1:C"
+        all_cells.add(cell)
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+        all_cells.add(cell)
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+        all_cells.add(cell)
+        cell = ws.cell(1, 2)
+        cell.value = "2:C"
+        all_cells.add(cell)
+        cell = ws.cell(1, 1)
+        cell.value = "2:B"
+        all_cells.add(cell)
+
+        ordered_cells = ws.get_cell_collection(sort='row')
+        self.assertEqual(set(ordered_cells), all_cells)
+        self.assertEqual(ordered_cells[0].row, 0)
+        self.assertEqual(ordered_cells[0].column, 0)
+        self.assertEqual(ordered_cells[1].row, 0)
+        self.assertEqual(ordered_cells[1].column, 1)
+        self.assertEqual(ordered_cells[2].row, 0)
+        self.assertEqual(ordered_cells[2].column, 2)
+        self.assertEqual(ordered_cells[3].row, 1)
+        self.assertEqual(ordered_cells[3].column, 1)
+        self.assertEqual(ordered_cells[4].row, 1)
+        self.assertEqual(ordered_cells[4].column, 2)
+        self.assertEqual(ordered_cells[5].row, 2)
+        self.assertEqual(ordered_cells[5].column, 2)
+
+    def test_get_cells_sorted_column_major(self):
+        ws = self.wb.create_sheet('CellOrder')
+
+        all_cells = set()
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+        all_cells.add(cell)
+        cell = ws.cell(0, 2)
+        cell.value = "1:C"
+        all_cells.add(cell)
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+        all_cells.add(cell)
+        cell = ws.cell(0, 1)
+        cell.value = "1:B"
+        all_cells.add(cell)
+        cell = ws.cell(1, 2)
+        cell.value = "2:C"
+        all_cells.add(cell)
+        cell = ws.cell(1, 1)
+        cell.value = "2:B"
+        all_cells.add(cell)
+
+        ordered_cells = ws.get_cell_collection(sort='column')
+        self.assertEqual(set(ordered_cells), all_cells)
+        self.assertEqual(ordered_cells[0].row, 0)
+        self.assertEqual(ordered_cells[0].column, 0)
+        self.assertEqual(ordered_cells[1].row, 0)
+        self.assertEqual(ordered_cells[1].column, 1)
+        self.assertEqual(ordered_cells[2].row, 1)
+        self.assertEqual(ordered_cells[2].column, 1)
+        self.assertEqual(ordered_cells[3].row, 0)
+        self.assertEqual(ordered_cells[3].column, 2)
+        self.assertEqual(ordered_cells[4].row, 1)
+        self.assertEqual(ordered_cells[4].column, 2)
+        self.assertEqual(ordered_cells[5].row, 2)
+        self.assertEqual(ordered_cells[5].column, 2)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):

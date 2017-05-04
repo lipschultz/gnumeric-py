@@ -15,6 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from operator import attrgetter
+
 from lxml import etree
 
 from src import cell
@@ -212,18 +214,46 @@ class Sheet:
         '''
         return self.cell(row_idx, col_idx, create=False).text
 
-    def get_cell_collection(self, include_empty=False):
+    def __sort_cell_elements(self, cell_elements, row_major):
         """
-        Return all cells as a list.  The cells may be unordered.
+        Sort the cells according to indices.  If `row_major` is True, then sorting will occur by row first, then within
+        each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
+        then by row within each column.
+        
+        :returns: A list of Cell objects
+        """
+        return self.__sort_cells([cell.Cell(c, self) for c in cell_elements], row_major)
+
+    def __sort_cells(self, cells, row_major):
+        """
+        Sort the cells according to indices.  If `row_major` is True, then sorting will occur by row first, then within
+        each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
+        then by row within each column.
+        """
+        key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
+        return sorted(cells, key=key_fn)
+
+    def get_cell_collection(self, include_empty=False, sort=False):
+        """
+        Return all cells as a list.
 
         If `include_empty` is False (default), then only cells with content will be included.  If `include_empty` is
         True, then empty cells that have been created will be included.
+
+        Use `sort` to specify whether the cells should be sorted.  If `False` (default), then no sorting will take
+        place.  If `sort` is `"row"`, then sorting will occur by row first, then by column within each row.  If `sort`
+        is `"column"`, then the opposite will happen: first sort by column, then by row within each column.
         """
         if include_empty:
             cells = self.__get_cells()
         else:
             cells = self.__get_non_empty_cells()
-        return [cell.Cell(c, self) for c in cells]
+
+        cells = [cell.Cell(c, self) for c in cells]
+        if sort:
+            return self.__sort_cells(cells, sort=='row')
+        else:
+            return cells
 
     def get_expression_map(self):
         """
