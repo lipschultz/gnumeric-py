@@ -307,6 +307,50 @@ class Sheet:
         else:
             return cells
 
+    def get_column(self, column, min_row=0, max_row=None, create_cells=False):
+        """
+        Get the cells in the specified column (index starting at 0).
+
+        Use `min_row` and `max_row` to specify the range of cells within the column.  `min_row` defaults to 0.
+        `max_row` defaults to `None`, meaning go to the last cell with a value in the column, but if the column is
+        empty, then go to the last allowed row.  These bounds are inclusive.
+
+        If `create_cells` is `True`, then any cells in the column that don't exist, will be created.  If `False` (the
+        default), then only already-existing cells will be returned.  Note that existing cells that are empty will be
+        returned if `create_cells` is `False`.
+
+        Raises `IndexError` if `column` is outside of the valid range for columns, or if `min_row` or `max_row` is
+        outside the valid range for rows.
+        :return: generator
+        """
+        if not self.is_valid_column(column):
+            raise IndexError('Column (' + str(column) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_column) + ']')
+
+        if not self.is_valid_row(min_row):
+            raise IndexError('Min row (' + str(min_row) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_row) + ']')
+
+        if max_row is not None and not self.is_valid_row(max_row):
+            raise IndexError('Max row (' + str(max_row) + ') is out of allowed bounds of [0, '
+                             + str(self.max_allowed_row) + ']')
+        elif max_row is None:
+            max_row = self.max_row_in_column(column)
+            if max_row == -1:
+                max_row = self.max_allowed_row
+
+        existing_cells = self.__get_cells().xpath(
+                './gnm:Cell[@Col="' + str(column)
+                + '" and "' + str(min_row) + '"<=@Row and @Row<="' + str(max_row) + '"]',
+                namespaces=self.__workbook._ns)
+        cells = self.__sort_cell_elements(existing_cells, False)
+
+        if create_cells:
+            cell_map = dict([(c.row, c) for c in cells])
+            return (cell_map[i] if i in cell_map else self.cell(i, column) for i in range(min_row, max_row + 1))
+        else:
+            return (c for c in cells)
+
     def get_row(self, row, min_col=0, max_col=None, create_cells=False):
         """
         Get the cells in the specified row (index starting at 0).

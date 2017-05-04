@@ -627,6 +627,70 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(ordered_cells[5].row, 2)
         self.assertEqual(ordered_cells[5].column, 2)
 
+    def test_get_empty_column(self):
+        ws = self.wb.create_sheet('Title')
+        col = ws.get_column(0)
+        col = [c for c in col]
+
+        self.assertEqual(col, [])
+
+    @unittest.skip("takes too long to complete in a reasonable amount of time")
+    def test_get_empty_col_and_create_cells_returns_cells_for_all_rows(self):
+        ws = self.wb.create_sheet('Title')
+        col = ws.get_column(0, create_cells=True)
+        self.assertEqual(sum(1 for c in col), ws.max_allowed_row + 1)
+
+    def test_get_col_with_values_returns_only_existing_cells_in_sorted_order(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+        cell = ws.cell(3, 0)
+        cell.value = "4:A"
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+        cell = ws.cell(1, 0)
+        cell.value = "2:A"
+
+        col = ws.get_column(0)
+        self.assertEquals([c.text for c in col], ["1:A", "2:A", "4:A"])
+
+    def test_get_col_within_range_only_returns_cells_within_that_range(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+
+        cell = ws.cell(3, 0)
+        cell.value = "4:A"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(1, 0)
+        cell.value = "2:A"
+
+        col = ws.get_column(0, 1, 2)
+        self.assertEquals([c.text for c in col], ["2:A"])
+
+    def test_get_col_and_create_cells_will_return_all_cells_in_sorted_order(self):
+        ws = self.wb.create_sheet('Title')
+
+        cell = ws.cell(2, 2)
+        cell.value = "3:C"
+
+        cell = ws.cell(3, 0)
+        cell.value = "4:A"
+
+        cell = ws.cell(0, 0)
+        cell.value = "1:A"
+
+        cell = ws.cell(1, 0)
+        cell.value = "2:A"
+
+        col = ws.get_column(0, max_row=10, create_cells=True)
+        self.assertEquals([c.text for c in col], ["1:A", "2:A", None, "4:A"] + [None]*7)
+
     def test_max_row_in_empty_row_is_negative_one(self):
         ws = self.wb.create_sheet('Title')
         self.assertEqual(ws.max_row_in_column(0), -1)
