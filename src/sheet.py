@@ -93,39 +93,24 @@ class Sheet:
         '''
         return self._sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
+    def __max_rc(self, rc):
+        """
+        The abstracted method for `max_column` and `max_row`.
+        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        """
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have max ' + rc)
+
+        content_cells = self.__get_non_empty_cells()
+        return -1 if len(content_cells) == 0 else max(getattr(cell.Cell(c, self), rc) for c in content_cells)
+
     @property
     def max_column(self):
         '''
         The maximum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max column')
-
-        content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).column for c in content_cells)
-
-    def max_column_in_row(self, row):
-        """
-        Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
-        UnsupportedOperationException when the sheet is a chartsheet.
-        """
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max column')
-
-        content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
-        content_cells = [c.column for c in content_cells if c.row == row]
-        return -1 if len(content_cells) == 0 else max(content_cells)
-
-    @property
-    def max_allowed_column(self):
-        """
-        The maximum column allowed in the worksheet.
-        :return: `int`
-        """
-        key = '{%s}Cols' % (self.__workbook._ns['gnm'])
-        return int(self._sheet_name.get(key)) - 1
+        return self.__max_rc('column')
 
     @property
     def max_row(self):
@@ -133,24 +118,53 @@ class Sheet:
         The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
+        return self.__max_rc('row')
+
+    def __max_rc_in_cr(self, idx, cr):
+        """
+        The abstracted method for `max_column_in_row` and `max_row_in_column`.
+        :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
+        :param idx: `int` indicating which column/row to search through
+        """
+        rc = 'column' if cr == 'row' else 'row'
         if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max row')
+            raise UnsupportedOperationException('Chartsheet does not have max ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else max(cell.Cell(c, self).row for c in content_cells)
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
+        return -1 if len(content_cells) == 0 else max(content_cells)
+
+    def max_column_in_row(self, row):
+        """
+        Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        return self.__max_rc_in_cr(row, 'row')
 
     def max_row_in_column(self, column):
         """
         Get the last row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max row')
+        return self.__max_rc_in_cr(column, 'column')
 
-        content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
-        content_cells = [c.row for c in content_cells if c.column == column]
-        return -1 if len(content_cells) == 0 else max(content_cells)
+    def __max_allowed_rc(self, rc):
+        """
+        The abstracted method for `max_allowed_column` and `max_allowed_row`.
+        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        """
+        rc = 'Cols' if rc == 'column' else 'Rows'
+        key = '{%s}%s' % (self.__workbook._ns['gnm'], rc)
+        return int(self._sheet_name.get(key)) - 1
+
+    @property
+    def max_allowed_column(self):
+        """
+        The maximum column allowed in the worksheet.
+        :return: `int`
+        """
+        return self.__max_allowed_rc('column')
 
     @property
     def max_allowed_row(self):
@@ -158,21 +172,47 @@ class Sheet:
         The maximum row allowed in the worksheet.
         :return: `int`
         """
-        key = '{%s}Rows' % (self.__workbook._ns['gnm'])
-        return int(self._sheet_name.get(key)) - 1
+        return self.__max_allowed_rc('row')
+
+    def __min_rc_in_cr(self, idx, cr):
+        """
+        The abstracted method for `min_column_in_row` and `min_row_in_column`.
+        :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
+        :param idx: `int` indicating which column/row to search through
+        """
+        rc = 'column' if cr == 'row' else 'row'
+        if self.type == SHEET_TYPE_OBJECT:
+            raise UnsupportedOperationException('Chartsheet does not have min ' + rc)
+
+        content_cells = self.__get_non_empty_cells()
+        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
+        return -1 if len(content_cells) == 0 else min(content_cells)
 
     def min_column_in_row(self, row):
         """
         Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
+        return self.__min_rc_in_cr(row, 'row')
+
+    def min_row_in_column(self, column):
+        """
+        Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        return self.__min_rc_in_cr(column, 'column')
+
+    def __min_rc(self, rc):
+        """
+        The abstracted method for `min_column` and `min_row`.
+        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        """
         if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min column')
+            raise UnsupportedOperationException('Chartsheet does not have min ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
-        content_cells = [c.column for c in content_cells if c.row == row]
-        return -1 if len(content_cells) == 0 else min(content_cells)
+        return -1 if len(content_cells) == 0 else min(getattr(cell.Cell(c, self), rc) for c in content_cells)
 
     @property
     def min_column(self):
@@ -180,10 +220,7 @@ class Sheet:
         The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min column')
-        content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else min([cell.Cell(c, self).column for c in content_cells])
+        return self.__min_rc('column')
 
     @property
     def min_row(self):
@@ -191,10 +228,7 @@ class Sheet:
         The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min row')
-        content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else min([cell.Cell(c, self).row for c in content_cells])
+        return self.__min_rc('row')
 
     def calculate_dimension(self):
         '''
@@ -208,32 +242,29 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
 
-    def min_row_in_column(self, column):
+    def __is_valid_rc(self, idx, rc):
         """
-        Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
-        UnsupportedOperationException when the sheet is a chartsheet.
+        The abstracted method for `is_valid_column` and `is_valid_row`.
+        :param idx: The column or row.
+        :param rc: A string indiciating whether this is for a `"column"` or `"row"`.
+        :return: bool
         """
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min row')
-
-        content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
-        content_cells = [c.row for c in content_cells if c.column == column]
-        return -1 if len(content_cells) == 0 else min(content_cells)
+        max_allowed = 'max_allowed_'+rc
+        return 0 <= idx <= getattr(self, max_allowed)
 
     def is_valid_column(self, column):
         """
         Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns False
         :return: bool
         """
-        return 0 <= column <= self.max_allowed_column
+        return self.__is_valid_rc(column, 'column')
 
     def is_valid_row(self, row):
         """
         Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns False
         :return: bool
         """
-        return 0 <= row <= self.max_allowed_row
+        return self.__is_valid_rc(row, 'row')
 
     def cell(self, row_idx, col_idx, create=True):
         '''
@@ -307,6 +338,42 @@ class Sheet:
         else:
             return cells
 
+    def __get_rc(self, rc, idx, min_cr, max_cr, create_cells):
+        """
+        The abstracted method for `get_column` and `get_row`.
+        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        """
+        cr = 'row' if rc == 'column' else 'column'
+        rc_attr = rc[:3].title()
+        cr_attr = cr[:3].title()
+        if not self.__is_valid_rc(idx, rc):
+            raise IndexError(rc.title() + ' (' + str(idx) + ') is out of allowed bounds of [0, '
+                             + str(self.__max_allowed_rc(rc)) + ']')
+
+        if not self.__is_valid_rc(min_cr, cr):
+            raise IndexError('Min ' + cr + ' (' + str(min_cr) + ') is out of allowed bounds of [0, '
+                             + str(self.__max_allowed_rc(cr)) + ']')
+
+        if max_cr is not None and not self.__is_valid_rc(max_cr, cr):
+            raise IndexError('Max ' + cr + ' (' + str(max_cr) + ') is out of allowed bounds of [0, '
+                             + str(self.__max_allowed_rc(cr)) + ']')
+        elif max_cr is None:
+            max_cr = self.__max_rc_in_cr(idx, rc)
+            if max_cr == -1:
+                max_cr = self.__max_allowed_rc(cr)
+
+        existing_cells = self.__get_cells().xpath(
+                './gnm:Cell[@' + rc_attr + '="' + str(idx)
+                + '" and "' + str(min_cr) + '"<=@' + cr_attr + ' and @' + cr_attr + '<="' + str(max_cr) + '"]',
+                namespaces=self.__workbook._ns)
+        cells = self.__sort_cell_elements(existing_cells, False)
+
+        if create_cells:
+            cell_map = dict([(getattr(c, cr), c) for c in cells])
+            return (cell_map[i] if i in cell_map else self.cell(i, idx) for i in range(min_cr, max_cr + 1))
+        else:
+            return (c for c in cells)
+
     def get_column(self, column, min_row=0, max_row=None, create_cells=False):
         """
         Get the cells in the specified column (index starting at 0).
@@ -323,33 +390,7 @@ class Sheet:
         outside the valid range for rows.
         :return: generator
         """
-        if not self.is_valid_column(column):
-            raise IndexError('Column (' + str(column) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_column) + ']')
-
-        if not self.is_valid_row(min_row):
-            raise IndexError('Min row (' + str(min_row) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_row) + ']')
-
-        if max_row is not None and not self.is_valid_row(max_row):
-            raise IndexError('Max row (' + str(max_row) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_row) + ']')
-        elif max_row is None:
-            max_row = self.max_row_in_column(column)
-            if max_row == -1:
-                max_row = self.max_allowed_row
-
-        existing_cells = self.__get_cells().xpath(
-                './gnm:Cell[@Col="' + str(column)
-                + '" and "' + str(min_row) + '"<=@Row and @Row<="' + str(max_row) + '"]',
-                namespaces=self.__workbook._ns)
-        cells = self.__sort_cell_elements(existing_cells, False)
-
-        if create_cells:
-            cell_map = dict([(c.row, c) for c in cells])
-            return (cell_map[i] if i in cell_map else self.cell(i, column) for i in range(min_row, max_row + 1))
-        else:
-            return (c for c in cells)
+        return self.__get_rc('column', column, min_row, max_row, create_cells)
 
     def get_row(self, row, min_col=0, max_col=None, create_cells=False):
         """
@@ -367,32 +408,7 @@ class Sheet:
         the valid range for columns.
         :return: generator
         """
-        if not self.is_valid_row(row):
-            raise IndexError('Row (' + str(row) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_row) + ']')
-
-        if not self.is_valid_column(min_col):
-            raise IndexError('Min column (' + str(min_col) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_column) + ']')
-
-        if max_col is not None and not self.is_valid_column(max_col):
-            raise IndexError('Max column (' + str(max_col) + ') is out of allowed bounds of [0, '
-                             + str(self.max_allowed_column) + ']')
-        elif max_col is None:
-            max_col = self.max_column_in_row(row)
-            if max_col == -1:
-                max_col = self.max_allowed_column
-
-        existing_cells = self.__get_cells().xpath(
-                './gnm:Cell[@Row="' + str(row) + '" and "' + str(min_col) + '"<=@Col and @Col<="' + str(max_col) + '"]',
-                namespaces=self.__workbook._ns)
-        cells = self.__sort_cell_elements(existing_cells, False)
-
-        if create_cells:
-            cell_map = dict([(c.column, c) for c in cells])
-            return (cell_map[i] if i in cell_map else self.cell(row, i) for i in range(min_col, max_col + 1))
-        else:
-            return (c for c in cells)
+        return self.__get_rc('row', row, min_col, max_col, create_cells)
 
     def get_expression_map(self):
         """

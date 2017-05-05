@@ -810,7 +810,7 @@ class SheetTests(unittest.TestCase):
     def test_get_row_and_create_cells_will_return_all_cells_in_sorted_order(self):
         ws = self.wb.create_sheet('Title')
 
-        cell = ws.cell(2, 0)
+        cell = ws.cell(2, 2)
         cell.value = "3:C"
         cell = ws.cell(0, 3)
         cell.value = "1:D"
