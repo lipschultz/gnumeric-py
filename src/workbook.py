@@ -352,6 +352,9 @@ class Workbook:
         '''
         return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_REGULAR]
 
+    def __str__(self):
+        return 'Workbook' + str(self.sheetnames)
+
     def save(self, filepath, compress=9):
         '''
         Save the workbook to `filepath`.
