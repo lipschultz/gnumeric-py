@@ -237,6 +237,8 @@ class Workbook:
         elif isinstance(sheet, Sheet):
             return self.set_active_sheet(self.get_index(sheet))
 
+    active = property(get_active_sheet, set_active_sheet)
+
     def get_sheet_by_index(self, index):
         '''
         Get the sheet at the specified index.
