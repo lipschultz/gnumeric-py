@@ -266,6 +266,33 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
         self.assertEqual(wb.version, '1.12.28')
 
+    def test_getting_active_sheet(self):
+        self.assertEqual(self.loaded_wb.get_active_sheet(), self.loaded_wb.get_sheet_by_name('Expressions'))
+
+    def test_getting_active_sheet_from_empty_workbook(self):
+        self.assertIsNone(self.wb.get_active_sheet())
+
+    def test_setting_active_sheet_by_index(self):
+        self.wb.create_sheet("Sheet1")
+        ws = self.wb.create_sheet("Sheet2")
+        self.wb.create_sheet("Sheet3")
+        self.wb.set_active_sheet(1)
+        self.assertEqual(self.wb.get_active_sheet(), ws)
+
+    def test_setting_active_sheet_by_name(self):
+        self.wb.create_sheet("Sheet1")
+        ws = self.wb.create_sheet("Sheet2")
+        self.wb.create_sheet("Sheet3")
+        self.wb.set_active_sheet("Sheet2")
+        self.assertEqual(self.wb.get_active_sheet(), ws)
+
+    def test_setting_active_sheet_by_sheet(self):
+        self.wb.create_sheet("Sheet1")
+        ws = self.wb.create_sheet("Sheet2")
+        self.wb.create_sheet("Sheet3")
+        self.wb.set_active_sheet(ws)
+        self.assertEqual(self.wb.get_active_sheet(), ws)
+
 
 class SheetTests(unittest.TestCase):
     def setUp(self):

@@ -155,6 +155,9 @@ class Workbook:
     def __sheet_elements(self):
         return self.__root.find('gnm:Sheets', self._ns)
 
+    def __get_ui_data_element(self):
+        return self.__root.find('gnm:UIData', self._ns)
+
     @property
     def version(self):
         version = self.__root.find('gnm:Version', self._ns)
@@ -211,6 +214,28 @@ class Workbook:
         ws = Sheet(sheet_name_element, sheet_element, self)
         ws.title = title
         return ws
+
+    def get_active_sheet(self):
+        """
+        The sheet that is selected, or active, in the workbook.
+        :return: `sheet`
+        """
+        if len(self) == 0:
+            return None
+        else:
+            return self.get_sheet_by_index(int(self.__get_ui_data_element().get('SelectedTab')))
+
+    def set_active_sheet(self, sheet):
+        """
+        Given a sheet, set it as the active sheet in the workbook.
+        :param sheet: An `int` (the sheet's index), a `str` (the name of the sheet), or a `Sheet` object
+        """
+        if isinstance(sheet, int):
+            self.__get_ui_data_element().set('SelectedTab', str(sheet))
+        elif isinstance(sheet, str):
+            return self.set_active_sheet(self.sheetnames.index(sheet))
+        elif isinstance(sheet, Sheet):
+            return self.set_active_sheet(self.get_index(sheet))
 
     def get_sheet_by_index(self, index):
         '''

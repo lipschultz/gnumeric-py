@@ -51,6 +51,9 @@ def test_order_of_cells_in_worksheet_does_not_matter(out_dir):
 def test_assigning_wrong_value_type_to_cell(out_dir):
     pass
 
+def test_saving_workbook_with_no_sheets(out_dir):
+    pass
+
 
 if __name__ == '__main__':
     test_dir = 'test_output'
