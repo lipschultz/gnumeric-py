@@ -50,6 +50,13 @@ class Cell:
         return int(self.__cell.get('Row'))
 
     @property
+    def coordinate(self):
+        """
+        The (row, column) of the cell.
+        """
+        return self.row, self.column
+
+    @property
     def text(self):
         '''
         Returns the raw value stored in the cell.  The text will be `None` if the cell is empty.

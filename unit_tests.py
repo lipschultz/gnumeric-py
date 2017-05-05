@@ -985,3 +985,9 @@ class CellTests(unittest.TestCase):
         test_cell1 = self.ws.cell(0, 0)
         test_cell2 = self.ws.cell(1, 0)
         self.assertFalse(test_cell1 == test_cell2)
+
+    def test_cell_coordinate(self):
+        row = 6
+        col = 4
+        c = self.ws.cell(row, col)
+        self.assertEqual(c.coordinate, (row, col))
