@@ -93,16 +93,17 @@ class Sheet:
         '''
         return self._sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
-    def __max_rc(self, rc):
+    def __maxmin_rc(self, rc, mm_fn):
         """
-        The abstracted method for `max_column` and `max_row`.
+        The abstracted method for `max_column`, `max_row`, `min_column`, and `min_row`
         :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        :param mm_fn: The function for whether to get the max or the min.
         """
         if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max ' + rc)
+            raise UnsupportedOperationException('Chartsheet does not have ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else max(getattr(cell.Cell(c, self), rc) for c in content_cells)
+        return -1 if len(content_cells) == 0 else mm_fn(getattr(cell.Cell(c, self), rc) for c in content_cells)
 
     @property
     def max_column(self):
@@ -110,7 +111,7 @@ class Sheet:
         The maximum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
-        return self.__max_rc('column')
+        return self.__maxmin_rc('column', max)
 
     @property
     def max_row(self):
@@ -118,36 +119,67 @@ class Sheet:
         The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         '''
-        return self.__max_rc('row')
+        return self.__maxmin_rc('row', max)
 
-    def __max_rc_in_cr(self, cr, idx):
+    @property
+    def min_column(self):
+        '''
+        The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
+        :return: `int`
+        '''
+        return self.__maxmin_rc('column', min)
+
+    @property
+    def min_row(self):
+        '''
+        The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
+        :return: `int`
+        '''
+        return self.__maxmin_rc('row', min)
+
+    def __maxmin_rc_in_cr(self, cr, mm_fn, idx):
         """
         The abstracted method for `max_column_in_row` and `max_row_in_column`.
         :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
+        :param mm_fn: The function for whether to get the max or the min.
         :param idx: `int` indicating which column/row to search through
         """
         rc = 'column' if cr == 'row' else 'row'
         if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have max ' + rc)
+            raise UnsupportedOperationException('Chartsheet does not have ' + rc)
 
         content_cells = self.__get_non_empty_cells()
         content_cells = [cell.Cell(c, self) for c in content_cells]
         content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
-        return -1 if len(content_cells) == 0 else max(content_cells)
+        return -1 if len(content_cells) == 0 else mm_fn(content_cells)
 
     def max_column_in_row(self, row):
         """
         Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__max_rc_in_cr('row', row)
+        return self.__maxmin_rc_in_cr('row', max, row)
 
     def max_row_in_column(self, column):
         """
         Get the last row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__max_rc_in_cr('column', column)
+        return self.__maxmin_rc_in_cr('column', max, column)
+
+    def min_column_in_row(self, row):
+        """
+        Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        return self.__maxmin_rc_in_cr('row', min, row)
+
+    def min_row_in_column(self, column):
+        """
+        Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
+        UnsupportedOperationException when the sheet is a chartsheet.
+        """
+        return self.__maxmin_rc_in_cr('column', min, column)
 
     def __max_allowed_rc(self, rc):
         """
@@ -173,62 +205,6 @@ class Sheet:
         :return: `int`
         """
         return self.__max_allowed_rc('row')
-
-    def __min_rc_in_cr(self, cr, idx):
-        """
-        The abstracted method for `min_column_in_row` and `min_row_in_column`.
-        :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
-        :param idx: `int` indicating which column/row to search through
-        """
-        rc = 'column' if cr == 'row' else 'row'
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min ' + rc)
-
-        content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
-        content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
-        return -1 if len(content_cells) == 0 else min(content_cells)
-
-    def min_column_in_row(self, row):
-        """
-        Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
-        UnsupportedOperationException when the sheet is a chartsheet.
-        """
-        return self.__min_rc_in_cr('row', row)
-
-    def min_row_in_column(self, column):
-        """
-        Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
-        UnsupportedOperationException when the sheet is a chartsheet.
-        """
-        return self.__min_rc_in_cr('column', column)
-
-    def __min_rc(self, rc):
-        """
-        The abstracted method for `min_column` and `min_row`.
-        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
-        """
-        if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have min ' + rc)
-
-        content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else min(getattr(cell.Cell(c, self), rc) for c in content_cells)
-
-    @property
-    def min_column(self):
-        '''
-        The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
-        :return: `int`
-        '''
-        return self.__min_rc('column')
-
-    @property
-    def min_row(self):
-        '''
-        The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
-        :return: `int`
-        '''
-        return self.__min_rc('row')
 
     def calculate_dimension(self):
         '''
@@ -358,7 +334,7 @@ class Sheet:
             raise IndexError('Max ' + cr + ' (' + str(max_cr) + ') is out of allowed bounds of [0, '
                              + str(self.__max_allowed_rc(cr)) + ']')
         elif max_cr is None:
-            max_cr = self.__max_rc_in_cr(rc, idx)
+            max_cr = self.__maxmin_rc_in_cr(rc, max, idx)
             if max_cr == -1:
                 max_cr = self.__max_allowed_rc(cr)
 
