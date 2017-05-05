@@ -120,7 +120,7 @@ class Sheet:
         '''
         return self.__max_rc('row')
 
-    def __max_rc_in_cr(self, idx, cr):
+    def __max_rc_in_cr(self, cr, idx):
         """
         The abstracted method for `max_column_in_row` and `max_row_in_column`.
         :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
@@ -140,14 +140,14 @@ class Sheet:
         Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__max_rc_in_cr(row, 'row')
+        return self.__max_rc_in_cr('row', row)
 
     def max_row_in_column(self, column):
         """
         Get the last row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__max_rc_in_cr(column, 'column')
+        return self.__max_rc_in_cr('column', column)
 
     def __max_allowed_rc(self, rc):
         """
@@ -174,7 +174,7 @@ class Sheet:
         """
         return self.__max_allowed_rc('row')
 
-    def __min_rc_in_cr(self, idx, cr):
+    def __min_rc_in_cr(self, cr, idx):
         """
         The abstracted method for `min_column_in_row` and `min_row_in_column`.
         :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
@@ -194,14 +194,14 @@ class Sheet:
         Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__min_rc_in_cr(row, 'row')
+        return self.__min_rc_in_cr('row', row)
 
     def min_row_in_column(self, column):
         """
         Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
-        return self.__min_rc_in_cr(column, 'column')
+        return self.__min_rc_in_cr('column', column)
 
     def __min_rc(self, rc):
         """
@@ -242,7 +242,7 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
 
-    def __is_valid_rc(self, idx, rc):
+    def __is_valid_rc(self, rc, idx):
         """
         The abstracted method for `is_valid_column` and `is_valid_row`.
         :param idx: The column or row.
@@ -257,14 +257,14 @@ class Sheet:
         Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns False
         :return: bool
         """
-        return self.__is_valid_rc(column, 'column')
+        return self.__is_valid_rc('column', column)
 
     def is_valid_row(self, row):
         """
         Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns False
         :return: bool
         """
-        return self.__is_valid_rc(row, 'row')
+        return self.__is_valid_rc('row', row)
 
     def cell(self, row_idx, col_idx, create=True):
         '''
@@ -346,19 +346,19 @@ class Sheet:
         cr = 'row' if rc == 'column' else 'column'
         rc_attr = rc[:3].title()
         cr_attr = cr[:3].title()
-        if not self.__is_valid_rc(idx, rc):
+        if not self.__is_valid_rc(rc, idx):
             raise IndexError(rc.title() + ' (' + str(idx) + ') is out of allowed bounds of [0, '
                              + str(self.__max_allowed_rc(rc)) + ']')
 
-        if not self.__is_valid_rc(min_cr, cr):
+        if not self.__is_valid_rc(cr, min_cr):
             raise IndexError('Min ' + cr + ' (' + str(min_cr) + ') is out of allowed bounds of [0, '
                              + str(self.__max_allowed_rc(cr)) + ']')
 
-        if max_cr is not None and not self.__is_valid_rc(max_cr, cr):
+        if max_cr is not None and not self.__is_valid_rc(cr, max_cr):
             raise IndexError('Max ' + cr + ' (' + str(max_cr) + ') is out of allowed bounds of [0, '
                              + str(self.__max_allowed_rc(cr)) + ']')
         elif max_cr is None:
-            max_cr = self.__max_rc_in_cr(idx, rc)
+            max_cr = self.__max_rc_in_cr(rc, idx)
             if max_cr == -1:
                 max_cr = self.__max_allowed_rc(cr)
 
