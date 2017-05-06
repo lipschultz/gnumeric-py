@@ -500,8 +500,7 @@ class SheetTests(unittest.TestCase):
     def test_get_expression_map_from_worksheet_with_expressions(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
         expected_map = {'1': ((1, 1), '=sum(A2:A10)'),
-                        '2': ((2, 1), '=counta(A$1:A$65536)'),
-                        '3': ((3, 1), '=product(BoundingRegion!D7:J13)')
+                        '2': ((2, 1), '=counta(A$1:A$65536)')
                         }
         self.assertEqual(ws.get_expression_map(), expected_map)
 
@@ -1012,6 +1011,10 @@ class CellTests(unittest.TestCase):
         col = 4
         c = self.ws.cell(row, col)
         self.assertEqual(c.coordinate, (row, col))
+
+    def test_get_text_format(self):
+        ws = self.loaded_wb.get_sheet_by_name('Mine & Yours Sheet[s]!')
+        self.assertEqual(ws.cell(0, 0).text_format, '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
 
 
 class BasicUtilityTests(unittest.TestCase):

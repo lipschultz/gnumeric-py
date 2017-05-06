@@ -31,10 +31,11 @@ VALUE_TYPE_ARRAY = 80
 
 
 class Cell:
-    def __init__(self, cell_element, styles_element, worksheet):
+    def __init__(self, cell_element, style_element, worksheet, ns):
         self.__cell = cell_element
-        self.__styles = styles_element
+        self.__style = style_element
         self.__worksheet = worksheet
+        self.__ns = ns
 
     @property
     def column(self):
@@ -155,6 +156,13 @@ class Cell:
         self.__set_type(value_type)
 
     value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
+
+    @property
+    def text_format(self):
+        """
+        The format string used to format the text in the cell for display.  This is the "Number Format" in Gnumeric.
+        """
+        return self.__style.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0]
 
     def __str__(self):
         return repr(self.value)

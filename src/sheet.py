@@ -60,6 +60,13 @@ class Sheet:
     def __get_styles(self):
         return self.__sheet.xpath('./gnm:Styles', namespaces=self.__workbook._ns)[0]
 
+    def __get_cell_style(self, cell_element):
+        row = cell_element.get('Row')
+        col = cell_element.get('Col')
+        return self.__get_styles().xpath('./gnm:StyleRegion[@startCol<="' + col + '" and "' + col + '"<=@endCol '
+                                         +'and @startRow<="' + row + '" and "' + row + '"<=@endRow]',
+                                         namespaces=self.__workbook._ns)[0]
+
     def __create_and_get_new_cell(self, row_idx, col_idx):
         '''
         Creates a new cell, adds it to the worksheet, and returns it.
@@ -72,7 +79,7 @@ class Sheet:
         return new_cell
 
     def __cell_element_to_class(self, element):
-        return cell.Cell(element, self.__get_styles(), self)
+        return cell.Cell(element, self.__get_cell_style(element), self, self.__workbook._ns)
 
     __ce2c = __cell_element_to_class
 
