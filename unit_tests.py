@@ -22,7 +22,7 @@ from datetime import datetime
 from dateutil.tz import tzutc
 
 from src.workbook import Workbook
-from src import sheet, cell
+from src import sheet, cell, utils
 from src.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
 
 
@@ -716,7 +716,7 @@ class SheetTests(unittest.TestCase):
         cell.value = "2:A"
 
         col = ws.get_column(0, max_row=10, create_cells=True)
-        self.assertEquals([c.text for c in col], ["1:A", "2:A", None, "4:A"] + [None]*7)
+        self.assertEquals([c.text for c in col], ["1:A", "2:A", None, "4:A"] + [None] * 7)
 
     def test_max_row_in_empty_row_is_negative_one(self):
         ws = self.wb.create_sheet('Title')
@@ -820,7 +820,7 @@ class SheetTests(unittest.TestCase):
         cell.value = "1:B"
 
         row = ws.get_row(0, max_col=10, create_cells=True)
-        self.assertEquals([r.text for r in row], ["1:A", "1:B", None, "1:D"] + [None]*7)
+        self.assertEquals([r.text for r in row], ["1:A", "1:B", None, "1:D"] + [None] * 7)
 
     def test_max_column_in_empty_row_is_negative_one(self):
         ws = self.wb.create_sheet('Title')
@@ -992,3 +992,37 @@ class CellTests(unittest.TestCase):
         col = 4
         c = self.ws.cell(row, col)
         self.assertEqual(c.coordinate, (row, col))
+
+
+class BasicUtilityTests(unittest.TestCase):
+    def test_column_index_to_letter_works_for_single_char_columns(self):
+        name = utils.column_index_to_letter(3)
+        self.assertEqual(name, 'D')
+
+    def test_column_index_to_letter_works_for_multi_char_columns(self):
+        name = utils.column_index_to_letter(30)
+        self.assertEqual(name, 'AE')
+
+    def test_column_index_to_letter_raises_IndexError_when_negative_column_given(self):
+        with self.assertRaises(IndexError):
+            utils.column_index_to_letter(-3)
+
+    def test_column_index_to_letter_returns_absolute_when_absolute_ref_requested(self):
+        name = utils.column_index_to_letter(30, True)
+        self.assertEqual(name, '$AE')
+
+    def test_column_letter_to_index_works_for_single_char_columns(self):
+        idx = utils.column_letter_to_index('D')
+        self.assertEqual(idx, 3)
+
+    def test_column_letter_to_index_works_for_multi_char_columns(self):
+        idx = utils.column_letter_to_index('AE')
+        self.assertEqual(idx, 30)
+
+    def test_column_letter_to_index_raises_IndexError_when_non_alphabetic_character_in_name(self):
+        with self.assertRaises(IndexError):
+            print(utils.column_letter_to_index('A:E'))
+
+    def test_column_letter_to_index_ignores_absolute_references(self):
+        idx = utils.column_letter_to_index('$A$E')
+        self.assertEqual(idx, 30)
