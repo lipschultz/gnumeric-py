@@ -1028,15 +1028,21 @@ class BasicUtilityTests(unittest.TestCase):
         self.assertEqual(idx, 30)
 
     def test_row_to_spreadsheet_converts_valid_values(self):
-        self.assertEqual(utils.row_to_spreadsheet(16), 17)
+        self.assertEqual(utils.row_to_spreadsheet(16), '17')
+
+    def test_row_to_spreadsheet_creates_absolute_reference(self):
+        self.assertEqual(utils.row_to_spreadsheet(16, True), '$17')
 
     def test_row_to_spreadsheet_raises_exception_on_less_than_0(self):
         with self.assertRaises(IndexError):
             utils.row_to_spreadsheet(-1)
 
     def test_row_from_spreadsheet_converts_valid_values(self):
-        self.assertEqual(utils.row_from_spreadsheet(15), 14)
+        self.assertEqual(utils.row_from_spreadsheet('15'), 14)
+
+    def test_row_from_spreadsheet_ignores_absolute_reference(self):
+        self.assertEqual(utils.row_from_spreadsheet('$15'), 14)
 
     def test_row_from_spreadsheet_raises_exception_on_less_than_1(self):
         with self.assertRaises(IndexError):
-            utils.row_from_spreadsheet(0)
+            utils.row_from_spreadsheet('0')

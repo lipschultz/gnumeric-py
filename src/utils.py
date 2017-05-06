@@ -52,16 +52,18 @@ def column_from_spreadsheet(col_letter):
     return index - 1
 
 
-def row_to_spreadsheet(row):
+def row_to_spreadsheet(row, abs_ref=False):
     """
-    Convert a 0-indexed row index into the standard spreadsheet row (which is 1-indexed).
+    Convert a 0-indexed row index into the standard spreadsheet row (which is 1-indexed).  If `abs_ref` is True, then
+    the returned value will be an absolute reference to the row.
 
     Raises `IndexError` if row is less than 1.
     """
     if row < 0:
         raise IndexError('row must be greater than or equal to 0')
 
-    return row + 1
+    abs_ref = '$' if abs_ref else ''
+    return abs_ref + str(row + 1)
 
 
 def row_from_spreadsheet(row):
@@ -70,6 +72,7 @@ def row_from_spreadsheet(row):
 
     Raises `IndexError` if row is less than 1.
     """
+    row = int(row.replace('$', ''))
     if row < 1:
         raise IndexError('row must be greater than or equal to 1')
 
