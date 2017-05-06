@@ -891,8 +891,9 @@ class CellTests(unittest.TestCase):
                 expected_type = cell.VALUE_TYPE_EMPTY
 
             test_cell = ws.cell(row, 1)
-            self.assertEqual(test_cell.type, expected_type, str(test_cell.text) + ' (row=' + str(row) + ') has type '
-                             + str(test_cell.type) + ', but expected ' + str(expected_type))
+            self.assertEqual(test_cell.value_type, expected_type,
+                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
+                             + ', but expected ' + str(expected_type))
 
     def test_get_cell_values(self):
         ws = self.loaded_wb.get_sheet_by_name('CellTypes')
@@ -900,81 +901,81 @@ class CellTests(unittest.TestCase):
             test_cell = ws.cell(row, 1)
 
             expected_value = test_cell.text
-            if test_cell.type == cell.VALUE_TYPE_INTEGER:
+            if test_cell.value_type == cell.VALUE_TYPE_INTEGER:
                 expected_value = int(expected_value)
-            elif test_cell.type == cell.VALUE_TYPE_FLOAT:
+            elif test_cell.value_type == cell.VALUE_TYPE_FLOAT:
                 expected_value = float(expected_value)
-            elif test_cell.type == cell.VALUE_TYPE_BOOLEAN:
+            elif test_cell.value_type == cell.VALUE_TYPE_BOOLEAN:
                 expected_value = bool(expected_value)
-            elif test_cell.type == cell.VALUE_TYPE_EMPTY:
+            elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
                 expected_value = None
 
             self.assertEqual(test_cell.get_value(), expected_value,
-                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.type)
+                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
                              + ', but expected ' + str(expected_value))
 
     def test_set_cell_value_infer_bool(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(True)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_BOOLEAN)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_BOOLEAN)
 
     def test_set_cell_value_infer_int(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(10)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_INTEGER)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_INTEGER)
 
     def test_set_cell_value_infer_float(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(10.0)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_FLOAT)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_FLOAT)
 
     def test_new_cell_is_empty(self):
         test_cell = self.ws.cell(0, 0)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_EMPTY)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_EMPTY)
 
     def test_set_cell_value_infer_empty_from_empty_string(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_EMPTY)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_EMPTY)
 
     def test_set_cell_value_infer_empty_from_None(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(None)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_EMPTY)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_EMPTY)
 
     def test_set_cell_value_infer_expression(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('=max()')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_EXPR)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_EXPR)
 
     def test_set_cell_value_infer_string(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('asdf')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
 
     def test_cell_type_changes_when_value_changes(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('asdf')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
         test_cell.set_value(17)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_INTEGER)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_INTEGER)
 
     def test_save_int_into_cell_value_using_keep_when_cell_value_is_string(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value('asdf')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
         test_cell.set_value(17, value_type='keep')
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
 
     def test_explicitly_setting_value_type_uses_that_value_type(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.set_value(17, cell.VALUE_TYPE_STRING)
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_STRING)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
 
     def test_setting_value_infers_type(self):
         test_cell = self.ws.cell(0, 0)
         test_cell.value = 17
-        self.assertEqual(test_cell.type, cell.VALUE_TYPE_INTEGER)
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_INTEGER)
 
     def test_cells_equal(self):
         test_cell1 = self.ws.cell(0, 0)

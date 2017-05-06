@@ -65,7 +65,7 @@ class Cell:
         return self.__cell.text
 
     @property
-    def type(self):
+    def value_type(self):
         '''
         Returns the type of value stored in the cell:
          - VALUE_TYPE_EXPR = -10
@@ -99,11 +99,11 @@ class Cell:
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
         '''
         value = self.text
-        if self.type == VALUE_TYPE_BOOLEAN:
+        if self.value_type == VALUE_TYPE_BOOLEAN:
             return bool(value)
-        elif self.type == VALUE_TYPE_INTEGER:
+        elif self.value_type == VALUE_TYPE_INTEGER:
             return int(value)
-        elif self.type == VALUE_TYPE_FLOAT:
+        elif self.value_type == VALUE_TYPE_FLOAT:
             return float(value)
         else:
             return value
@@ -136,13 +136,13 @@ class Cell:
                 value_type = VALUE_TYPE_EMPTY
             elif value[0] == '=':
                 value_type = VALUE_TYPE_EXPR
-            elif self.type in (
+            elif self.value_type in (
                     VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT, VALUE_TYPE_ERROR):
                 value_type = VALUE_TYPE_STRING
             else:
-                value_type = self.type
+                value_type = self.value_type
         elif value_type == 'keep':
-            value_type = self.type
+            value_type = self.value_type
 
         if value_type == VALUE_TYPE_BOOLEAN:
             self.__cell.text = str(bool(value)).upper()
