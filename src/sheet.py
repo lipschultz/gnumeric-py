@@ -36,12 +36,12 @@ class Sheet:
                                    + '" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)')
 
     def __init__(self, sheet_name_element, sheet_element, workbook):
-        self._sheet_name = sheet_name_element
-        self._sheet = sheet_element
+        self.__sheet_name = sheet_name_element
+        self.__sheet = sheet_element
         self.__workbook = workbook
 
     def __get_cells(self):
-        return self._sheet.find('gnm:Cells', self.__workbook._ns)
+        return self.__sheet.find('gnm:Cells', self.__workbook._ns)
 
     def __get_empty_cells(self):
         all_cells = self.__get_cells()
@@ -76,13 +76,21 @@ class Sheet:
         '''
         The title, or name, of the worksheet
         '''
-        return self._sheet_name.text
+        return self.__sheet_name.text
 
     def set_title(self, title):
-        sheet_name = self._sheet.find('gnm:Name', self.__workbook._ns)
-        sheet_name.text = self._sheet_name.text = title
+        sheet_name = self.__sheet.find('gnm:Name', self.__workbook._ns)
+        sheet_name.text = self.__sheet_name.text = title
 
     title = property(get_title, set_title)
+
+    def remove_from_workbook(self):
+        """
+        Delete this sheet from its workbook.  Note that after this operation, this worksheet will be in an invalid state
+        and should not be used.
+        """
+        self.__sheet_name.getparent().remove(self.__sheet_name)
+        self.__sheet.getparent().remove(self.__sheet)
 
     @property
     def type(self):
@@ -91,7 +99,7 @@ class Sheet:
          - `SHEET_TYPE_REGULAR` if a regular worksheet
          - `SHEET_TYPE_OBJECT` if an object (e.g. graph) worksheet
         '''
-        return self._sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
+        return self.__sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
     def __maxmin_rc(self, rc, mm_fn):
         """
@@ -188,7 +196,7 @@ class Sheet:
         """
         rc = 'Cols' if rc == 'column' else 'Rows'
         key = '{%s}%s' % (self.__workbook._ns['gnm'], rc)
-        return int(self._sheet_name.get(key)) - 1
+        return int(self.__sheet_name.get(key)) - 1
 
     @property
     def max_allowed_column(self):
@@ -412,13 +420,13 @@ class Sheet:
             all_cells.remove(empty_cell)
 
         # Update max col and row
-        self._sheet.find('gnm:MaxCol', self.__workbook._ns).text = str(self.max_column)
-        self._sheet.find('gnm:MaxRow', self.__workbook._ns).text = str(self.max_row)
+        self.__sheet.find('gnm:MaxCol', self.__workbook._ns).text = str(self.max_column)
+        self.__sheet.find('gnm:MaxRow', self.__workbook._ns).text = str(self.max_row)
 
     def __eq__(self, other):
         return (self.__workbook == other.__workbook and
-                self._sheet_name == other._sheet_name and
-                self._sheet == other._sheet)
+                self.__sheet_name == other.__sheet_name and
+                self.__sheet == other.__sheet)
 
     def __str__(self):
         return self.title

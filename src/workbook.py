@@ -305,12 +305,11 @@ class Workbook:
     def remove_sheet(self, ws):
         '''
         Remove the worksheet from the workbook.
+
+        Raises `WrongWorkbookException` if worksheet is not part of this workbook.
         '''
-        try:
-            self.__sheet_name_elements().remove(ws._sheet_name)
-            self.__sheet_elements().remove(ws._sheet)
-        except ValueError:
-            raise ValueError("Worksheet is not part of workbook")
+        self.get_index(ws)
+        ws.remove_from_workbook()
 
     def remove(self, ws):
         '''

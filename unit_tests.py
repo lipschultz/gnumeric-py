@@ -188,7 +188,7 @@ class WorkbookTests(unittest.TestCase):
         [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
         ws2 = wb2.create_sheet('Title2')
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(WrongWorkbookException):
             self.wb.remove_sheet(ws2)
 
     def test_deleting_worksheet_by_name(self):
@@ -863,6 +863,26 @@ class SheetTests(unittest.TestCase):
         cell.value = "1:B"
 
         self.assertEqual(ws.min_column_in_row(0), 0)
+
+    def test_removing_worksheet_deletes_it_from_workbook(self):
+        [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        orig_num_worksheets = len(self.wb)
+
+        ws2 = self.wb.get_sheet_by_name('Title2')
+
+        ws2.remove_from_workbook()
+        self.assertEqual(len(self.wb), orig_num_worksheets - 1)
+
+    def test_removing_worksheet_keeps_other_worksheets(self):
+        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(3)]
+
+        ws1 = self.wb.get_sheet_by_name('Title1')
+        ws1.remove_from_workbook()
+
+        self.assertEqual(self.wb.get_sheet_by_name('Title0'), worksheets[0])
+        self.assertEqual(self.wb.get_sheet_by_name('Title0').title, worksheets[0].title)
+        self.assertEqual(self.wb.get_sheet_by_name('Title2'), worksheets[2])
+        self.assertEqual(self.wb.get_sheet_by_name('Title2').title, worksheets[2].title)
 
 
 class CellTests(unittest.TestCase):
