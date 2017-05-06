@@ -17,14 +17,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-def column_index_to_letter(col_int, abs_ref=False):
+def column_to_spreadsheet(col_int, abs_ref=False):
     """
         Convert 0-indexed column number into standard spreadsheet notation.  For example: `30` -> `'AE'`.
 
         Raises `IndexError` when `col_int` is negative.
     """
     if col_int < 0:
-        raise IndexError('The column index must be positive: '+str(col_int))
+        raise IndexError('The column index must be positive: ' + str(col_int))
 
     column = chr((col_int % 26) + ord('A'))
     while col_int >= 26:
@@ -35,7 +35,7 @@ def column_index_to_letter(col_int, abs_ref=False):
     return '%s%s' % (abs_col, column)
 
 
-def column_letter_to_index(col_letter):
+def column_from_spreadsheet(col_letter):
     """
     Convert standard spreadsheet notation for a column into a 0-indexed column number.  For example: `'AE'` -> `30`.
 
@@ -50,3 +50,27 @@ def column_letter_to_index(col_letter):
             raise IndexError('Illegal character in column name: ' + l)
         index = index * 26 + (ord(l) - ord('A') + 1)
     return index - 1
+
+
+def row_to_spreadsheet(row):
+    """
+    Convert a 0-indexed row index into the standard spreadsheet row (which is 1-indexed).
+
+    Raises `IndexError` if row is less than 1.
+    """
+    if row < 0:
+        raise IndexError('row must be greater than or equal to 0')
+
+    return row + 1
+
+
+def row_from_spreadsheet(row):
+    """
+    Convert the standard spreadsheet row numbers (1-indexed) to 0-indexed index.
+
+    Raises `IndexError` if row is less than 1.
+    """
+    if row < 1:
+        raise IndexError('row must be greater than or equal to 1')
+
+    return row - 1
