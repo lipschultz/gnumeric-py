@@ -31,8 +31,9 @@ VALUE_TYPE_ARRAY = 80
 
 
 class Cell:
-    def __init__(self, cell_element, worksheet):
+    def __init__(self, cell_element, styles_element, worksheet):
         self.__cell = cell_element
+        self.__styles = styles_element
         self.__worksheet = worksheet
 
     @property

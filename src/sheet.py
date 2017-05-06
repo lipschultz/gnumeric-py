@@ -57,6 +57,9 @@ class Sheet:
         all_cells = self.__get_cells()
         return all_cells.xpath('./gnm:Cell[@ExprID]', namespaces=self.__workbook._ns)
 
+    def __get_styles(self):
+        return self.__sheet.xpath('./gnm:Styles', namespaces=self.__workbook._ns)[0]
+
     def __create_and_get_new_cell(self, row_idx, col_idx):
         '''
         Creates a new cell, adds it to the worksheet, and returns it.
@@ -67,6 +70,11 @@ class Sheet:
         cells = self.__get_cells()
         cells.append(new_cell)
         return new_cell
+
+    def __cell_element_to_class(self, element):
+        return cell.Cell(element, self.__get_styles(), self)
+
+    __ce2c = __cell_element_to_class
 
     @property
     def workbook(self):
@@ -111,7 +119,7 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else mm_fn(getattr(cell.Cell(c, self), rc) for c in content_cells)
+        return -1 if len(content_cells) == 0 else mm_fn(getattr(self.__ce2c(c), rc) for c in content_cells)
 
     @property
     def max_column(self):
@@ -157,7 +165,7 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        content_cells = [cell.Cell(c, self) for c in content_cells]
+        content_cells = [self.__ce2c(c) for c in content_cells]
         content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
         return -1 if len(content_cells) == 0 else mm_fn(content_cells)
 
@@ -273,7 +281,7 @@ class Sheet:
             else:
                 raise IndexError('No cell exists at position (%d, %d)' % (row_idx, col_idx))
 
-        return cell.Cell(cell_found, self)
+        return self.__ce2c(cell_found)
 
     def cell_text(self, row_idx, col_idx):
         '''
@@ -289,7 +297,7 @@ class Sheet:
 
         :returns: A list of Cell objects
         """
-        return self.__sort_cells([cell.Cell(c, self) for c in cell_elements], row_major)
+        return self.__sort_cells([self.__ce2c(c) for c in cell_elements], row_major)
 
     def __sort_cells(self, cells, row_major):
         """
@@ -316,7 +324,7 @@ class Sheet:
         else:
             cells = self.__get_non_empty_cells()
 
-        cells = [cell.Cell(c, self) for c in cells]
+        cells = [self.__ce2c(c) for c in cells]
         if sort:
             return self.__sort_cells(cells, sort == 'row')
         else:
