@@ -1046,3 +1046,16 @@ class BasicUtilityTests(unittest.TestCase):
     def test_row_from_spreadsheet_raises_exception_on_less_than_1(self):
         with self.assertRaises(IndexError):
             utils.row_from_spreadsheet('0')
+
+    def test_row_from_spreadsheet_ignores_absolute_references(self):
+        idx = utils.row_from_spreadsheet('$31')
+        self.assertEqual(idx, 30)
+
+    def test_coordinate_to_spreadsheet_using_col_param(self):
+        self.assertEqual(utils.coordinate_to_spreadsheet(17, 30, abs_ref_row=True), 'AE$18')
+
+    def test_coordinate_to_spreadsheet_using_just_coord_param(self):
+        self.assertEqual(utils.coordinate_to_spreadsheet((17, 30), abs_ref_col=True), '$AE18')
+
+    def test_coordinate_from_spreadsheet(self):
+        self.assertEqual(utils.coordinate_from_spreadsheet('AE$18'), (17, 30))

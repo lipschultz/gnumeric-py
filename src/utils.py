@@ -77,3 +77,38 @@ def row_from_spreadsheet(row):
         raise IndexError('row must be greater than or equal to 1')
 
     return row - 1
+
+
+def coordinate_to_spreadsheet(coord, col=None, abs_ref_row=False, abs_ref_col=False):
+    """
+    Convert a coordinate into spreadsheet notation.  If `col` is `None`, then `coord` is assumed to be a (row, column)
+    tuple.  If `col` is not `None`, then `coord` is the row and col is the column.
+
+    If `abs_ref_row` is True, then the resulting coordinate will have the row be an absolute reference.  Then same is
+    true for `abs_ref_col` about the column.
+
+    Example (6, 2) -> 'C7'
+    """
+    if col is None:
+        coord, col = coord
+
+    return column_to_spreadsheet(col, abs_ref_col) + row_to_spreadsheet(coord, abs_ref_row)
+
+
+def coordinate_from_spreadsheet(coord):
+    """
+    Convert a coordinate from spreadsheet notation into a (row, column) tuple.
+
+    Example `'C$7'` -> `(6, 2)`
+    """
+    coord = coord.replace('$', '')
+
+    first_row_position = None
+    i = 0
+    while first_row_position is None and i < len(coord):
+        if not coord[i].isalpha():
+            first_row_position = i
+
+        i += 1
+
+    return (row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(coord[:first_row_position]))
