@@ -91,6 +91,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -179,5 +180,5 @@ pip-selfcheck.json
 # End of https://www.gitignore.io/api/python,pycharm,virtualenv
 
 
-# Testing
+### Gnumeric-py ###
 test_output
