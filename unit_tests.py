@@ -893,6 +893,40 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(self.wb.get_sheet_by_name('Title2'), worksheets[2])
         self.assertEqual(self.wb.get_sheet_by_name('Title2').title, worksheets[2].title)
 
+    def test_removing_non_existing_cell_does_not_delete_cells(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = ws.get_cell_collection()
+        ws.delete_cell(10, 10)
+        self.assertEqual(ws.get_cell_collection(), expected_cells)
+
+    def test_removing_existing_non_expression_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = ws.get_cell_collection()
+        expected_cells.remove(ws.cell(0, 1))
+        ws.delete_cell(0, 1)
+        self.assertEqual(ws.get_cell_collection(), expected_cells)
+
+    def test_removing_non_shared_expression_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = ws.get_cell_collection()
+        expected_cells.remove(ws.cell(3, 1))
+        ws.delete_cell(3, 1)
+        self.assertEqual(ws.get_cell_collection(), expected_cells)
+
+    def test_removing_shared_expression_non_originating_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = ws.get_cell_collection()
+        expected_cells.remove(ws.cell(4, 1))
+        ws.delete_cell(4, 1)
+        self.assertEqual(ws.get_cell_collection(), expected_cells)
+
+    def test_removing_shared_expression_originating_cell_raises_exception(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = ws.get_cell_collection()
+        with self.assertRaises(UnsupportedOperationException):
+            ws.delete_cell(1, 1)
+        self.assertEqual(ws.get_cell_collection(), expected_cells)
+
 
 class CellTests(unittest.TestCase):
     def setUp(self):

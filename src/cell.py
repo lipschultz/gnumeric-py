@@ -96,7 +96,6 @@ class Cell:
         if value_type == VALUE_TYPE_EXPR:
             if 'ValueType' in self.__cell.keys():
                 self.__cell.attrib.pop('ValueType')
-                # TODO: How should expression IDs be handled?
         else:
             self.__cell.set('ValueType', str(value_type))
 
@@ -165,10 +164,10 @@ class Cell:
                 expr_id = str(max(int(k) for k in self.__worksheet.get_expression_map()) + 1)
 
             if len(value.get_all_cells()) == 1 and value.get_originating_cell() == self:
-                #copying expression over itself, so don't add it to cells using this expression
+                # copying expression over itself, so don't add it to cells using this expression
                 self.__cell.text = value.value
             else:
-                #the expression is shared, so use the expression id
+                # the expression is shared, so use the expression id
                 if len(value.get_all_cells()) == 1:
                     value.get_originating_cell().__set_expression_id(expr_id)
                 self.__cell.text = None

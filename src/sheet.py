@@ -53,6 +53,10 @@ class Sheet:
         return all_cells.xpath('./gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
                                namespaces=self.__workbook._ns)
 
+    def __get_cell_element(self, row, col):
+        cells = self.__get_cells()
+        return cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row, col), self.__workbook._ns)
+
     def __get_expression_id_cells(self):
         all_cells = self.__get_cells()
         return all_cells.xpath('./gnm:Cell[@ExprID]', namespaces=self.__workbook._ns)
@@ -280,8 +284,7 @@ class Sheet:
             raise IndexError('Column (' + str(col_idx) + ') for cell is out of allowed bounds of [0, '
                              + str(self.max_allowed_column) + ']')
 
-        cells = self.__get_cells()
-        cell_found = cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row_idx, col_idx), self.__workbook._ns)
+        cell_found = self.__get_cell_element(row_idx, col_idx)
         if cell_found is None:
             if create:
                 cell_found = self.__create_and_get_new_cell(row_idx, col_idx)
@@ -436,6 +439,21 @@ class Sheet:
             return self.__sort_cells(cells, sort == 'row')
         else:
             return cells
+
+    def delete_cell(self, row, col):
+        """
+        Deletes the cell at the specified row and column.  If the cell doesn't exist, then nothing will happen.  If the
+        cell is the originating cell for an expression, then an exception is thrown (deleting these cells is not yet
+        supported).
+        """
+        cell = self.__get_cell_element(row, col)
+        if cell is None:
+            return
+        elif cell.get('ExprID') is not None and cell.text is not None:
+            raise UnsupportedOperationException("Can't delete originating cell for an expression")
+
+        all_cells = self.__get_cells()
+        all_cells.remove(cell)
 
     def _clean_data(self):
         """
