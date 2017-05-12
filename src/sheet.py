@@ -64,7 +64,7 @@ class Sheet:
         row = cell_element.get('Row')
         col = cell_element.get('Col')
         return self.__get_styles().xpath('./gnm:StyleRegion[@startCol<="' + col + '" and "' + col + '"<=@endCol '
-                                         +'and @startRow<="' + row + '" and "' + row + '"<=@endRow]',
+                                         + 'and @startRow<="' + row + '" and "' + row + '"<=@endRow]',
                                          namespaces=self.__workbook._ns)[0]
 
     def __create_and_get_new_cell(self, row_idx, col_idx):
@@ -248,7 +248,7 @@ class Sheet:
         :param rc: A string indiciating whether this is for a `"column"` or `"row"`.
         :return: bool
         """
-        max_allowed = 'max_allowed_'+rc
+        max_allowed = 'max_allowed_' + rc
         return 0 <= idx <= getattr(self, max_allowed)
 
     def is_valid_column(self, column):
@@ -421,6 +421,21 @@ class Sheet:
         cells = self.__get_expression_id_cells()
         return dict([(c.get('ExprID'), ((int(c.get('Row')), int(c.get('Col'))), c.text)) for c in cells
                      if c.text is not None])
+
+    def get_all_cells_with_expression(self, id, sort=False):
+        """
+        Returns a list of all cells referencing/using the expression with the provided id.
+
+        Use `sort` to specify whether the cells should be sorted.  If `False` (default), then no sorting will take
+        place.  If `sort` is `"row"`, then sorting will occur by row first, then by column within each row.  If `sort`
+        is `"column"`, then the opposite will happen: first sort by column, then by row within each column.
+        """
+        cells = self.__get_expression_id_cells()
+        cells = [self.__ce2c(c) for c in cells if c.get('ExprID') == id]
+        if sort:
+            return self.__sort_cells(cells, sort == 'row')
+        else:
+            return cells
 
     def _clean_data(self):
         """

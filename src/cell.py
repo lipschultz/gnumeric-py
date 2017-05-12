@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 from lxml import etree
 
 from src.exceptions import UnrecognizedCellTypeException
+from src.expression import Expression
 
 VALUE_TYPE_EXPR = -10
 VALUE_TYPE_EMPTY = 10
@@ -36,6 +37,9 @@ class Cell:
         self.__style = style_element
         self.__worksheet = worksheet
         self.__ns = ns
+
+    def __set_expression_id(self, expr_id):
+        self.__cell.set('ExprID', expr_id)
 
     @property
     def column(self):
@@ -107,6 +111,8 @@ class Cell:
             return int(value)
         elif self.value_type == VALUE_TYPE_FLOAT:
             return float(value)
+        elif self.value_type == VALUE_TYPE_EXPR:
+            return Expression(self.__cell.get('ExprID'), self.__worksheet, self)
         else:
             return value
 
@@ -122,7 +128,7 @@ class Cell:
             - if `value` is of type `int`, then `VALUE_TYPE_INTEGER`
             - if `value` is of type `float`, then `VALUE_TYPE_FLOAT`
             - if `value` is an empty string or `None`, then `VALUE_TYPE_EMPTY`
-            - if `value` is a string and starts with `=`, then `VALUE_TYPE_EXPR`
+            - if `value` is a string that starts with `=` or is an `Expression` object, then `VALUE_TYPE_EXPR`
             - if `value` is anything else, then `VALUE_TYPE_STRING`
 
         The default `value_type` is `'infer'`.
@@ -136,10 +142,10 @@ class Cell:
                 value_type = val_types[type(value)]
             elif value in ('', None):
                 value_type = VALUE_TYPE_EMPTY
-            elif value[0] == '=':
+            elif isinstance(value, Expression) or value[0] == '=':
                 value_type = VALUE_TYPE_EXPR
-            elif self.value_type in (
-                    VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT, VALUE_TYPE_ERROR):
+            elif self.value_type in (VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
+                                     VALUE_TYPE_ERROR):
                 value_type = VALUE_TYPE_STRING
             else:
                 value_type = self.value_type
@@ -150,6 +156,23 @@ class Cell:
             self.__cell.text = str(bool(value)).upper()
         elif value_type == VALUE_TYPE_EMPTY:
             self.__cell.text = None
+        elif value_type == VALUE_TYPE_EXPR and isinstance(value, Expression):
+            if self.__worksheet != value.worksheet:
+                raise NotImplementedError('Copying expression to different worksheet is not yet supported')
+
+            expr_id = str(value.id)
+            if expr_id not in self.__worksheet.get_expression_map() and value.id is None:
+                expr_id = str(max(int(k) for k in self.__worksheet.get_expression_map()) + 1)
+
+            if len(value.get_all_cells()) == 1 and value.get_originating_cell() == self:
+                #copying expression over itself, so don't add it to cells using this expression
+                self.__cell.text = value.value
+            else:
+                #the expression is shared, so use the expression id
+                if len(value.get_all_cells()) == 1:
+                    value.get_originating_cell().__set_expression_id(expr_id)
+                self.__cell.text = None
+                self.__set_expression_id(expr_id)
         else:
             self.__cell.text = str(value)
 

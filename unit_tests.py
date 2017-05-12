@@ -21,9 +21,9 @@ from datetime import datetime
 
 from dateutil.tz import tzutc
 
-from src.workbook import Workbook
 from src import sheet, cell, utils
 from src.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
+from src.workbook import Workbook
 
 
 class WorkbookTests(unittest.TestCase):
@@ -509,6 +509,16 @@ class SheetTests(unittest.TestCase):
         expected_map = {}
         self.assertEqual(ws.get_expression_map(), expected_map)
 
+    def test_get_all_cells_with_a_specific_expression_id(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = [ws.cell(1, 1), ws.cell(4, 1)]
+        self.assertEqual(ws.get_all_cells_with_expression('1', sort='row'), expected_cells)
+
+    def test_get_all_cells_with_a_specific_expression_id_that_does_not_exist(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+        expected_cells = []
+        self.assertEqual(ws.get_all_cells_with_expression("DOESN'T EXIST", sort='row'), expected_cells)
+
     def test_get_max_allowed_column(self):
         ws = self.loaded_wb.get_sheet_by_index(0)
         self.assertEqual(ws.max_allowed_column, 255)
@@ -929,9 +939,57 @@ class CellTests(unittest.TestCase):
             elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
                 expected_value = None
 
-            self.assertEqual(test_cell.get_value(), expected_value,
-                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
-                             + ', but expected ' + str(expected_value))
+            if test_cell.value_type == cell.VALUE_TYPE_EXPR:
+                self.assertEqual(test_cell.get_value().value, expected_value)
+            else:
+                self.assertEqual(test_cell.get_value(), expected_value,
+                                 str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
+                                 + ', but expected ' + str(expected_value))
+
+    def test_get_shared_expression_value_from_originating_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=sum(A2:A10)'
+        expected_id = '1'
+        expected_originating_cell = ws.cell(1, 1)
+        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
+
+        c1 = ws.cell(1, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+
+    def test_get_shared_expression_value_from_cell_using_expression(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=sum(A2:A10)'
+        expected_id = '1'
+        expected_originating_cell = ws.cell(1, 1)
+        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
+
+        c1 = ws.cell(4, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+
+    def test_get_non_shared_expression_value(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=product(BoundingRegion!D7:J13)'
+        expected_id = None
+        expected_originating_cell = ws.cell(3, 1)
+        expected_cells = [expected_originating_cell]
+
+        c1 = ws.cell(3, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
 
     def test_set_cell_value_infer_bool(self):
         test_cell = self.ws.cell(0, 0)
@@ -1015,6 +1073,57 @@ class CellTests(unittest.TestCase):
     def test_get_text_format(self):
         ws = self.loaded_wb.get_sheet_by_name('Mine & Yours Sheet[s]!')
         self.assertEqual(ws.cell(0, 0).text_format, '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
+
+    def test_copying_shared_expression_to_new_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_originating_cell = ws.cell(1, 1)
+
+        new_cell = ws.cell(5, 5)
+        new_cell.value = expected_originating_cell.value
+
+        expected_value = expected_originating_cell.text
+        expected_id = '1'
+        expected_cells = [expected_originating_cell, ws.cell(4, 1), new_cell]
+
+        nc_val = new_cell.value
+        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.id, expected_id)
+        self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(nc_val.get_all_cells(), expected_cells)
+
+        nc_val = expected_originating_cell.value
+        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.id, expected_id)
+        self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(nc_val.get_all_cells(), expected_cells)
+
+    def test_sharing_a_non_shared_expression(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_originating_cell = ws.cell(3, 1)
+        expected_id = str(max(int(k) for k in ws.get_expression_map()) + 1)
+
+        new_cell = ws.cell(5, 5)
+        new_cell.value = expected_originating_cell.value
+
+        expected_value = expected_originating_cell.text
+        expected_cells = [expected_originating_cell, new_cell]
+
+        nc_val = new_cell.value
+        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.id, expected_id)
+        self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(nc_val.get_all_cells(), expected_cells)
+
+        nc_val = expected_originating_cell.value
+        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.id, expected_id)
+        self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(nc_val.get_all_cells(), expected_cells)
+
+    def test_deleting_originating_cell_of_shared_expression(self):
+        pass
 
 
 class BasicUtilityTests(unittest.TestCase):
