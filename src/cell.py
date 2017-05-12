@@ -43,16 +43,16 @@ class Cell:
 
     @property
     def column(self):
-        '''
+        """
         The column this cell belongs to (0-indexed).
-        '''
+        """
         return int(self.__cell.get('Col'))
 
     @property
     def row(self):
-        '''
+        """
         The row this cell belongs to (0-indexed).
-        '''
+        """
         return int(self.__cell.get('Row'))
 
     @property
@@ -64,15 +64,15 @@ class Cell:
 
     @property
     def text(self):
-        '''
+        """
         Returns the raw value stored in the cell.  The text will be `None` if the cell is empty.
         :return: str or `None`
-        '''
+        """
         return self.__cell.text
 
     @property
     def value_type(self):
-        '''
+        """
         Returns the type of value stored in the cell:
          - VALUE_TYPE_EXPR = -10
          - VALUE_TYPE_EMPTY = 10
@@ -83,7 +83,7 @@ class Cell:
          - VALUE_TYPE_STRING = 60
          - VALUE_TYPE_CELLRANGE = 70
          - VALUE_TYPE_ARRAY = 80
-        '''
+        """
         value_type = self.__cell.get('ValueType')
         if value_type is not None:
             return int(value_type)
@@ -100,9 +100,9 @@ class Cell:
             self.__cell.set('ValueType', str(value_type))
 
     def get_value(self):
-        '''
+        """
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
-        '''
+        """
         value = self.text
         if self.value_type == VALUE_TYPE_BOOLEAN:
             return bool(value)
@@ -116,7 +116,7 @@ class Cell:
             return value
 
     def set_value(self, value, value_type='infer'):
-        '''
+        """
         Sets the value stored in the cell.
 
         If `value_type` is:
@@ -134,7 +134,7 @@ class Cell:
 
         Warning: This method does no type checking, so it is possible to save a string into a cell whose type is
         `VALUE_TYPE_INTEGER`.  This could result in problems when opening the workbook in Gnumeric.
-        '''
+        """
         val_types = {bool: VALUE_TYPE_BOOLEAN, int: VALUE_TYPE_INTEGER, float: VALUE_TYPE_FLOAT}
         if value_type == 'infer':
             if type(value) in val_types:

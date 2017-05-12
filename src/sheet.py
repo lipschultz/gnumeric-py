@@ -72,9 +72,9 @@ class Sheet:
                                          namespaces=self.__workbook._ns)[0]
 
     def __create_and_get_new_cell(self, row_idx, col_idx):
-        '''
+        """
         Creates a new cell, adds it to the worksheet, and returns it.
-        '''
+        """
         new_cell = etree.fromstring(
                 NEW_CELL % {b'row': row_idx, b'col': col_idx,
                             b'value_type': cell.VALUE_TYPE_EMPTY}).getchildren()[0]
@@ -92,9 +92,9 @@ class Sheet:
         return self.__workbook
 
     def get_title(self):
-        '''
+        """
         The title, or name, of the worksheet
-        '''
+        """
         return self.__sheet_name.text
 
     def set_title(self, title):
@@ -113,11 +113,11 @@ class Sheet:
 
     @property
     def type(self):
-        '''
+        """
         The type of sheet:
          - `SHEET_TYPE_REGULAR` if a regular worksheet
          - `SHEET_TYPE_OBJECT` if an object (e.g. graph) worksheet
-        '''
+        """
         return self.__sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
     def __maxmin_rc(self, rc, mm_fn):
@@ -134,34 +134,34 @@ class Sheet:
 
     @property
     def max_column(self):
-        '''
+        """
         The maximum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
-        '''
+        """
         return self.__maxmin_rc('column', max)
 
     @property
     def max_row(self):
-        '''
+        """
         The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
-        '''
+        """
         return self.__maxmin_rc('row', max)
 
     @property
     def min_column(self):
-        '''
+        """
         The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
-        '''
+        """
         return self.__maxmin_rc('column', min)
 
     @property
     def min_row(self):
-        '''
+        """
         The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
-        '''
+        """
         return self.__maxmin_rc('row', min)
 
     def __maxmin_rc_in_cr(self, cr, mm_fn, idx):
@@ -234,13 +234,13 @@ class Sheet:
         return self.__max_allowed_rc('row')
 
     def calculate_dimension(self):
-        '''
+        """
         The minimum bounding rectangle that contains all data in the worksheet
 
         Raises UnsupportedOperationException when the sheet is a chartsheet.
 
         :return: A four-tuple of ints: (min_row, min_col, max_row, max_col)
-        '''
+        """
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
         return (self.min_row, self.min_column, self.max_row, self.max_column)
@@ -270,13 +270,13 @@ class Sheet:
         return self.__is_valid_rc('row', row)
 
     def cell(self, row_idx, col_idx, create=True):
-        '''
+        """
         Returns a Cell object for the cell at the specific row and column.
 
         If the cell does not exist, then an empty cell will be created and returned, unless `create` is `False` (in
         which case, `IndexError` is raised).  Note that the cell will not be added to the worksheet until it is not
         empty (since Gnumeric does not seem to store empty cells).
-        '''
+        """
         if not self.is_valid_row(row_idx):
             raise IndexError('Row (' + str(row_idx) + ') for cell is out of allowed bounds of [0, '
                              + str(self.max_allowed_row) + ']')
@@ -294,9 +294,9 @@ class Sheet:
         return self.__ce2c(cell_found)
 
     def cell_text(self, row_idx, col_idx):
-        '''
+        """
         Returns a the cell's text at the specific row and column.
-        '''
+        """
         return self.cell(row_idx, col_idx, create=False).text
 
     def __sort_cell_elements(self, cell_elements, row_major):

@@ -164,16 +164,16 @@ class Workbook:
         return version.get('Full')
 
     def get_creation_date(self):
-        '''
+        """
         Date the workbook was created
-        '''
+        """
         creation_element = self.__creation_date_element()
         return dateutil.parser.parse(creation_element.text)
 
     def set_creation_date(self, creation_datetime):
-        '''
+        """
         :param creation_datetime: A datetime object representing when this workbook was created
-        '''
+        """
         creation_element = self.__creation_date_element()
         creation_element.text = creation_datetime.isoformat()
 
@@ -183,9 +183,9 @@ class Workbook:
         return len(self.__sheet_elements())
 
     def get_sheet_names(self):
-        '''
+        """
         The list of sheet names, in the order they occur in the workbook.
-        '''
+        """
         return [s.text for s in self.__sheet_name_elements()]
 
     @property
@@ -193,13 +193,13 @@ class Workbook:
         return self.get_sheet_names()
 
     def create_sheet(self, title, index=-1):
-        '''
+        """
         Create a new worksheet
         :param title: Title, or name, or worksheet
         :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
         :raises DuplicateTitleException: When a sheet with the same title already exists in the workbook
         :return: The worksheet
-        '''
+        """
         if title in self.sheetnames:
             raise DuplicateTitleException('A sheet titled "%s" already exists' % (title))
 
@@ -240,20 +240,20 @@ class Workbook:
     active = property(get_active_sheet, set_active_sheet)
 
     def get_sheet_by_index(self, index):
-        '''
+        """
         Get the sheet at the specified index.
         :raises IndexError: When index is out of bounds
-        '''
+        """
         return Sheet(self.__sheet_name_elements()[index],
                      self.__sheet_elements()[index],
                      self
                      )
 
     def get_sheet_by_name(self, name):
-        '''
+        """
         Get the sheet with the specified title/name
         :raises KeyError: When not worksheet with that name exists
-        '''
+        """
         names = self.sheetnames
         try:
             idx = names.index(name)
@@ -262,13 +262,13 @@ class Workbook:
             raise KeyError('No sheet named "%s" exists' % (name))
 
     def __getitem__(self, key):
-        '''
+        """
         Get a worksheet by name or by index.  If `key` is a string, then it is treated as a worksheet's name.  If it is
          an int, then it's treated as an index.
 
          Raises a `TypeError` if key is not and `int` or a `str`.  Can also raise the exceptions that
          `get_sheet_by_index` and `get_sheet_by_name` raise.
-        '''
+        """
         if isinstance(key, str):
             return self.get_sheet_by_name(key)
         elif isinstance(key, int):
@@ -277,9 +277,9 @@ class Workbook:
             raise TypeError("Unexpected type (%s) for key: %s" % (type(key), str(key)))
 
     def get_index(self, ws):
-        '''
+        """
         Given a worksheet, find its index in the workbook.
-        '''
+        """
         index = self.sheetnames.index(ws.title)
         if ws != self.get_sheet_by_index(index):
             raise WrongWorkbookException("The worksheet does not belong to this workbook.")
@@ -289,33 +289,33 @@ class Workbook:
         return self.get_index(ws)
 
     def remove_sheet_by_name(self, name):
-        '''
+        """
         Remove the worksheet named `name` from the workbook.  See `get_sheet_by_name` and `remove_sheet` for exceptions
         thrown.
-        '''
+        """
         self.remove_sheet(self.get_sheet_by_name(name))
 
     def remove_sheet_by_index(self, index):
-        '''
+        """
         Remove the worksheet at `index` from the workbook.  See `get_sheet_by_index` and `remove_sheet` for exceptions
         thrown.
-        '''
+        """
         self.remove_sheet(self.get_sheet_by_index(index))
 
     def remove_sheet(self, ws):
-        '''
+        """
         Remove the worksheet from the workbook.
 
         Raises `WrongWorkbookException` if worksheet is not part of this workbook.
-        '''
+        """
         self.get_index(ws)
         ws.remove_from_workbook()
 
     def remove(self, ws):
-        '''
+        """
         Remove the specified worksheet
         :param ws: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
-        '''
+        """
         if isinstance(ws, int):
             self.remove_sheet_by_index(ws)
         elif isinstance(ws, str):
@@ -324,43 +324,43 @@ class Workbook:
             self.remove_sheet(ws)
 
     def __delitem__(self, key):
-        '''
+        """
         Remove the specified worksheet
         :param key: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
-        '''
+        """
         self.remove(key)
 
     @property
     def sheets(self):
-        '''
+        """
         Get a list of all sheets in the workbook.
-        '''
+        """
         return [self.get_sheet_by_index(i) for i in range(len(self))]
 
     @property
     def chartsheets(self):
-        '''
+        """
         Get list of only the chart sheets in the workbook.
-        '''
+        """
         return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_OBJECT]
 
     @property
     def worksheets(self):
-        '''
+        """
         Get list of only the non-chart sheets in the workbook.
-        '''
+        """
         return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_REGULAR]
 
     def __str__(self):
         return 'Workbook' + str(self.sheetnames)
 
     def save(self, filepath, compress=9):
-        '''
+        """
         Save the workbook to `filepath`.
         :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still
             write it as a gzip-compressed Gnumeric file) and 9 (slowest but most compressed; default).  A `False` value
             will write a uncompressed Gnumeric file.
-        '''
+        """
         [s._clean_data() for s in self.sheets]
         xml = etree.tostring(self.__root)
         if compress:
@@ -372,9 +372,9 @@ class Workbook:
 
     @classmethod
     def load_workbook(clas, filepath):
-        '''
+        """
         Open the given filepath and return the workbook.
-        '''
+        """
         if filepath.endswith('.xml'):
             open_method = open
         else:
