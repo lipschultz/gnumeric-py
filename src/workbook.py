@@ -233,9 +233,9 @@ class Workbook:
         if isinstance(sheet, int):
             self.__get_ui_data_element().set('SelectedTab', str(sheet))
         elif isinstance(sheet, str):
-            return self.set_active_sheet(self.sheetnames.index(sheet))
+            self.set_active_sheet(self.sheetnames.index(sheet))
         elif isinstance(sheet, Sheet):
-            return self.set_active_sheet(self.get_index(sheet))
+            self.set_active_sheet(self.get_index(sheet))
 
     active = property(get_active_sheet, set_active_sheet)
 
