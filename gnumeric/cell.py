@@ -17,8 +17,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 from lxml import etree
 
-from src.exceptions import UnrecognizedCellTypeException
-from src.expression import Expression
+from gnumeric.exceptions import UnrecognizedCellTypeException
+from gnumeric.expression import Expression
 
 VALUE_TYPE_EXPR = -10
 VALUE_TYPE_EMPTY = 10

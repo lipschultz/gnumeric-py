@@ -19,8 +19,8 @@ from operator import attrgetter
 
 from lxml import etree
 
-from src import cell
-from src.exceptions import UnsupportedOperationException
+from gnumeric import cell
+from gnumeric.exceptions import UnsupportedOperationException
 
 NEW_CELL = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Cell Row="%(row)a" Col="%(col)a" ValueType="%(value_type)a"/>

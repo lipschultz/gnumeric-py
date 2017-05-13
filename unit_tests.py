@@ -21,9 +21,9 @@ from datetime import datetime
 
 from dateutil.tz import tzutc
 
-from src import sheet, cell, utils
-from src.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
-from src.workbook import Workbook
+from gnumeric import sheet, cell, utils
+from gnumeric.exceptions import DuplicateTitleException, WrongWorkbookException, UnsupportedOperationException
+from gnumeric.workbook import Workbook
 
 
 class WorkbookTests(unittest.TestCase):

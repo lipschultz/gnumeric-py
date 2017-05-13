@@ -16,7 +16,25 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from src.workbook import Workbook
+import json
+import os
+
+try:
+    here = os.path.abspath(os.path.dirname(__file__))
+    src_file = os.path.join(here, ".constants.json")
+    with open(src_file) as src:
+        constants = json.load(src)
+        __author__ = constants['__author__']
+        __author_email__ = constants["__author_email__"]
+        __license__ = constants["__license__"]
+        __maintainer_email__ = constants["__maintainer_email__"]
+        __url__ = constants["__url__"]
+        __version__ = constants["__version__"]
+except IOError:
+    # packaged
+    pass
+
+from gnumeric.workbook import Workbook
 
 
 def load_workbook(filepath):

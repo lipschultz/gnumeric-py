@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
-from src import workbook
+from gnumeric import workbook
 
 
 def write_workbook_with_one_worksheet(out_dir):

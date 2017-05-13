@@ -20,9 +20,9 @@ from lxml import etree
 import dateutil.parser
 import gzip
 
-from src import sheet
-from src.exceptions import DuplicateTitleException, WrongWorkbookException
-from src.sheet import Sheet
+from gnumeric import sheet
+from gnumeric.exceptions import DuplicateTitleException, WrongWorkbookException
+from gnumeric.sheet import Sheet
 
 EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
 <gnm:Workbook xmlns:gnm="http://www.gnumeric.org/v10.dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gnumeric.org/v9.xsd">
