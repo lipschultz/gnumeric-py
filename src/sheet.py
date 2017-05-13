@@ -269,7 +269,7 @@ class Sheet:
         """
         return self.__is_valid_rc('row', row)
 
-    def cell(self, row_idx, col_idx, create=True):
+    def cell(self, row_idx, col_idx, *, create=True):
         """
         Returns a Cell object for the cell at the specific row and column.
 
@@ -318,7 +318,7 @@ class Sheet:
         key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, include_empty=False, sort=False):
+    def get_cell_collection(self, *, include_empty=False, sort=False):
         """
         Return all cells as a list.
 
@@ -376,7 +376,7 @@ class Sheet:
         else:
             return (c for c in cells)
 
-    def get_column(self, column, min_row=0, max_row=None, create_cells=False):
+    def get_column(self, column, *, min_row=0, max_row=None, create_cells=False):
         """
         Get the cells in the specified column (index starting at 0).
 
@@ -394,7 +394,7 @@ class Sheet:
         """
         return self.__get_rc('column', column, min_row, max_row, create_cells)
 
-    def get_row(self, row, min_col=0, max_col=None, create_cells=False):
+    def get_row(self, row, *, min_col=0, max_col=None, create_cells=False):
         """
         Get the cells in the specified row (index starting at 0).
 
@@ -425,7 +425,7 @@ class Sheet:
         return dict([(c.get('ExprID'), ((int(c.get('Row')), int(c.get('Col'))), c.text)) for c in cells
                      if c.text is not None])
 
-    def get_all_cells_with_expression(self, id, sort=False):
+    def get_all_cells_with_expression(self, id, *, sort=False):
         """
         Returns a list of all cells referencing/using the expression with the provided id.
 

@@ -91,7 +91,7 @@ class Expression:
         if self.__exprid is None:
             return [self.__cell]
         else:
-            return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort)
+            return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort=sort)
 
     def __str__(self):
         return self.value

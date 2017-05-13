@@ -192,7 +192,7 @@ class Workbook:
     def sheetnames(self):
         return self.get_sheet_names()
 
-    def create_sheet(self, title, index=-1):
+    def create_sheet(self, title, *, index=-1):
         """
         Create a new worksheet
         :param title: Title, or name, or worksheet
@@ -354,7 +354,7 @@ class Workbook:
     def __str__(self):
         return 'Workbook' + str(self.sheetnames)
 
-    def save(self, filepath, compress=9):
+    def save(self, filepath, *, compress=9):
         """
         Save the workbook to `filepath`.
         :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still

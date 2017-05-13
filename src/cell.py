@@ -115,7 +115,7 @@ class Cell:
         else:
             return value
 
-    def set_value(self, value, value_type='infer'):
+    def set_value(self, value, *, value_type='infer'):
         """
         Sets the value stored in the cell.
 

@@ -74,7 +74,7 @@ class WorkbookTests(unittest.TestCase):
         titles = ['Title1', 'Title3', 'Title2']
         ws = self.wb.create_sheet(titles[0])
         ws = self.wb.create_sheet(titles[2])
-        ws = self.wb.create_sheet(titles[1], 1)
+        ws = self.wb.create_sheet(titles[1], index=1)
         self.assertEqual(self.wb.get_sheet_names(), titles)
 
     def test_creation_date_on_new_workbook(self):
@@ -434,7 +434,7 @@ class SheetTests(unittest.TestCase):
     def test_get_non_existent_cell_with_create_False_raises_exception(self):
         ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         with self.assertRaises(IndexError):
-            ws.cell(0, 2, False)
+            ws.cell(0, 2, create=False)
             # TODO: should also confirm that the cell is not created
 
     def test_get_cell_text_at_index(self):
@@ -495,7 +495,7 @@ class SheetTests(unittest.TestCase):
         c.set_value('=max(A1:A5)')
         cells.add(c)
 
-        self.assertEqual(set(ws.get_cell_collection(True)), cells)
+        self.assertEqual(set(ws.get_cell_collection(include_empty=True)), cells)
 
     def test_get_expression_map_from_worksheet_with_expressions(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
@@ -706,7 +706,7 @@ class SheetTests(unittest.TestCase):
         cell = ws.cell(1, 0)
         cell.value = "2:A"
 
-        col = ws.get_column(0, 1, 2)
+        col = ws.get_column(0, min_row=1, max_row=2)
         self.assertEquals([c.text for c in col], ["2:A"])
 
     def test_get_col_and_create_cells_will_return_all_cells_in_sorted_order(self):
@@ -813,7 +813,7 @@ class SheetTests(unittest.TestCase):
         cell = ws.cell(0, 1)
         cell.value = "1:B"
 
-        row = ws.get_row(0, 1, 2)
+        row = ws.get_row(0, min_col=1, max_col=2)
         self.assertEquals([r.text for r in row], ["1:B"])
 
     def test_get_row_and_create_cells_will_return_all_cells_in_sorted_order(self):
@@ -1080,7 +1080,7 @@ class CellTests(unittest.TestCase):
 
     def test_explicitly_setting_value_type_uses_that_value_type(self):
         test_cell = self.ws.cell(0, 0)
-        test_cell.set_value(17, cell.VALUE_TYPE_STRING)
+        test_cell.set_value(17, value_type=cell.VALUE_TYPE_STRING)
         self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_STRING)
 
     def test_setting_value_infers_type(self):
