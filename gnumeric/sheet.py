@@ -21,6 +21,7 @@ from lxml import etree
 
 from gnumeric import cell
 from gnumeric.exceptions import UnsupportedOperationException
+from gnumeric.utils import coordinate_from_spreadsheet
 
 NEW_CELL = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Cell Row="%(row)a" Col="%(col)a" ValueType="%(value_type)a"/>
@@ -292,6 +293,13 @@ class Sheet:
                 raise IndexError('No cell exists at position (%d, %d)' % (row_idx, col_idx))
 
         return self.__ce2c(cell_found)
+
+    def __getitem__(self, idx):
+        if isinstance(idx, tuple) and len(idx) == 2:
+            return self.cell(*idx)
+        elif isinstance(idx, str):
+            return self.cell(*coordinate_from_spreadsheet(idx))
+        raise IndexError('Unrecognized index: ' + repr(idx))
 
     def cell_text(self, row_idx, col_idx):
         """

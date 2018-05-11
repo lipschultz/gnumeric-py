@@ -388,6 +388,20 @@ class SheetTests(unittest.TestCase):
         self.assertEqual(c00.column, 0)
         self.assertEqual(c00.text, '2')
 
+    def test_getitem_returns_cell_at_provided_row_column(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        c00 = ws[1, 0]
+        self.assertEqual(c00.row, 1)
+        self.assertEqual(c00.column, 0)
+        self.assertEqual(c00.text, '2')
+
+    def test_getitem_returns_cell_at_specified_by_spreadsheet_notation(self):
+        ws = self.loaded_wb.get_sheet_by_name('Sheet1')
+        c00 = ws['A2']
+        self.assertEqual(c00.row, 1)
+        self.assertEqual(c00.column, 0)
+        self.assertEqual(c00.text, '2')
+
     def test_get_non_existent_cell_at_index_creates_cell_with_None_text(self):
         ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         c02 = ws.cell(0, 2)
