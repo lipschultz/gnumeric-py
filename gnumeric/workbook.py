@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 from datetime import datetime
+from typing import List, Optional, Union
+
 from lxml import etree
 import dateutil.parser
 import gzip
@@ -159,18 +161,18 @@ class Workbook:
         return self.__root.find('gnm:UIData', self._ns)
 
     @property
-    def version(self):
+    def version(self) -> str:
         version = self.__root.find('gnm:Version', self._ns)
         return version.get('Full')
 
-    def get_creation_date(self):
+    def get_creation_date(self) -> datetime:
         """
         Date the workbook was created
         """
         creation_element = self.__creation_date_element()
         return dateutil.parser.parse(creation_element.text)
 
-    def set_creation_date(self, creation_datetime):
+    def set_creation_date(self, creation_datetime: datetime) -> None:
         """
         :param creation_datetime: A datetime object representing when this workbook was created
         """
@@ -179,29 +181,29 @@ class Workbook:
 
     creation_date = property(get_creation_date, set_creation_date)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__sheet_elements())
 
-    def get_sheet_names(self):
+    def get_sheet_names(self) -> List[str]:
         """
         The list of sheet names, in the order they occur in the workbook.
         """
         return [s.text for s in self.__sheet_name_elements()]
 
     @property
-    def sheetnames(self):
+    def sheetnames(self) -> List[str]:
         return self.get_sheet_names()
 
-    def create_sheet(self, title, *, index=-1):
+    def create_sheet(self, title: str, *, index: int = -1) -> Sheet:
         """
         Create a new worksheet
-        :param title: Title, or name, or worksheet
+        :param title: Title, or name, of worksheet
         :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
         :raises DuplicateTitleException: When a sheet with the same title already exists in the workbook
         :return: The worksheet
         """
         if title in self.sheetnames:
-            raise DuplicateTitleException('A sheet titled "%s" already exists' % (title))
+            raise DuplicateTitleException('A sheet titled "%s" already exists' % title)
 
         sheet_name_element = etree.fromstring(NEW_SHEET_NAME).getchildren()[0]
         sheet_element = etree.fromstring(NEW_SHEET).getchildren()[0]
@@ -215,7 +217,7 @@ class Workbook:
         ws.title = title
         return ws
 
-    def get_active_sheet(self):
+    def get_active_sheet(self) -> Optional[Sheet]:
         """
         The sheet that is selected, or active, in the workbook.
         :return: `sheet`
@@ -225,7 +227,7 @@ class Workbook:
         else:
             return self.get_sheet_by_index(int(self.__get_ui_data_element().get('SelectedTab')))
 
-    def set_active_sheet(self, sheet):
+    def set_active_sheet(self, sheet: Union[int, str, Sheet]) -> None:
         """
         Given a sheet, set it as the active sheet in the workbook.
         :param sheet: An `int` (the sheet's index), a `str` (the name of the sheet), or a `Sheet` object
@@ -239,7 +241,7 @@ class Workbook:
 
     active = property(get_active_sheet, set_active_sheet)
 
-    def get_sheet_by_index(self, index):
+    def get_sheet_by_index(self, index: int) -> Sheet:
         """
         Get the sheet at the specified index.
         :raises IndexError: When index is out of bounds
@@ -249,7 +251,7 @@ class Workbook:
                      self
                      )
 
-    def get_sheet_by_name(self, name):
+    def get_sheet_by_name(self, name: str) -> Sheet:
         """
         Get the sheet with the specified title/name
         :raises KeyError: When not worksheet with that name exists
@@ -259,9 +261,9 @@ class Workbook:
             idx = names.index(name)
             return self.get_sheet_by_index(idx)
         except ValueError:
-            raise KeyError('No sheet named "%s" exists' % (name))
+            raise KeyError('No sheet named "%s" exists' % name)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[str, int]) -> Sheet:
         """
         Get a worksheet by name or by index.  If `key` is a string, then it is treated as a worksheet's name.  If it is
          an int, then it's treated as an index.
@@ -276,7 +278,7 @@ class Workbook:
         else:
             raise TypeError("Unexpected type (%s) for key: %s" % (type(key), str(key)))
 
-    def get_index(self, ws):
+    def get_index(self, ws: Sheet) -> int:
         """
         Given a worksheet, find its index in the workbook.
         """
@@ -285,24 +287,24 @@ class Workbook:
             raise WrongWorkbookException("The worksheet does not belong to this workbook.")
         return index
 
-    def index(self, ws):
+    def index(self, ws: Sheet) -> int:
         return self.get_index(ws)
 
-    def remove_sheet_by_name(self, name):
+    def remove_sheet_by_name(self, name: str) -> None:
         """
         Remove the worksheet named `name` from the workbook.  See `get_sheet_by_name` and `remove_sheet` for exceptions
         thrown.
         """
         self.remove_sheet(self.get_sheet_by_name(name))
 
-    def remove_sheet_by_index(self, index):
+    def remove_sheet_by_index(self, index: int) -> None:
         """
         Remove the worksheet at `index` from the workbook.  See `get_sheet_by_index` and `remove_sheet` for exceptions
         thrown.
         """
         self.remove_sheet(self.get_sheet_by_index(index))
 
-    def remove_sheet(self, ws):
+    def remove_sheet(self, ws: Sheet) -> None:
         """
         Remove the worksheet from the workbook.
 
@@ -311,7 +313,7 @@ class Workbook:
         self.get_index(ws)
         ws.remove_from_workbook()
 
-    def remove(self, ws):
+    def remove(self, ws: Union[int, str, Sheet]) -> None:
         """
         Remove the specified worksheet
         :param ws: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
@@ -323,7 +325,7 @@ class Workbook:
         else:
             self.remove_sheet(ws)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Union[int, str, Sheet]) -> None:
         """
         Remove the specified worksheet
         :param key: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
@@ -331,30 +333,30 @@ class Workbook:
         self.remove(key)
 
     @property
-    def sheets(self):
+    def sheets(self) -> List[Sheet]:
         """
         Get a list of all sheets in the workbook.
         """
         return [self.get_sheet_by_index(i) for i in range(len(self))]
 
     @property
-    def chartsheets(self):
+    def chartsheets(self) -> List[Sheet]:
         """
         Get list of only the chart sheets in the workbook.
         """
         return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_OBJECT]
 
     @property
-    def worksheets(self):
+    def worksheets(self) -> List[Sheet]:
         """
         Get list of only the non-chart sheets in the workbook.
         """
         return [s for s in self.sheets if s.type == sheet.SHEET_TYPE_REGULAR]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'Workbook' + str(self.sheetnames)
 
-    def save(self, filepath, *, compress=9):
+    def save(self, filepath: str, *, compress: int = 9) -> None:
         """
         Save the workbook to `filepath`.
         :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still
@@ -371,7 +373,7 @@ class Workbook:
                 fout.write(xml)
 
     @classmethod
-    def load_workbook(clas, filepath):
+    def load_workbook(clas, filepath: str) -> 'Workbook':
         """
         Open the given filepath and return the workbook.
         """

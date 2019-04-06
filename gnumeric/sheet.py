@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 from operator import attrgetter
+from typing import Callable, Iterable, Tuple, Union, List, Sequence, Optional, Generator, Dict
 
 from lxml import etree
 
@@ -29,6 +30,10 @@ NEW_CELL = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http:/
 
 SHEET_TYPE_REGULAR = None
 SHEET_TYPE_OBJECT = 'object'
+
+
+MaxMinFunction = Callable[[Iterable], int]
+Cell = cell.Cell
 
 
 class Sheet:
@@ -54,7 +59,7 @@ class Sheet:
         return all_cells.xpath('./gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
                                namespaces=self.__workbook._ns)
 
-    def __get_cell_element(self, row, col):
+    def __get_cell_element(self, row: int, col: int):
         cells = self.__get_cells()
         return cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row, col), self.__workbook._ns)
 
@@ -72,7 +77,7 @@ class Sheet:
                                          + 'and @startRow<="' + row + '" and "' + row + '"<=@endRow]',
                                          namespaces=self.__workbook._ns)[0]
 
-    def __create_and_get_new_cell(self, row_idx, col_idx):
+    def __create_and_get_new_cell(self, row_idx: int, col_idx: int) -> cell.Cell:
         """
         Creates a new cell, adds it to the worksheet, and returns it.
         """
@@ -83,7 +88,7 @@ class Sheet:
         cells.append(new_cell)
         return new_cell
 
-    def __cell_element_to_class(self, element):
+    def __cell_element_to_class(self, element) -> Cell:
         return cell.Cell(element, self.__get_cell_style(element), self, self.__workbook._ns)
 
     __ce2c = __cell_element_to_class
@@ -92,19 +97,19 @@ class Sheet:
     def workbook(self):
         return self.__workbook
 
-    def get_title(self):
+    def get_title(self) -> str:
         """
         The title, or name, of the worksheet
         """
         return self.__sheet_name.text
 
-    def set_title(self, title):
+    def set_title(self, title: str) -> None:
         sheet_name = self.__sheet.find('gnm:Name', self.__workbook._ns)
         sheet_name.text = self.__sheet_name.text = title
 
     title = property(get_title, set_title)
 
-    def remove_from_workbook(self):
+    def remove_from_workbook(self) -> None:
         """
         Delete this sheet from its workbook.  Note that after this operation, this worksheet will be in an invalid state
         and should not be used.
@@ -113,7 +118,7 @@ class Sheet:
         self.__sheet.getparent().remove(self.__sheet)
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         The type of sheet:
          - `SHEET_TYPE_REGULAR` if a regular worksheet
@@ -121,7 +126,7 @@ class Sheet:
         """
         return self.__sheet_name.get('{%s}SheetType' % (self.__workbook._ns['gnm']))
 
-    def __maxmin_rc(self, rc, mm_fn):
+    def __maxmin_rc(self, rc: str, mm_fn: MaxMinFunction) -> int:
         """
         The abstracted method for `max_column`, `max_row`, `min_column`, and `min_row`
         :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
@@ -134,7 +139,7 @@ class Sheet:
         return -1 if len(content_cells) == 0 else mm_fn(getattr(self.__ce2c(c), rc) for c in content_cells)
 
     @property
-    def max_column(self):
+    def max_column(self) -> int:
         """
         The maximum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
@@ -142,7 +147,7 @@ class Sheet:
         return self.__maxmin_rc('column', max)
 
     @property
-    def max_row(self):
+    def max_row(self) -> int:
         """
         The maximum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
@@ -150,7 +155,7 @@ class Sheet:
         return self.__maxmin_rc('row', max)
 
     @property
-    def min_column(self):
+    def min_column(self) -> int:
         """
         The minimum column that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
@@ -158,14 +163,14 @@ class Sheet:
         return self.__maxmin_rc('column', min)
 
     @property
-    def min_row(self):
+    def min_row(self) -> int:
         """
         The minimum row that still holds data.  Raises UnsupportedOperationException when the sheet is a chartsheet.
         :return: `int`
         """
         return self.__maxmin_rc('row', min)
 
-    def __maxmin_rc_in_cr(self, cr, mm_fn, idx):
+    def __maxmin_rc_in_cr(self, cr: str, mm_fn: MaxMinFunction, idx: int) -> int:
         """
         The abstracted method for `max_column_in_row` and `max_row_in_column`.
         :param cr: `str` indicating whether to search the `"column"` or `"row"` for the max row/col.
@@ -181,45 +186,45 @@ class Sheet:
         content_cells = [getattr(c, rc) for c in content_cells if getattr(c, cr) == idx]
         return -1 if len(content_cells) == 0 else mm_fn(content_cells)
 
-    def max_column_in_row(self, row):
+    def max_column_in_row(self, row: int) -> int:
         """
         Get the last column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
         return self.__maxmin_rc_in_cr('row', max, row)
 
-    def max_row_in_column(self, column):
+    def max_row_in_column(self, column: int) -> int:
         """
         Get the last row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
         return self.__maxmin_rc_in_cr('column', max, column)
 
-    def min_column_in_row(self, row):
+    def min_column_in_row(self, row: int) -> int:
         """
         Get the first column in `row` that has a value.  Returns -1 if the row is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
         return self.__maxmin_rc_in_cr('row', min, row)
 
-    def min_row_in_column(self, column):
+    def min_row_in_column(self, column: int) -> int:
         """
         Get the first row in `column` that has a value.  Returns -1 if the column is empty.  Raises
         UnsupportedOperationException when the sheet is a chartsheet.
         """
         return self.__maxmin_rc_in_cr('column', min, column)
 
-    def __max_allowed_rc(self, rc):
+    def __max_allowed_rc(self, rc: str) -> int:
         """
         The abstracted method for `max_allowed_column` and `max_allowed_row`.
-        :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
+        :param rc: `str` indicating whether this is for `"column"` or `"row"`.
         """
         rc = 'Cols' if rc == 'column' else 'Rows'
         key = '{%s}%s' % (self.__workbook._ns['gnm'], rc)
         return int(self.__sheet_name.get(key)) - 1
 
     @property
-    def max_allowed_column(self):
+    def max_allowed_column(self) -> int:
         """
         The maximum column allowed in the worksheet.
         :return: `int`
@@ -227,14 +232,14 @@ class Sheet:
         return self.__max_allowed_rc('column')
 
     @property
-    def max_allowed_row(self):
+    def max_allowed_row(self) -> int:
         """
         The maximum row allowed in the worksheet.
         :return: `int`
         """
         return self.__max_allowed_rc('row')
 
-    def calculate_dimension(self):
+    def calculate_dimension(self) -> Tuple[int, int, int, int]:
         """
         The minimum bounding rectangle that contains all data in the worksheet
 
@@ -244,33 +249,33 @@ class Sheet:
         """
         if self.type == SHEET_TYPE_OBJECT:
             raise UnsupportedOperationException('Chartsheet does not have rows or columns')
-        return (self.min_row, self.min_column, self.max_row, self.max_column)
+        return self.min_row, self.min_column, self.max_row, self.max_column
 
-    def __is_valid_rc(self, rc, idx):
+    def __is_valid_rc(self, rc: str, idx: int) -> bool:
         """
         The abstracted method for `is_valid_column` and `is_valid_row`.
-        :param idx: The column or row.
         :param rc: A string indiciating whether this is for a `"column"` or `"row"`.
+        :param idx: The column or row.
         :return: bool
         """
         max_allowed = 'max_allowed_' + rc
         return 0 <= idx <= getattr(self, max_allowed)
 
-    def is_valid_column(self, column):
+    def is_valid_column(self, column: int) -> bool:
         """
         Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns False
         :return: bool
         """
         return self.__is_valid_rc('column', column)
 
-    def is_valid_row(self, row):
+    def is_valid_row(self, row: int) -> bool:
         """
         Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns False
         :return: bool
         """
         return self.__is_valid_rc('row', row)
 
-    def cell(self, row_idx, col_idx, *, create=True):
+    def cell(self, row_idx: int, col_idx: int, *, create: bool = True) -> Cell:
         """
         Returns a Cell object for the cell at the specific row and column.
 
@@ -294,20 +299,22 @@ class Sheet:
 
         return self.__ce2c(cell_found)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: Union[Tuple[int, int], str]) -> Cell:
         if isinstance(idx, tuple) and len(idx) == 2:
             return self.cell(*idx)
         elif isinstance(idx, str):
             return self.cell(*coordinate_from_spreadsheet(idx))
         raise IndexError('Unrecognized index: ' + repr(idx))
 
-    def cell_text(self, row_idx, col_idx):
+    def cell_text(self, row_idx: int, col_idx: int) -> str:
         """
         Returns a the cell's text at the specific row and column.
+
+        If the cell does not exist, then it will raise an IndexError.
         """
         return self.cell(row_idx, col_idx, create=False).text
 
-    def __sort_cell_elements(self, cell_elements, row_major):
+    def __sort_cell_elements(self, cell_elements, row_major: bool) -> List[Cell]:
         """
         Sort the cells according to indices.  If `row_major` is True, then sorting will occur by row first, then within
         each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
@@ -317,7 +324,7 @@ class Sheet:
         """
         return self.__sort_cells([self.__ce2c(c) for c in cell_elements], row_major)
 
-    def __sort_cells(self, cells, row_major):
+    def __sort_cells(self, cells: Sequence[Cell], row_major: bool) -> List[Cell]:
         """
         Sort the cells according to indices.  If `row_major` is True, then sorting will occur by row first, then within
         each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
@@ -326,7 +333,7 @@ class Sheet:
         key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, *, include_empty=False, sort=False):
+    def get_cell_collection(self, *, include_empty: bool = False, sort: bool = False) -> List[Cell]:
         """
         Return all cells as a list.
 
@@ -348,7 +355,7 @@ class Sheet:
         else:
             return cells
 
-    def __get_rc(self, rc, idx, min_cr, max_cr, create_cells):
+    def __get_rc(self, rc: str, idx: int, min_cr: int, max_cr: Optional[int], create_cells: bool) -> Generator[Cell, None, None]:
         """
         The abstracted method for `get_column` and `get_row`.
         :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
@@ -384,7 +391,7 @@ class Sheet:
         else:
             return (c for c in cells)
 
-    def get_column(self, column, *, min_row=0, max_row=None, create_cells=False):
+    def get_column(self, column: int, *, min_row: int = 0, max_row: Optional[int] = None, create_cells: bool = False) -> Generator[Cell, None, None]:
         """
         Get the cells in the specified column (index starting at 0).
 
@@ -402,7 +409,7 @@ class Sheet:
         """
         return self.__get_rc('column', column, min_row, max_row, create_cells)
 
-    def get_row(self, row, *, min_col=0, max_col=None, create_cells=False):
+    def get_row(self, row: int, *, min_col: int = 0, max_col: Optional[int] = None, create_cells: bool = False) -> Generator[Cell, None, None]:
         """
         Get the cells in the specified row (index starting at 0).
 
@@ -420,7 +427,7 @@ class Sheet:
         """
         return self.__get_rc('row', row, min_col, max_col, create_cells)
 
-    def get_expression_map(self):
+    def get_expression_map(self) -> Dict[str, Tuple[Tuple[int, int], str]]:
         """
         In each worksheet, Gnumeric stores an expression/formula once (in the cell it's first used), then references it
         by an id in all other cells that use the expression.  This method will return a dict of
@@ -430,10 +437,9 @@ class Sheet:
         may not have an id and thus will not be returned by this method.
         """
         cells = self.__get_expression_id_cells()
-        return dict([(c.get('ExprID'), ((int(c.get('Row')), int(c.get('Col'))), c.text)) for c in cells
-                     if c.text is not None])
+        return {c.get('ExprID'): ((int(c.get('Row')), int(c.get('Col'))), c.text) for c in cells if c.text is not None}
 
-    def get_all_cells_with_expression(self, id, *, sort=False):
+    def get_all_cells_with_expression(self, id: str, *, sort: Union[bool, str] = False) -> List[Cell]:
         """
         Returns a list of all cells referencing/using the expression with the provided id.
 
@@ -448,7 +454,7 @@ class Sheet:
         else:
             return cells
 
-    def delete_cell(self, row, col):
+    def delete_cell(self, row: int, col: int) -> None:
         """
         Deletes the cell at the specified row and column.  If the cell doesn't exist, then nothing will happen.  If the
         cell is the originating cell for an expression, then an exception is thrown (deleting these cells is not yet
@@ -463,7 +469,7 @@ class Sheet:
         all_cells = self.__get_cells()
         all_cells.remove(cell)
 
-    def _clean_data(self):
+    def _clean_data(self) -> None:
         """
         Performs housekeeping on the data.  Only necessary when contents are being written to file.  Should not be
         called directly -- the workbook will call this automatically when writing to file.
@@ -479,10 +485,11 @@ class Sheet:
         self.__sheet.find('gnm:MaxCol', self.__workbook._ns).text = str(self.max_column)
         self.__sheet.find('gnm:MaxRow', self.__workbook._ns).text = str(self.max_row)
 
-    def __eq__(self, other):
-        return (self.__workbook == other.__workbook and
+    def __eq__(self, other) -> bool:
+        return (isinstance(other, Sheet) and
+                self.__workbook == other.__workbook and
                 self.__sheet_name == other.__sheet_name and
                 self.__sheet == other.__sheet)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
