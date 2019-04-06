@@ -53,15 +53,27 @@ _grammar = f"""
 """
 
 
+def to_str(value) -> str:
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
+    elif isinstance(value, bool):
+        value = 'TRUE' if value else 'FALSE'
+    return str(value)
+
+
 @v_args(inline=True)
 class ExpressionEvaluator(Transformer):
     from operator import add, sub, mul, truediv as div, neg
-    from operator import eq, lt, le, gt, ge, ne
-    number = float
     pow = pow
 
     def __init__(self, cell):
         self._cell = cell
+
+    def number(self, val):
+        try:
+            return int(val)
+        except ValueError:
+            return float(val)
 
     def string(self, a):
         return a.value[1:-1]
@@ -76,14 +88,16 @@ class ExpressionEvaluator(Transformer):
             b = str(b).lower()
 
         # Numbers are always less than strings and strings always less than bools, so to simplify the logic below, just use different values for a and b if there's a type mismatch
-        if not isinstance(a, type(b)):
+        a_type = type(a) if type(a) != int else float
+        b_type = type(b) if type(b) != int else float
+        if a_type != b_type:
             type_val_mapper = {
                 float: 0,
                 str: 50,
                 bool: 100
             }
-            a = type_val_mapper[type(a)]
-            b = type_val_mapper[type(b)]
+            a = type_val_mapper[a_type]
+            b = type_val_mapper[b_type]
 
         if op == '=':
             return a == b
@@ -111,7 +125,9 @@ class ExpressionEvaluator(Transformer):
         return 'cell lookup:' + str(ref)
 
     def concat(self, a, b):
-        return str(a) + str(b)
+        a = to_str(a)
+        b = to_str(b)
+        return a + b
 
     def function(self, name, *args):
         return function_map[name](*args)

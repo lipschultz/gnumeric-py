@@ -179,3 +179,16 @@ class EvaluationTests(unittest.TestCase):
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_text_concatenation(self):
+        cases = (
+            ('="cat"&"dog"', 'catdog'),
+            ('=2&"cat"', '2cat'),
+            ('="cat"&2', 'cat2'),
+            ('="cat"&-2+3*4-10/5', 'cat8'),
+            ('=(2<3)&"cat"', 'TRUEcat'),
+            ('=(2>3)&"cat"', 'FALSEcat'),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
