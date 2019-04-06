@@ -11,12 +11,7 @@ _grammar = f"""
           | "+" root
     ?root: logical_stmt
     ?logical_stmt: text_stmt
-                 | logical_stmt "=" text_stmt   -> eq
-                 | logical_stmt "<" text_stmt   -> lt
-                 | logical_stmt "<=" text_stmt   -> le
-                 | logical_stmt ">" text_stmt   -> gt
-                 | logical_stmt ">=" text_stmt   -> ge
-                 | logical_stmt "<>" text_stmt   -> ne
+                 | logical_stmt logical_op text_stmt   -> logical
     ?text_stmt: sum
             | text_stmt "&" sum   -> concat
     ?sum: product
@@ -27,16 +22,18 @@ _grammar = f"""
         | product "/" exponentiation  -> div
     ?exponentiation: atom
                    | atom "^" exponentiation   -> pow
-    ?atom: NUMBER                                           -> number
+    ?atom: NUMBER                                     -> number
          | string
          | "(" root ")"
          | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
-         | cell_reference                                   -> cell_lookup
+         | cell_reference                             -> cell_lookup
 
     ?cell_reference: (SHEETNAME "!")? "$"? COLUMN "$"? ROW   -> cell_ref
     COLUMN: CHARS~1..3
     ROW: DIGIT~1..5
     SHEETNAME: CHARS
+
+    !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
     string : ESCAPED_DQUOTE_STRING
            | ESCAPED_SQUOTE_STRING
@@ -68,6 +65,40 @@ class ExpressionEvaluator(Transformer):
 
     def string(self, a):
         return a.value[1:-1]
+
+    def logical_op(self, op):
+        return op.value
+
+    def logical(self, a, op, b):
+        if isinstance(a, str):
+            a = str(a).lower()
+        if isinstance(b, str):
+            b = str(b).lower()
+
+        # Numbers are always less than strings and strings always less than bools, so to simplify the logic below, just use different values for a and b if there's a type mismatch
+        if not isinstance(a, type(b)):
+            type_val_mapper = {
+                float: 0,
+                str: 50,
+                bool: 100
+            }
+            a = type_val_mapper[type(a)]
+            b = type_val_mapper[type(b)]
+
+        if op == '=':
+            return a == b
+        elif op == '<>':
+            return a != b
+        elif op == '<':
+            return a < b
+        elif op == '<=':
+            return a <= b
+        elif op == '>':
+            return a > b
+        elif op == '>=':
+            return a >= b
+        else:
+            raise ValueError(f'Unrecognized logical operator: {op}')
 
     def cell_ref(self, *ref):
         ref = [r.value for r in ref]

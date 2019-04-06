@@ -28,6 +28,15 @@ class EvaluationTests(unittest.TestCase):
         actual = evaluate('+-2*3', self.ANY_CELL)
         self.assertEqual(-6, actual)
 
+    def test_it_evaluates_numbers(self):
+        actual = evaluate('=54', self.ANY_CELL)
+        self.assertEqual(54, actual)
+
+    def test_it_evaluates_text(self):
+        for quote_str in '"\'':
+            actual = evaluate(f'={quote_str}test{quote_str}', self.ANY_CELL)
+            self.assertEqual('test', actual, f'Parse failure on quote type {quote_str}')
+
     def test_basic_arithmetic_evaluation(self):
         cases = (
             ('=-2', -2),
@@ -43,7 +52,7 @@ class EvaluationTests(unittest.TestCase):
             actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
-    def test_logical_evaluation(self):
+    def test_numeric_logical_evaluation(self):
         cases = (
             ('=2<3', True),
             ('=2<=3', True),
@@ -51,6 +60,121 @@ class EvaluationTests(unittest.TestCase):
             ('=2>=3', False),
             ('=2=3', False),
             ('=2<>3', True),
+            ('=2<1+5', True),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_string_logical_evaluation(self):
+        cases = (
+            ('="case"<"test"', True),
+            ('="case"<="test"', True),
+            ('="case">"test"', False),
+            ('="case">="test"', False),
+            ('="case"="test"', False),
+            ('="case"<>"test"', True),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_string_logical_evaluation_is_case_insensitive(self):
+        cases = (
+            ('="case"<"CASE"', False),
+            ('="case"<="CASE"', True),
+            ('="case">"CASE"', False),
+            ('="case">="CASE"', True),
+            ('="case"="CASE"', True),
+            ('="case"<>"CASE"', False),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_numbers_always_less_than_text_and_bools(self):
+        true = '(2<3)'
+        false = '(2>3)'
+        cases = (
+            ('=2="2"', False),
+            ('=2<>"2"', True),
+            ('=50<"2"', True),
+            ('=50<="2"', True),
+            ('=2>"1"', False),
+            ('=2>="1"', False),
+
+            (f'=2={true}', False),
+            (f'=2<>{true}', True),
+            (f'=50<{true}', True),
+            (f'=50<={true}', True),
+            (f'=2>{true}', False),
+            (f'=2>={true}', False),
+
+            (f'=2={false}', False),
+            (f'=2<>{false}', True),
+            (f'=50<{false}', True),
+            (f'=50<={false}', True),
+            (f'=2>{false}', False),
+            (f'=2>={false}', False),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_text_always_less_than_bools(self):
+        true = '(2<3)'
+        false = '(2>3)'
+        cases = (
+            (f'="cat"={true}', False),
+            (f'="cat"<>{true}', True),
+            (f'="cat"<{true}', True),
+            (f'="cat"<={true}', True),
+            (f'="cat">{true}', False),
+            (f'="cat">={true}', False),
+
+            (f'="cat"={false}', False),
+            (f'="cat"<>{false}', True),
+            (f'="cat"<{false}', True),
+            (f'="cat"<={false}', True),
+            (f'="cat">{false}', False),
+            (f'="cat">={false}', False),
+
+            (f'=""={false}', False),
+            (f'=""<>{false}', True),
+            (f'=""<{false}', True),
+            (f'=""<={false}', True),
+            (f'="">{false}', False),
+            (f'="">={false}', False),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_boolean_logical_evaluation(self):
+        # TODO: How to handle boolean constants
+        true = '(2<3)'
+        false = '(2>3)'
+        cases = (
+            (f'={true}={true}', True),
+            (f'={true}<>{true}', False),
+            (f'={true}<{true}', False),
+            (f'={true}<={true}', True),
+            (f'={true}>{true}', False),
+            (f'={true}>={true}', True),
+
+            (f'={true}={false}', False),
+            (f'={true}<>{false}', True),
+            (f'={true}<{false}', False),
+            (f'={true}<={false}', False),
+            (f'={true}>{false}', True),
+            (f'={true}>={false}', True),
+
+            (f'={false}={false}', True),
+            (f'={false}<>{false}', False),
+            (f'={false}<{false}', False),
+            (f'={false}<={false}', True),
+            (f'={false}>{false}', False),
+            (f'={false}>={false}', True),
         )
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_CELL)
