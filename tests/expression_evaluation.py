@@ -42,3 +42,16 @@ class EvaluationTests(unittest.TestCase):
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_logical_evaluation(self):
+        cases = (
+            ('=2<3', True),
+            ('=2<=3', True),
+            ('=2>3', False),
+            ('=2>=3', False),
+            ('=2=3', False),
+            ('=2<>3', True),
+        )
+        for case, expected_result in cases:
+            actual = evaluate(case, self.ANY_CELL)
+            self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
