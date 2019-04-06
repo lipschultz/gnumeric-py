@@ -15,6 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from typing import Optional, Tuple, Union
+
 from lxml import etree
 
 from gnumeric.exceptions import UnrecognizedCellTypeException
@@ -38,32 +40,32 @@ class Cell:
         self.__worksheet = worksheet
         self.__ns = ns
 
-    def __set_expression_id(self, expr_id):
+    def __set_expression_id(self, expr_id: str) -> None:
         self.__cell.set('ExprID', expr_id)
 
     @property
-    def column(self):
+    def column(self) -> int:
         """
         The column this cell belongs to (0-indexed).
         """
         return int(self.__cell.get('Col'))
 
     @property
-    def row(self):
+    def row(self) -> int:
         """
         The row this cell belongs to (0-indexed).
         """
         return int(self.__cell.get('Row'))
 
     @property
-    def coordinate(self):
+    def coordinate(self) -> Tuple[int, int]:
         """
         The (row, column) of the cell.
         """
         return self.row, self.column
 
     @property
-    def text(self):
+    def text(self) -> Optional[str]:
         """
         Returns the raw value stored in the cell.  The text will be `None` if the cell is empty.
         :return: str or `None`
@@ -71,7 +73,7 @@ class Cell:
         return self.__cell.text
 
     @property
-    def value_type(self):
+    def value_type(self) -> int:
         """
         Returns the type of value stored in the cell:
          - VALUE_TYPE_EXPR = -10
@@ -92,14 +94,14 @@ class Cell:
         else:
             raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
 
-    def __set_type(self, value_type):
+    def __set_type(self, value_type: int):
         if value_type == VALUE_TYPE_EXPR:
             if 'ValueType' in self.__cell.keys():
                 self.__cell.attrib.pop('ValueType')
         else:
             self.__cell.set('ValueType', str(value_type))
 
-    def get_value(self):
+    def get_value(self) -> Union[bool, int, float, Expression, str]:
         """
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
         """
@@ -115,7 +117,7 @@ class Cell:
         else:
             return value
 
-    def set_value(self, value, *, value_type='infer'):
+    def set_value(self, value, *, value_type: str = 'infer') -> None:
         """
         Sets the value stored in the cell.
 
@@ -180,21 +182,23 @@ class Cell:
     value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
 
     @property
-    def text_format(self):
+    def text_format(self) -> str:
         """
         The format string used to format the text in the cell for display.  This is the "Number Format" in Gnumeric.
         """
-        return self.__style.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0]
+        return str(self.__style.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self.value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'Cell[%s, (%d, %d), ws="%s"]' % (str(self), self.row, self.column, self.__worksheet.title)
 
-    def __eq__(self, other):
-        return (isinstance(other, Cell)
-                and self.__worksheet == other.__worksheet and self.row == other.row and self.column == other.column)
+    def __eq__(self, other) -> bool:
+        return (isinstance(other, Cell) and
+                self.__worksheet == other.__worksheet and
+                self.row == other.row and
+                self.column == other.column)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__cell)

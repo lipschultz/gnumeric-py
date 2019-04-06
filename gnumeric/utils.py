@@ -15,9 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from typing import Optional, Union, Tuple
 
 
-def column_to_spreadsheet(col_int, abs_ref=False):
+def column_to_spreadsheet(col_int: int, abs_ref: bool = False) -> str:
     """
         Convert 0-indexed column number into standard spreadsheet notation.  For example: `30` -> `'AE'`.
 
@@ -35,7 +36,7 @@ def column_to_spreadsheet(col_int, abs_ref=False):
     return '%s%s' % (abs_col, column)
 
 
-def column_from_spreadsheet(col_letter):
+def column_from_spreadsheet(col_letter: str) -> int:
     """
     Convert standard spreadsheet notation for a column into a 0-indexed column number.  For example: `'AE'` -> `30`.
 
@@ -52,7 +53,7 @@ def column_from_spreadsheet(col_letter):
     return index - 1
 
 
-def row_to_spreadsheet(row, abs_ref=False):
+def row_to_spreadsheet(row: int, abs_ref: bool = False) -> str:
     """
     Convert a 0-indexed row index into the standard spreadsheet row (which is 1-indexed).  If `abs_ref` is True, then
     the returned value will be an absolute reference to the row.
@@ -66,7 +67,7 @@ def row_to_spreadsheet(row, abs_ref=False):
     return abs_ref + str(row + 1)
 
 
-def row_from_spreadsheet(row):
+def row_from_spreadsheet(row: str) -> int:
     """
     Convert the standard spreadsheet row numbers (1-indexed) to 0-indexed index.
 
@@ -79,7 +80,7 @@ def row_from_spreadsheet(row):
     return row - 1
 
 
-def coordinate_to_spreadsheet(coord, col=None, abs_ref_row=False, abs_ref_col=False):
+def coordinate_to_spreadsheet(coord: Union[int, Tuple[int, int]], col: Optional[int] = None, abs_ref_row: bool = False, abs_ref_col: bool = False) -> str:
     """
     Convert a coordinate into spreadsheet notation.  If `col` is `None`, then `coord` is assumed to be a (row, column)
     tuple.  If `col` is not `None`, then `coord` is the row and col is the column.
@@ -95,7 +96,7 @@ def coordinate_to_spreadsheet(coord, col=None, abs_ref_row=False, abs_ref_col=Fa
     return column_to_spreadsheet(col, abs_ref_col) + row_to_spreadsheet(coord, abs_ref_row)
 
 
-def coordinate_from_spreadsheet(coord):
+def coordinate_from_spreadsheet(coord: str) -> Tuple[int, int]:
     """
     Convert a coordinate from spreadsheet notation into a (row, column) tuple.
 
@@ -111,4 +112,4 @@ def coordinate_from_spreadsheet(coord):
 
         i += 1
 
-    return (row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(coord[:first_row_position]))
+    return row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(coord[:first_row_position])
