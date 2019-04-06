@@ -28,9 +28,13 @@ class EvaluationTests(unittest.TestCase):
         actual = evaluate('+-2*3', self.ANY_CELL)
         self.assertEqual(-6, actual)
 
-    def test_it_evaluates_numbers(self):
+    def test_it_evaluates_integers(self):
         actual = evaluate('=54', self.ANY_CELL)
         self.assertEqual(54, actual)
+
+    def test_it_evaluates_floats(self):
+        actual = evaluate('=5.4', self.ANY_CELL)
+        self.assertEqual(5.4, actual)
 
     def test_it_evaluates_text(self):
         for quote_str in '"\'':

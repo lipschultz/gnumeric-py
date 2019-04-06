@@ -333,7 +333,7 @@ class Sheet:
         key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, *, include_empty: bool = False, sort: bool = False) -> List[Cell]:
+    def get_cell_collection(self, *, include_empty: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
         """
         Return all cells as a list.
 

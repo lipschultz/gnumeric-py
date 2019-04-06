@@ -84,22 +84,22 @@ class SheetTests(unittest.TestCase):
     def test_getting_min_row_raises_exception_on_chartsheet(self):
         ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
-            val = ws.min_row
+            _ = ws.min_row
 
     def test_getting_min_col_raises_exception_on_chartsheet(self):
         ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
-            val = ws.min_column
+            _ = ws.min_column
 
     def test_getting_max_row_raises_exception_on_chartsheet(self):
         ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
-            val = ws.max_row
+            _ = ws.max_row
 
     def test_getting_max_col_raises_exception_on_chartsheet(self):
         ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
-            val = ws.max_column
+            _ = ws.max_column
 
     def test_calculate_dimension(self):
         ws = self.loaded_wb.get_sheet_by_index(1)
@@ -207,7 +207,7 @@ class SheetTests(unittest.TestCase):
         c.set_value(13.4)
         cells.add(c)
 
-        c = ws.cell(0, 3)
+        _ = ws.cell(0, 3)
 
         c = ws.cell(0, 4)
         c.set_value('=max(A1:A5)')
@@ -417,7 +417,7 @@ class SheetTests(unittest.TestCase):
     def test_get_empty_col_and_create_cells_returns_cells_for_all_rows(self):
         ws = self.wb.create_sheet('Title')
         col = ws.get_column(0, create_cells=True)
-        self.assertEqual(sum(1 for c in col), ws.max_allowed_row + 1)
+        self.assertEqual(sum(1 for _ in col), ws.max_allowed_row + 1)
 
     def test_get_col_with_values_returns_only_existing_cells_in_sorted_order(self):
         ws = self.wb.create_sheet('Title')
