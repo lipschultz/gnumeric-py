@@ -37,9 +37,8 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(5.4, actual)
 
     def test_it_evaluates_text(self):
-        for quote_str in '"\'':
-            actual = evaluate(f'={quote_str}test{quote_str}', self.ANY_CELL)
-            self.assertEqual('test', actual, f'Parse failure on quote type {quote_str}')
+        actual = evaluate(f'="test"', self.ANY_CELL)
+        self.assertEqual('test', actual)
 
     def test_basic_arithmetic_evaluation(self):
         cases = (

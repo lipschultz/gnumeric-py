@@ -159,7 +159,7 @@ class Cell:
             self.__cell.text = None
         elif value_type == VALUE_TYPE_EXPR and isinstance(value, Expression):
             if self.__worksheet != value.worksheet:
-                raise NotImplementedError('Copying expression to different worksheet is not yet supported')
+                raise NotImplementedError('Copying expression to different worksheet is not yet supported')  # TODO
 
             expr_id = str(value.id)
             if expr_id not in self.__worksheet.get_expression_map() and value.id is None:

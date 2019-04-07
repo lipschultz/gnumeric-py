@@ -35,19 +35,15 @@ _grammar = f"""
 
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
-    string : ESCAPED_DQUOTE_STRING
-           | ESCAPED_SQUOTE_STRING
+    string : ESCAPED_STRING
 
     FUNC_NAME: {' | '.join(f'"{f}"i' for f in function_map.keys())}
-
-    ESCAPED_SQUOTE_STRING : "'" _STRING_ESC_INNER "'"
 
     %import common.CNAME -> NAME
     %import common.SIGNED_NUMBER -> NUMBER
     %import common.DIGIT
     %import common.WORD -> CHARS
-    %import common.ESCAPED_STRING -> ESCAPED_DQUOTE_STRING
-    %import common._STRING_ESC_INNER
+    %import common.ESCAPED_STRING
     %import common.WS_INLINE
     %ignore WS_INLINE
 """
