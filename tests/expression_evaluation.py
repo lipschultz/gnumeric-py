@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
-from gnumeric.expression_evaluation import evaluate
+from gnumeric.expression_evaluation import evaluate, EvaluationError
 
 
 class EvaluationTests(unittest.TestCase):
@@ -59,6 +59,7 @@ class EvaluationTests(unittest.TestCase):
             ('=2^3', 2**3),
             ('=-2+3*4-10/5', 8),
             ('=2*(8-3)^2^3', 2*(8-3)**2**3),
+            ('=1/0', EvaluationError.DIV0)
         )
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_SHEET)
@@ -202,6 +203,9 @@ class EvaluationTests(unittest.TestCase):
 class FunctionEvaluationTests(unittest.TestCase):
     ANY_SHEET = None
 
+    def test_name_error(self):
+        self.assertEqual(EvaluationError.NAME, evaluate('=NAMEDOESNOTEXIST()', self.ANY_SHEET))
+
     def test_abs(self):
         self.assertEqual(3, evaluate('=ABS(3)', self.ANY_SHEET))
         self.assertEqual(3, evaluate('=ABS(-3)', self.ANY_SHEET))
@@ -209,7 +213,7 @@ class FunctionEvaluationTests(unittest.TestCase):
         self.assertEqual(5/3, evaluate('=ABS(-5/3)', self.ANY_SHEET))
         self.assertEqual(1, evaluate('=ABS(TRUE)', self.ANY_SHEET))
         self.assertEqual(0, evaluate('=ABS(FALSE)', self.ANY_SHEET))
-        # self.assertEqual(EvaluationError.VALUE, evaluate('=abs("string")', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.VALUE, evaluate('=abs("string")', self.ANY_SHEET))
         # self.assertEqual(EvaluationError.NA, evaluate('=abs()', self.ANY_SHEET))
 
     def test_len(self):

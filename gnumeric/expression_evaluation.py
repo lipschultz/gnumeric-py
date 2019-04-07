@@ -1,4 +1,17 @@
+import enum
+
 from lark import Lark, Transformer, v_args
+from lark.exceptions import VisitError
+
+
+class EvaluationError(enum.Enum):
+    DIV0 = '#DIV/0!'  # =1/0
+    VALUE = '#VALUE!'  # =4+5+"cat"
+    NA = '#N/A'  # =abs()
+    NAME = '#NAME?'  # =NAMEDOESNOTEXIST()
+    NUM = '#NUM!'  # =10000000000^1000000000
+    REF = '#REF!'  # Refers to a cell that's been deleted
+    NULL = '#NULL!'  # occurs when the intersection of two areas don't actually intersect
 
 
 function_map = {
@@ -34,18 +47,18 @@ _grammar = f"""
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
     ?cell_reference: (SHEETNAME "!")? "$"? COLUMN "$"? ROW   -> cell_ref
-    COLUMN: CHARS~1..3
+    COLUMN: LETTER~1..3
     ROW: DIGIT~1..5
-    SHEETNAME: CHARS
+    SHEETNAME: LETTER+
 
     string : ESCAPED_STRING
 
-    FUNC_NAME: {' | '.join(f'"{f}"i' for f in function_map.keys())}
+    // FUNC_NAME: {' | '.join(f'"{f}"i' for f in function_map.keys())}
+    FUNC_NAME: LETTER ("_"|LETTER|DIGIT|".")*
 
-    %import common.CNAME -> NAME
-    %import common.SIGNED_NUMBER -> NUMBER
     %import common.DIGIT
-    %import common.WORD -> CHARS
+    %import common.SIGNED_NUMBER -> NUMBER
+    %import common.LETTER
     %import common.ESCAPED_STRING
     %import common.WS_INLINE
     %ignore WS_INLINE
@@ -143,7 +156,20 @@ _parser = Lark(_grammar, start='start', parser='earley')
 
 def evaluate(expression: str, cell):
     evaluator = ExpressionEvaluator(cell)
+
     tree = _parser.parse(expression)
     # print(tree.pretty())
-    result = evaluator.transform(tree)
+    try:
+        result = evaluator.transform(tree)
+    except VisitError as ex:
+        if isinstance(ex.orig_exc, ZeroDivisionError):
+            return EvaluationError.DIV0
+        elif isinstance(ex.orig_exc, TypeError):
+            return EvaluationError.VALUE
+        elif isinstance(ex.orig_exc, KeyError):
+            return EvaluationError.NAME
+
+        print(type(ex.orig_exc), ex.orig_exc)
+        raise ex.orig_exc
+
     return result
