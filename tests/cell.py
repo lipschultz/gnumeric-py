@@ -66,6 +66,7 @@ class CellTests(unittest.TestCase):
                 expected_value = bool(expected_value)
             elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
                 expected_value = None
+            # TODO: Cell values of Error cells
 
             if test_cell.value_type == cell.VALUE_TYPE_EXPR:
                 self.assertEqual(test_cell.get_value().value, expected_value)
