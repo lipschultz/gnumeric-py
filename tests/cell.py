@@ -74,6 +74,22 @@ class CellTests(unittest.TestCase):
                                  str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
                                  + ', but expected ' + str(expected_value))
 
+    def test_get_string_cell_value_returns_parsed_value(self):
+        ws = self.loaded_wb.get_sheet_by_name('Strings')
+        expected_values = ('TBD', 'Blåbærgrød', 'Greek Α α', 'Greek Β β', 'Greek Γ γ', 'Greek Δ δ', 'Greek Ε ε', 'Greek Ζ ζ', 'Greek Η η', 'Greek Θ θ', 'Greek Ι ι',
+                           'Greek Κ κ', 'Greek Λ λ', 'Greek Μ μ', 'Greek Ν ν', 'Greek Ξ ξ', 'Greek Ο ο', 'Greek Π π', 'Greek Ρ ρ', 'Greek Σ σς', 'Greek Τ τ', 'Greek Υ υ',
+                           'Greek Φ φ', 'Greek Χ χ', 'Greek Ψ ψ', 'Greek Ω ω', 'TBD', '10', '-10', '1.23', '1e1', '1e+01', '1E+01', '1D+01', '=2+2', 'TRUE', 'FALSE', '#N/A',
+                           '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', ' abc', 'abc ', 'abc"def', 'abc""def', "abc'def", "abc''def", "'abc", 'abc&def', 'abc&amp;def', 'abc<def',
+                           'abc>def', 'abc	def', 'hi<!--there')
+        for row in range(ws.max_row + 1):
+            expected = expected_values[row]
+
+            test_cell = ws.cell(row, 0)
+            actual = test_cell.value
+
+            self.assertEqual(cell.VALUE_TYPE_STRING, test_cell.value_type, f'Failed on row={row+1}, cell={actual}, expected={expected}')
+            self.assertEqual(expected, actual, f'Failed on row={row+1}, cell={actual}, expected={expected}')
+
     def test_get_shared_expression_value_from_originating_cell(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
 

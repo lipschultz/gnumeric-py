@@ -29,6 +29,9 @@ class WorkbookTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
         self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
+        self.loaded_wb_sheet_names = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Expressions', 'Mine & Yours Sheet[s]!')
+        self.loaded_wb_graph_names = ('Graph1', )
+        self.loaded_wb_all_names = self.loaded_wb_sheet_names + self.loaded_wb_graph_names
 
     def test_equality_of_same_workbook(self):
         self.assertTrue(self.wb == self.wb)
@@ -238,26 +241,23 @@ class WorkbookTests(unittest.TestCase):
 
     def test_getting_all_sheets_of_mixed_type(self):
         ws = self.loaded_wb.sheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
-                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!', 'Graph1')]
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_all_names]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_worksheets_only(self):
         ws = self.loaded_wb.worksheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in
-                       ('Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!')]
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_sheet_names]
         self.assertEqual(ws, selected_ws)
 
     def test_getting_chartsheets_only(self):
         ws = self.loaded_wb.chartsheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in ('Graph1',)]
+        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_graph_names]
         self.assertEqual(ws, selected_ws)
 
     def test_loading_compressed_file(self):
-        self.assertEqual(self.loaded_wb.sheetnames,
-                         ['Sheet1', 'BoundingRegion', 'CellTypes', 'Expressions', 'Mine & Yours Sheet[s]!', 'Graph1'])
+        self.assertEqual(self.loaded_wb.sheetnames, list(self.loaded_wb_all_names))
         self.assertEqual(self.loaded_wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
-        self.assertEqual(self.loaded_wb.version, '1.12.28')
+        self.assertEqual(self.loaded_wb.version, '1.12.35')
 
     def test_loading_uncompressed_file(self):
         wb = Workbook.load_workbook('samples/sheet-names.xml')
@@ -266,7 +266,7 @@ class WorkbookTests(unittest.TestCase):
         self.assertEqual(wb.version, '1.12.28')
 
     def test_getting_active_sheet(self):
-        self.assertEqual(self.loaded_wb.get_active_sheet(), self.loaded_wb.get_sheet_by_name('Expressions'))
+        self.assertEqual(self.loaded_wb.get_active_sheet(), self.loaded_wb.get_sheet_by_name('Strings'))
 
     def test_getting_active_sheet_from_empty_workbook(self):
         self.assertIsNone(self.wb.get_active_sheet())
