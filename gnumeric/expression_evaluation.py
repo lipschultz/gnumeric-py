@@ -2,7 +2,8 @@ from lark import Lark, Transformer, v_args
 
 
 function_map = {
-    'abs': abs
+    'abs': abs,
+    'len': lambda val: len(str(val)),
 }
 
 
@@ -134,7 +135,7 @@ class ExpressionEvaluator(Transformer):
         return a + b
 
     def function(self, name, *args):
-        return function_map[name](*args)
+        return function_map[name.lower()](*args)
 
 
 _parser = Lark(_grammar, start='start', parser='earley')
@@ -142,5 +143,7 @@ _parser = Lark(_grammar, start='start', parser='earley')
 
 def evaluate(expression: str, cell):
     evaluator = ExpressionEvaluator(cell)
-    result = evaluator.transform(_parser.parse(expression))
+    tree = _parser.parse(expression)
+    # print(tree.pretty())
+    result = evaluator.transform(tree)
     return result

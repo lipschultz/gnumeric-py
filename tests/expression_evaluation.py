@@ -22,31 +22,31 @@ from gnumeric.expression_evaluation import evaluate
 
 
 class EvaluationTests(unittest.TestCase):
-    ANY_CELL = None
+    ANY_SHEET = None
 
     def test_it_can_start_with_a_plus_sign(self):
-        actual = evaluate('+-2*3', self.ANY_CELL)
+        actual = evaluate('+-2*3', self.ANY_SHEET)
         self.assertEqual(-6, actual)
 
     def test_it_evaluates_integers(self):
-        actual = evaluate('=54', self.ANY_CELL)
+        actual = evaluate('=54', self.ANY_SHEET)
         self.assertEqual(54, actual)
         self.assertIsInstance(actual, int)
 
     def test_it_evaluates_floats(self):
-        actual = evaluate('=5.4', self.ANY_CELL)
+        actual = evaluate('=5.4', self.ANY_SHEET)
         self.assertEqual(5.4, actual)
 
     def test_it_evaluates_text(self):
-        actual = evaluate('="test"', self.ANY_CELL)
+        actual = evaluate('="test"', self.ANY_SHEET)
         self.assertEqual('test', actual)
 
     def test_it_evaluates_true(self):
-        actual = evaluate('=TRUE', self.ANY_CELL)
+        actual = evaluate('=TRUE', self.ANY_SHEET)
         self.assertEqual(True, actual)
 
     def test_it_evaluates_false(self):
-        actual = evaluate('=FALSE', self.ANY_CELL)
+        actual = evaluate('=FALSE', self.ANY_SHEET)
         self.assertEqual(False, actual)
 
     def test_basic_arithmetic_evaluation(self):
@@ -61,7 +61,7 @@ class EvaluationTests(unittest.TestCase):
             ('=2*(8-3)^2^3', 2*(8-3)**2**3),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_numeric_logical_evaluation(self):
@@ -75,7 +75,7 @@ class EvaluationTests(unittest.TestCase):
             ('=2<1+5', True),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_string_logical_evaluation(self):
@@ -88,7 +88,7 @@ class EvaluationTests(unittest.TestCase):
             ('="case"<>"test"', True),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_string_logical_evaluation_is_case_insensitive(self):
@@ -101,7 +101,7 @@ class EvaluationTests(unittest.TestCase):
             ('="case"<>"CASE"', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_numbers_always_less_than_text_and_bools(self):
@@ -128,7 +128,7 @@ class EvaluationTests(unittest.TestCase):
             (f'=2>=FALSE', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_text_always_less_than_bools(self):
@@ -155,7 +155,7 @@ class EvaluationTests(unittest.TestCase):
             (f'="">=FALSE', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_boolean_logical_evaluation(self):
@@ -182,7 +182,7 @@ class EvaluationTests(unittest.TestCase):
             (f'=FALSE>=FALSE', True),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_text_concatenation(self):
@@ -195,5 +195,27 @@ class EvaluationTests(unittest.TestCase):
             ('=(2>3)&"cat"', 'FALSEcat'),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_CELL)
+            actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+
+class FunctionEvaluationTests(unittest.TestCase):
+    ANY_SHEET = None
+
+    def test_abs(self):
+        self.assertEqual(3, evaluate('=ABS(3)', self.ANY_SHEET))
+        self.assertEqual(3, evaluate('=ABS(-3)', self.ANY_SHEET))
+        self.assertEqual(5/3, evaluate('=ABS(5/3)', self.ANY_SHEET))
+        self.assertEqual(5/3, evaluate('=ABS(-5/3)', self.ANY_SHEET))
+        self.assertEqual(1, evaluate('=ABS(TRUE)', self.ANY_SHEET))
+        self.assertEqual(0, evaluate('=ABS(FALSE)', self.ANY_SHEET))
+        # self.assertEqual(EvaluationError.VALUE, evaluate('=abs("string")', self.ANY_SHEET))
+        # self.assertEqual(EvaluationError.NA, evaluate('=abs()', self.ANY_SHEET))
+
+    def test_len(self):
+        self.assertEqual(6, evaluate('=LEN("string")', self.ANY_SHEET))
+        self.assertEqual(4, evaluate('=LEN(TRUE)', self.ANY_SHEET))
+        self.assertEqual(5, evaluate('=LEN(FALSE)', self.ANY_SHEET))
+        self.assertEqual(2, evaluate('=LEN(12)', self.ANY_SHEET))
+        self.assertEqual(3, evaluate('=LEN(12/5)', self.ANY_SHEET))
+        self.assertEqual(18, evaluate('=LEN(5/3)', self.ANY_SHEET))
