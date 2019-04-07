@@ -31,14 +31,23 @@ class EvaluationTests(unittest.TestCase):
     def test_it_evaluates_integers(self):
         actual = evaluate('=54', self.ANY_CELL)
         self.assertEqual(54, actual)
+        self.assertIsInstance(actual, int)
 
     def test_it_evaluates_floats(self):
         actual = evaluate('=5.4', self.ANY_CELL)
         self.assertEqual(5.4, actual)
 
     def test_it_evaluates_text(self):
-        actual = evaluate(f'="test"', self.ANY_CELL)
+        actual = evaluate('="test"', self.ANY_CELL)
         self.assertEqual('test', actual)
+
+    def test_it_evaluates_true(self):
+        actual = evaluate('=TRUE', self.ANY_CELL)
+        self.assertEqual(True, actual)
+
+    def test_it_evaluates_false(self):
+        actual = evaluate('=FALSE', self.ANY_CELL)
+        self.assertEqual(False, actual)
 
     def test_basic_arithmetic_evaluation(self):
         cases = (

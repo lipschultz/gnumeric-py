@@ -24,16 +24,18 @@ _grammar = f"""
                    | atom "^" exponentiation   -> pow
     ?atom: NUMBER                                     -> number
          | string
+         | "TRUE"                                     -> true
+         | "FALSE"                                    -> false
          | "(" root ")"
          | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
          | cell_reference                             -> cell_lookup
+
+    !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
     ?cell_reference: (SHEETNAME "!")? "$"? COLUMN "$"? ROW   -> cell_ref
     COLUMN: CHARS~1..3
     ROW: DIGIT~1..5
     SHEETNAME: CHARS
-
-    !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
     string : ESCAPED_STRING
 
@@ -73,6 +75,12 @@ class ExpressionEvaluator(Transformer):
 
     def string(self, a):
         return a.value[1:-1]
+
+    def true(self):
+        return True
+
+    def false(self):
+        return False
 
     def logical_op(self, op):
         return op.value
