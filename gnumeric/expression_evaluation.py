@@ -1,16 +1,17 @@
 import enum
+import numbers
 
 from lark import Lark, Transformer, v_args
 from lark.exceptions import VisitError
 
 
 class EvaluationError(enum.Enum):
-    DIV0 = '#DIV/0!'  # =1/0
-    VALUE = '#VALUE!'  # =4+5+"cat"
-    NA = '#N/A'  # =abs()
-    NAME = '#NAME?'  # =NAMEDOESNOTEXIST()
+    DIV0 = '#DIV/0!'
+    VALUE = '#VALUE!'
+    NA = '#N/A'
+    NAME = '#NAME?'
     NUM = '#NUM!'  # =10000000000^1000000000
-    REF = '#REF!'  # Refers to a cell that's been deleted
+    REF = '#REF!'
     NULL = '#NULL!'  # occurs when the intersection of two areas don't actually intersect
 
 
@@ -40,22 +41,18 @@ _grammar = f"""
     ?text_stmt: sum
             | text_stmt "&" sum   -> concat
     ?sum: product
-        | sum "+" product   -> add
-        | sum "-" product   -> sub
+        | sum /[+-]/ product   -> arithmetic
     ?product: exponentiation
-        | product "*" exponentiation  -> mul
-        | product "/" exponentiation  -> div
+        | product /[*\\/]/ exponentiation  -> arithmetic
     ?exponentiation: atom
-                   | atom "^" exponentiation   -> pow
+                   | atom /\\^/ exponentiation   -> arithmetic
     ?atom: NUMBER                                     -> number
          | string
-         | "TRUE"                                     -> true
-         | "FALSE"                                    -> false
-         | "#REF!"                                    -> error_ref
          | "(" root ")"
          | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
          | cell_reference                             -> cell_lookup
-         //| FUNC_NAME                                  -> invalid_function_call
+         | "#REF!"                                    -> error_ref
+         | FUNC_NAME                                  -> atomic_string
 
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
@@ -88,11 +85,9 @@ def to_str(value) -> str:
 
 @v_args(inline=True)
 class ExpressionEvaluator(Transformer):
-    from operator import add, sub, mul, truediv as div, neg
-    pow = pow
 
-    def __init__(self, cell):
-        self._cell = cell
+    def __init__(self, sheet):
+        self._sheet = sheet
 
     def number(self, val):
         try:
@@ -103,14 +98,16 @@ class ExpressionEvaluator(Transformer):
     def string(self, a):
         return a.value[1:-1]
 
-    def true(self):
-        return True
-
-    def false(self):
-        return False
-
     def error_ref(self):
         raise ExpressionEvaluationException(EvaluationError.REF)
+
+    def atomic_string(self, name):
+        if name == 'TRUE':
+            return True
+        elif name == 'FALSE':
+            return False
+        else:
+            raise ExpressionEvaluationException(EvaluationError.NAME)
 
     def logical_op(self, op):
         return op.value
@@ -148,6 +145,21 @@ class ExpressionEvaluator(Transformer):
         else:
             raise ValueError(f'Unrecognized logical operator: {op}')
 
+    def arithmetic(self, a, op, b):
+        if not isinstance(a, numbers.Number) or not isinstance(b, numbers.Number):
+            raise ExpressionEvaluationException(EvaluationError.VALUE)
+
+        if op == '+':
+            return a + b
+        elif op == '-':
+            return a - b
+        elif op == '*':
+            return a * b
+        elif op == '/':
+            return a / b
+        elif op == '^':
+            return a ** b
+
     def cell_ref(self, *ref):
         ref = [r.value for r in ref]
         if len(ref) == 3:
@@ -166,6 +178,8 @@ class ExpressionEvaluator(Transformer):
     def function(self, name, *args):
         try:
             return function_map[name.lower()](*args)
+        except KeyError as ex:
+            raise ExpressionEvaluationException(EvaluationError.NAME) from ex
         except TypeError as ex:
             msg = str(ex)
             if msg.startswith('bad operand type'):
@@ -179,8 +193,8 @@ class ExpressionEvaluator(Transformer):
 _parser = Lark(_grammar, start='start', parser='earley')
 
 
-def evaluate(expression: str, cell):
-    evaluator = ExpressionEvaluator(cell)
+def evaluate(expression: str, sheet):
+    evaluator = ExpressionEvaluator(sheet)
 
     tree = _parser.parse(expression)
     # print(tree.pretty())
@@ -189,10 +203,6 @@ def evaluate(expression: str, cell):
     except VisitError as ex:
         if isinstance(ex.orig_exc, ZeroDivisionError):
             return EvaluationError.DIV0
-        elif isinstance(ex.orig_exc, TypeError):
-            return EvaluationError.VALUE
-        elif isinstance(ex.orig_exc, KeyError):
-            return EvaluationError.NAME
         elif isinstance(ex.orig_exc, ExpressionEvaluationException):
             return ex.orig_exc.error
 

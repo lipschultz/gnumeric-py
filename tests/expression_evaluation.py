@@ -63,6 +63,8 @@ class EvaluationTests(unittest.TestCase):
             ('=2^3', 2**3),
             ('=-2+3*4-10/5', 8),
             ('=2*(8-3)^2^3', 2*(8-3)**2**3),
+            ('=TRUE+4', 5),
+            ('=FALSE+4', 4),
             ('=1/0', EvaluationError.DIV0),
             ('=#REF!+1', EvaluationError.REF),
             ('=4+#REF!*3', EvaluationError.REF),
@@ -70,6 +72,23 @@ class EvaluationTests(unittest.TestCase):
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
+
+    def test_arithmetic_operations_between_numbers_and_strings_results_in_value_error(self):
+        cases = (
+            '=4+"string"',
+            '="string"+4',
+            '=4-"string"',
+            '="string"-4',
+            '=4*"string"',
+            '="string"*4',
+            '=4/"string"',
+            '="string"/4',
+            '=4^"string"',
+            '="string"^4',
+        )
+        for case in cases:
+            actual = evaluate(case, self.ANY_SHEET)
+            self.assertEqual(EvaluationError.VALUE, actual, f'Result mismatch on {case}')
 
     def test_numeric_logical_evaluation(self):
         cases = (
@@ -214,7 +233,7 @@ class FunctionEvaluationTests(unittest.TestCase):
 
     def test_name_error(self):
         self.assertEqual(EvaluationError.NAME, evaluate('=NAMEDOESNOTEXIST()', self.ANY_SHEET))
-        # self.assertEqual(EvaluationError.NAME, evaluate('=ABS', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.NAME, evaluate('=ABS', self.ANY_SHEET))
 
     def test_abs(self):
         self.assertEqual(3, evaluate('=ABS(3)', self.ANY_SHEET))
