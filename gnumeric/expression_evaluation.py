@@ -14,6 +14,17 @@ class EvaluationError(enum.Enum):
     NULL = '#NULL!'  # occurs when the intersection of two areas don't actually intersect
 
 
+class ExpressionEvaluationException(Exception):
+    """
+    Evaulating the expression has failed.
+    """
+
+    def __init__(self, error: EvaluationError, msg=None):
+        msg = msg or error.value
+        super().__init__(msg)
+        self.error = error
+
+
 function_map = {
     'abs': abs,
     'len': lambda val: len(str(val)),
@@ -40,9 +51,11 @@ _grammar = f"""
          | string
          | "TRUE"                                     -> true
          | "FALSE"                                    -> false
+         | "#REF!"                                    -> error_ref
          | "(" root ")"
          | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
          | cell_reference                             -> cell_lookup
+         //| FUNC_NAME                                  -> invalid_function_call
 
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
@@ -96,6 +109,9 @@ class ExpressionEvaluator(Transformer):
     def false(self):
         return False
 
+    def error_ref(self):
+        raise ExpressionEvaluationException(EvaluationError.REF)
+
     def logical_op(self, op):
         return op.value
 
@@ -148,7 +164,16 @@ class ExpressionEvaluator(Transformer):
         return a + b
 
     def function(self, name, *args):
-        return function_map[name.lower()](*args)
+        try:
+            return function_map[name.lower()](*args)
+        except TypeError as ex:
+            msg = str(ex)
+            if msg.startswith('bad operand type'):
+                raise ExpressionEvaluationException(EvaluationError.VALUE) from ex
+            elif 'takes exactly' in str(ex):
+                raise ExpressionEvaluationException(EvaluationError.NA) from ex
+            print(type(ex), ex)
+            raise ex
 
 
 _parser = Lark(_grammar, start='start', parser='earley')
@@ -168,6 +193,8 @@ def evaluate(expression: str, cell):
             return EvaluationError.VALUE
         elif isinstance(ex.orig_exc, KeyError):
             return EvaluationError.NAME
+        elif isinstance(ex.orig_exc, ExpressionEvaluationException):
+            return ex.orig_exc.error
 
         print(type(ex.orig_exc), ex.orig_exc)
         raise ex.orig_exc

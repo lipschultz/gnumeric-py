@@ -49,6 +49,10 @@ class EvaluationTests(unittest.TestCase):
         actual = evaluate('=FALSE', self.ANY_SHEET)
         self.assertEqual(False, actual)
 
+    def test_it_evaluates_ref_error(self):
+        actual = evaluate('=#REF!', self.ANY_SHEET)
+        self.assertEqual(EvaluationError.REF, actual)
+
     def test_basic_arithmetic_evaluation(self):
         cases = (
             ('=-2', -2),
@@ -59,7 +63,9 @@ class EvaluationTests(unittest.TestCase):
             ('=2^3', 2**3),
             ('=-2+3*4-10/5', 8),
             ('=2*(8-3)^2^3', 2*(8-3)**2**3),
-            ('=1/0', EvaluationError.DIV0)
+            ('=1/0', EvaluationError.DIV0),
+            ('=#REF!+1', EvaluationError.REF),
+            ('=4+#REF!*3', EvaluationError.REF),
         )
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_SHEET)
@@ -74,6 +80,7 @@ class EvaluationTests(unittest.TestCase):
             ('=2=3', False),
             ('=2<>3', True),
             ('=2<1+5', True),
+            ('=2<#REF!', EvaluationError.REF),
         )
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_SHEET)
@@ -194,6 +201,8 @@ class EvaluationTests(unittest.TestCase):
             ('="cat"&-2+3*4-10/5', 'cat8'),
             ('=(2<3)&"cat"', 'TRUEcat'),
             ('=(2>3)&"cat"', 'FALSEcat'),
+            ('=(2>3)&"cat"', 'FALSEcat'),
+            ('=#REF!&"cat"', EvaluationError.REF),
         )
         for case, expected_result in cases:
             actual = evaluate(case, self.ANY_SHEET)
@@ -205,6 +214,7 @@ class FunctionEvaluationTests(unittest.TestCase):
 
     def test_name_error(self):
         self.assertEqual(EvaluationError.NAME, evaluate('=NAMEDOESNOTEXIST()', self.ANY_SHEET))
+        # self.assertEqual(EvaluationError.NAME, evaluate('=ABS', self.ANY_SHEET))
 
     def test_abs(self):
         self.assertEqual(3, evaluate('=ABS(3)', self.ANY_SHEET))
@@ -213,8 +223,9 @@ class FunctionEvaluationTests(unittest.TestCase):
         self.assertEqual(5/3, evaluate('=ABS(-5/3)', self.ANY_SHEET))
         self.assertEqual(1, evaluate('=ABS(TRUE)', self.ANY_SHEET))
         self.assertEqual(0, evaluate('=ABS(FALSE)', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.VALUE, evaluate('=abs("string")', self.ANY_SHEET))
-        # self.assertEqual(EvaluationError.NA, evaluate('=abs()', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.VALUE, evaluate('=ABS("string")', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.REF, evaluate('=ABS(#REF!)', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.NA, evaluate('=ABS()', self.ANY_SHEET))
 
     def test_len(self):
         self.assertEqual(6, evaluate('=LEN("string")', self.ANY_SHEET))
@@ -223,3 +234,4 @@ class FunctionEvaluationTests(unittest.TestCase):
         self.assertEqual(2, evaluate('=LEN(12)', self.ANY_SHEET))
         self.assertEqual(3, evaluate('=LEN(12/5)', self.ANY_SHEET))
         self.assertEqual(18, evaluate('=LEN(5/3)', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.REF, evaluate('=LEN(#REF!)', self.ANY_SHEET))
