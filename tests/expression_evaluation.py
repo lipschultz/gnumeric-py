@@ -90,6 +90,16 @@ class EvaluationTests(unittest.TestCase):
             actual = evaluate(case, self.ANY_SHEET)
             self.assertEqual(EvaluationError.VALUE, actual, f'Result mismatch on {case}')
 
+    def test_arithmetic_operations_on_large_numbers_results_in_num_error(self):
+        cases = (
+            '=10000000000^10000000000',
+            '=10000000000^1000',
+            '=10^10000000000',
+        )
+        for case in cases:
+            actual = evaluate(case, self.ANY_SHEET)
+            self.assertEqual(EvaluationError.NUM, actual, f'Result mismatch on {case}')
+
     def test_numeric_logical_evaluation(self):
         cases = (
             ('=2<3', True),

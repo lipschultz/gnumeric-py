@@ -1,5 +1,5 @@
 import enum
-import numbers
+import math
 
 from lark import Lark, Transformer, v_args
 from lark.exceptions import VisitError
@@ -146,7 +146,7 @@ class ExpressionEvaluator(Transformer):
             raise ValueError(f'Unrecognized logical operator: {op}')
 
     def arithmetic(self, a, op, b):
-        if not isinstance(a, numbers.Number) or not isinstance(b, numbers.Number):
+        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
             raise ExpressionEvaluationException(EvaluationError.VALUE)
 
         if op == '+':
@@ -158,7 +158,10 @@ class ExpressionEvaluator(Transformer):
         elif op == '/':
             return a / b
         elif op == '^':
-            return a ** b
+            try:
+                return math.pow(a, b)
+            except OverflowError as ex:
+                raise ExpressionEvaluationException(EvaluationError.NUM)
 
     def cell_ref(self, *ref):
         ref = [r.value for r in ref]
