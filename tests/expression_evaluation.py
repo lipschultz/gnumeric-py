@@ -18,39 +18,40 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
+from gnumeric import Workbook
 from gnumeric.expression_evaluation import evaluate, EvaluationError
 
 
-class EvaluationTests(unittest.TestCase):
-    ANY_SHEET = None
+class OperatorAndConstantTests(unittest.TestCase):
+    ANY_CELL = None
 
     def test_it_can_start_with_a_plus_sign(self):
-        actual = evaluate('+-2*3', self.ANY_SHEET)
+        actual = evaluate('+-2*3', self.ANY_CELL)
         self.assertEqual(-6, actual)
 
     def test_it_evaluates_integers(self):
-        actual = evaluate('=54', self.ANY_SHEET)
+        actual = evaluate('=54', self.ANY_CELL)
         self.assertEqual(54, actual)
         self.assertIsInstance(actual, int)
 
     def test_it_evaluates_floats(self):
-        actual = evaluate('=5.4', self.ANY_SHEET)
+        actual = evaluate('=5.4', self.ANY_CELL)
         self.assertEqual(5.4, actual)
 
     def test_it_evaluates_text(self):
-        actual = evaluate('="test"', self.ANY_SHEET)
+        actual = evaluate('="test"', self.ANY_CELL)
         self.assertEqual('test', actual)
 
     def test_it_evaluates_true(self):
-        actual = evaluate('=TRUE', self.ANY_SHEET)
+        actual = evaluate('=TRUE', self.ANY_CELL)
         self.assertEqual(True, actual)
 
     def test_it_evaluates_false(self):
-        actual = evaluate('=FALSE', self.ANY_SHEET)
+        actual = evaluate('=FALSE', self.ANY_CELL)
         self.assertEqual(False, actual)
 
     def test_it_evaluates_ref_error(self):
-        actual = evaluate('=#REF!', self.ANY_SHEET)
+        actual = evaluate('=#REF!', self.ANY_CELL)
         self.assertEqual(EvaluationError.REF, actual)
 
     def test_basic_arithmetic_evaluation(self):
@@ -70,7 +71,7 @@ class EvaluationTests(unittest.TestCase):
             ('=4+#REF!*3', EvaluationError.REF),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_arithmetic_operations_between_numbers_and_strings_results_in_value_error(self):
@@ -87,7 +88,7 @@ class EvaluationTests(unittest.TestCase):
             '="string"^4',
         )
         for case in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(EvaluationError.VALUE, actual, f'Result mismatch on {case}')
 
     def test_arithmetic_operations_on_large_numbers_results_in_num_error(self):
@@ -97,7 +98,7 @@ class EvaluationTests(unittest.TestCase):
             '=10^10000000000',
         )
         for case in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(EvaluationError.NUM, actual, f'Result mismatch on {case}')
 
     def test_numeric_logical_evaluation(self):
@@ -112,7 +113,7 @@ class EvaluationTests(unittest.TestCase):
             ('=2<#REF!', EvaluationError.REF),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_string_logical_evaluation(self):
@@ -125,7 +126,7 @@ class EvaluationTests(unittest.TestCase):
             ('="case"<>"test"', True),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_string_logical_evaluation_is_case_insensitive(self):
@@ -138,7 +139,7 @@ class EvaluationTests(unittest.TestCase):
             ('="case"<>"CASE"', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_numbers_always_less_than_text_and_bools(self):
@@ -165,7 +166,7 @@ class EvaluationTests(unittest.TestCase):
             (f'=2>=FALSE', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_text_always_less_than_bools(self):
@@ -192,7 +193,7 @@ class EvaluationTests(unittest.TestCase):
             (f'="">=FALSE', False),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_boolean_logical_evaluation(self):
@@ -219,7 +220,7 @@ class EvaluationTests(unittest.TestCase):
             (f'=FALSE>=FALSE', True),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
     def test_text_concatenation(self):
@@ -234,33 +235,134 @@ class EvaluationTests(unittest.TestCase):
             ('=#REF!&"cat"', EvaluationError.REF),
         )
         for case, expected_result in cases:
-            actual = evaluate(case, self.ANY_SHEET)
+            actual = evaluate(case, self.ANY_CELL)
             self.assertEqual(expected_result, actual, f'Result mismatch on {case}')
 
 
+class CellReferenceTests(unittest.TestCase):
+    def setUp(self):
+        self.wb = Workbook()
+        self.ws = self.wb.create_sheet('Title')
+
+    def test_referencing_string_cell_gets_string_value(self):
+        expected_value = 'string'
+        reference_cell = self.ws.cell(0, 0)
+        reference_cell.set_value(expected_value)
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=A1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_string_cell_with_absolutes_gets_correct_value(self):
+        expected_value = 'string'
+        reference_cell = self.ws.cell(0, 0)
+        reference_cell.set_value(expected_value)
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=$A$1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_non_existent_cell_returns_zero(self):
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=A1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(0, actual_value)
+
+    def test_referencing_cell_in_another_sheet(self):
+        other_sheet = self.wb.create_sheet('Other')
+        expected_value = 'string'
+        reference_cell = other_sheet.cell(0, 0)
+        reference_cell.set_value(expected_value)
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=Other!A1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space(self):
+        other_sheet = self.wb.create_sheet('Other Sheet')
+        expected_value = 'string'
+        reference_cell = other_sheet.cell(0, 0)
+        reference_cell.set_value(expected_value)
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value("='Other Sheet'!A1")
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space_and_column_and_row_are_absolute_references(self):
+        other_sheet = self.wb.create_sheet('Other Sheet')
+        expected_value = 'string'
+        reference_cell = other_sheet.cell(0, 0)
+        reference_cell.set_value(expected_value)
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value("='Other Sheet'!$A$1")
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_cell_in_nonexistent_sheet_results_in_ref_error(self):
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=Other!A1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(EvaluationError.REF, actual_value)
+
+    def test_referencing_formula_cell_gets_formulas_result(self):
+        reference_cell = self.ws.cell(0, 0)
+        reference_cell.set_value('=5+2')
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=A1')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(7, actual_value)
+
+    @unittest.skip('Fails on "infinite" recursive loop')
+    def test_circular_references_end_and_use_zero_as_the_value(self):
+        first_cell = self.ws.cell(0, 0)
+        first_cell.set_value('=B1')
+
+        second_cell = self.ws.cell(0, 1)
+        second_cell.set_value('=A1')
+
+        actual_first_cell = evaluate(first_cell.text, first_cell)
+        actual_second_cell = evaluate(second_cell.text, second_cell)
+        self.assertEqual(0, actual_first_cell)
+        self.assertEqual(0, actual_second_cell)
+
+
 class FunctionEvaluationTests(unittest.TestCase):
-    ANY_SHEET = None
+    ANY_CELL = None
 
     def test_name_error(self):
-        self.assertEqual(EvaluationError.NAME, evaluate('=NAMEDOESNOTEXIST()', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.NAME, evaluate('=ABS', self.ANY_SHEET))
+        self.assertEqual(EvaluationError.NAME, evaluate('=NAMEDOESNOTEXIST()', self.ANY_CELL))
+        self.assertEqual(EvaluationError.NAME, evaluate('=ABS', self.ANY_CELL))
 
     def test_abs(self):
-        self.assertEqual(3, evaluate('=ABS(3)', self.ANY_SHEET))
-        self.assertEqual(3, evaluate('=ABS(-3)', self.ANY_SHEET))
-        self.assertEqual(5/3, evaluate('=ABS(5/3)', self.ANY_SHEET))
-        self.assertEqual(5/3, evaluate('=ABS(-5/3)', self.ANY_SHEET))
-        self.assertEqual(1, evaluate('=ABS(TRUE)', self.ANY_SHEET))
-        self.assertEqual(0, evaluate('=ABS(FALSE)', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.VALUE, evaluate('=ABS("string")', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.REF, evaluate('=ABS(#REF!)', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.NA, evaluate('=ABS()', self.ANY_SHEET))
+        self.assertEqual(3, evaluate('=ABS(3)', self.ANY_CELL))
+        self.assertEqual(3, evaluate('=ABS(-3)', self.ANY_CELL))
+        self.assertEqual(5 / 3, evaluate('=ABS(5/3)', self.ANY_CELL))
+        self.assertEqual(5 / 3, evaluate('=ABS(-5/3)', self.ANY_CELL))
+        self.assertEqual(1, evaluate('=ABS(TRUE)', self.ANY_CELL))
+        self.assertEqual(0, evaluate('=ABS(FALSE)', self.ANY_CELL))
+        self.assertEqual(EvaluationError.VALUE, evaluate('=ABS("string")', self.ANY_CELL))
+        self.assertEqual(EvaluationError.REF, evaluate('=ABS(#REF!)', self.ANY_CELL))
+        self.assertEqual(EvaluationError.NA, evaluate('=ABS()', self.ANY_CELL))
 
     def test_len(self):
-        self.assertEqual(6, evaluate('=LEN("string")', self.ANY_SHEET))
-        self.assertEqual(4, evaluate('=LEN(TRUE)', self.ANY_SHEET))
-        self.assertEqual(5, evaluate('=LEN(FALSE)', self.ANY_SHEET))
-        self.assertEqual(2, evaluate('=LEN(12)', self.ANY_SHEET))
-        self.assertEqual(3, evaluate('=LEN(12/5)', self.ANY_SHEET))
-        self.assertEqual(18, evaluate('=LEN(5/3)', self.ANY_SHEET))
-        self.assertEqual(EvaluationError.REF, evaluate('=LEN(#REF!)', self.ANY_SHEET))
+        self.assertEqual(6, evaluate('=LEN("string")', self.ANY_CELL))
+        self.assertEqual(4, evaluate('=LEN(TRUE)', self.ANY_CELL))
+        self.assertEqual(5, evaluate('=LEN(FALSE)', self.ANY_CELL))
+        self.assertEqual(2, evaluate('=LEN(12)', self.ANY_CELL))
+        self.assertEqual(3, evaluate('=LEN(12/5)', self.ANY_CELL))
+        self.assertEqual(18, evaluate('=LEN(5/3)', self.ANY_CELL))
+        self.assertEqual(EvaluationError.REF, evaluate('=LEN(#REF!)', self.ANY_CELL))

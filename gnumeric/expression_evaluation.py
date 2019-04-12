@@ -1,8 +1,12 @@
 import enum
 import math
+import re
+from typing import Optional, Tuple
 
 from lark import Lark, Transformer, v_args
 from lark.exceptions import VisitError
+
+from gnumeric.utils import coordinate_from_spreadsheet
 
 
 class EvaluationError(enum.Enum):
@@ -50,9 +54,9 @@ _grammar = f"""
          | string
          | "(" root ")"
          | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
-         | cell_reference                             -> cell_lookup
          | "#REF!"                                    -> error_ref
-         | FUNC_NAME                                  -> atomic_string
+         | ATOMIC_STR                                 -> atomic_string
+         // | cell_reference                             -> cell_lookup
 
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
@@ -65,6 +69,7 @@ _grammar = f"""
 
     // FUNC_NAME: {' | '.join(f'"{f}"i' for f in function_map.keys())}
     FUNC_NAME: LETTER ("_"|LETTER|DIGIT|".")*
+    ATOMIC_STR: (LETTER | "$" | "'") ("_"|LETTER|DIGIT|"."|"!"|"$"|"'"|" ")*
 
     %import common.DIGIT
     %import common.SIGNED_NUMBER -> NUMBER
@@ -86,8 +91,8 @@ def to_str(value) -> str:
 @v_args(inline=True)
 class ExpressionEvaluator(Transformer):
 
-    def __init__(self, sheet):
-        self._sheet = sheet
+    def __init__(self, cell):
+        self._cell = cell
 
     def number(self, val):
         try:
@@ -107,7 +112,20 @@ class ExpressionEvaluator(Transformer):
         elif name == 'FALSE':
             return False
         else:
-            raise ExpressionEvaluationException(EvaluationError.NAME)
+            res = re.match(r"('?[A-Za-z0-9_ ]+'?!)?(\$?[A-Za-z]{1,3})(\$?\d{1,5})", name)
+            if res:
+                sheet, col, row = res.groups()
+                sheet = sheet[:-1] if sheet is not None else None
+
+                if sheet is not None and sheet.startswith("'") and sheet.endswith("'"):
+                    sheet = sheet[1:-1]
+
+                cell_value = self.cell_lookup((sheet, col, row))
+                if cell_value is not None and not isinstance(cell_value, (int, float, str)):
+                    cell_value = cell_value.value
+                return cell_value
+
+        raise ExpressionEvaluationException(EvaluationError.NAME)
 
     def logical_op(self, op):
         return op.value
@@ -163,7 +181,7 @@ class ExpressionEvaluator(Transformer):
             except OverflowError as ex:
                 raise ExpressionEvaluationException(EvaluationError.NUM)
 
-    def cell_ref(self, *ref):
+    def cell_ref(self, *ref) -> Tuple[Optional[str], str, str]:
         ref = [r.value for r in ref]
         if len(ref) == 3:
             return tuple(ref)
@@ -171,7 +189,16 @@ class ExpressionEvaluator(Transformer):
             return (None, *ref)
 
     def cell_lookup(self, ref):
-        return 'cell lookup:' + str(ref)
+        ref_sheet, ref_col, ref_row = ref
+        try:
+            sheet = self._cell.worksheet if ref_sheet is None else self._cell.worksheet.workbook.get_sheet_by_name(ref_sheet)
+        except KeyError:
+            raise ExpressionEvaluationException(EvaluationError.REF)
+        try:
+            cell = sheet.cell(*coordinate_from_spreadsheet(f'{ref_col}{ref_row}'), create=False)
+        except IndexError:
+            return 0
+        return cell.value
 
     def concat(self, a, b):
         a = to_str(a)
@@ -196,8 +223,8 @@ class ExpressionEvaluator(Transformer):
 _parser = Lark(_grammar, start='start', parser='earley')
 
 
-def evaluate(expression: str, sheet):
-    evaluator = ExpressionEvaluator(sheet)
+def evaluate(expression: str, cell):
+    evaluator = ExpressionEvaluator(cell)
 
     tree = _parser.parse(expression)
     # print(tree.pretty())

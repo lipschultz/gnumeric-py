@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-from gnumeric import utils
+from gnumeric import utils, expression_evaluation
 
 
 class Expression:
@@ -49,12 +49,19 @@ class Expression:
         return self.__exprid
 
     @property
-    def value(self):
+    def text(self) -> str:
         """
         Returns the text of the expression, with cell references from the perspective of the cell where the expression
         is stored.
         """
         return self.__get_raw_originating_cell()[2]
+
+    @property
+    def value(self):
+        """
+        Returns the result of the expression's evaluation.
+        """
+        return expression_evaluation.evaluate(self.text, self.__cell)
 
     @property
     def worksheet(self):
@@ -94,8 +101,8 @@ class Expression:
             return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort=sort)
 
     def __str__(self):
-        return self.value
+        return self.text
 
     def __repr__(self):
         return 'Expression(id=%s, text="%s", ws=%s, cell=(%d, %d))' % (
-            self.id, self.value, self.__worksheet, self.__cell.row, self.__cell.column)
+            self.id, self.text, self.__worksheet, self.__cell.row, self.__cell.column)

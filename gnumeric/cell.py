@@ -44,6 +44,10 @@ class Cell:
         self.__cell.set('ExprID', expr_id)
 
     @property
+    def worksheet(self):
+        return self.__worksheet
+
+    @property
     def column(self) -> int:
         """
         The column this cell belongs to (0-indexed).

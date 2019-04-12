@@ -69,7 +69,7 @@ class CellTests(unittest.TestCase):
             # TODO: Cell values of Error cells
 
             if test_cell.value_type == cell.VALUE_TYPE_EXPR:
-                self.assertEqual(test_cell.get_value().value, expected_value)
+                self.assertEqual(test_cell.get_value().text, expected_value)
             else:
                 self.assertEqual(test_cell.get_value(), expected_value,
                                  str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
@@ -101,7 +101,7 @@ class CellTests(unittest.TestCase):
 
         c1 = ws.cell(1, 1)
         c1_val = c1.value
-        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(c1_val.get_all_cells(), expected_cells)
@@ -116,7 +116,7 @@ class CellTests(unittest.TestCase):
 
         c1 = ws.cell(4, 1)
         c1_val = c1.value
-        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(c1_val.get_all_cells(), expected_cells)
@@ -131,7 +131,7 @@ class CellTests(unittest.TestCase):
 
         c1 = ws.cell(3, 1)
         c1_val = c1.value
-        self.assertEqual(c1_val.value, expected_value)
+        self.assertEqual(c1_val.text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(c1_val.get_all_cells(), expected_cells)
@@ -232,13 +232,13 @@ class CellTests(unittest.TestCase):
         expected_cells = [expected_originating_cell, ws.cell(4, 1), new_cell]
 
         nc_val = new_cell.value
-        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.text, expected_value)
         self.assertEqual(nc_val.id, expected_id)
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
 
         nc_val = expected_originating_cell.value
-        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.text, expected_value)
         self.assertEqual(nc_val.id, expected_id)
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
@@ -256,13 +256,13 @@ class CellTests(unittest.TestCase):
         expected_cells = [expected_originating_cell, new_cell]
 
         nc_val = new_cell.value
-        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.text, expected_value)
         self.assertEqual(nc_val.id, expected_id)
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
 
         nc_val = expected_originating_cell.value
-        self.assertEqual(nc_val.value, expected_value)
+        self.assertEqual(nc_val.text, expected_value)
         self.assertEqual(nc_val.id, expected_id)
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
