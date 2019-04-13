@@ -34,6 +34,17 @@ VALUE_TYPE_ARRAY = 80
 
 
 class Cell:
+    _instances = {}
+
+    def __new__(cls, cell_element, style_element, worksheet, ns):
+        key = (cell_element, style_element, worksheet)
+        instance = cls._instances.get(key)
+        if not instance:
+            instance = super(Cell, cls).__new__(cls)
+            instance.__cached_value = None
+            cls._instances[key] = instance
+        return instance
+
     def __init__(self, cell_element, style_element, worksheet, ns):
         self.__cell = cell_element
         self.__style = style_element
@@ -105,9 +116,11 @@ class Cell:
         else:
             self.__cell.set('ValueType', str(value_type))
 
-    def get_value(self) -> Union[bool, int, float, Expression, str]:
+    def get_value(self, *, compute_expression: bool=False) -> Union[bool, int, float, Expression, str]:
         """
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
+
+        If the cell is an expression: If `compute_expression` is True, the the result of the expression is returned, otherwise an Expression object is returned.
         """
         value = self.text
         if self.value_type == VALUE_TYPE_BOOLEAN:
@@ -117,7 +130,14 @@ class Cell:
         elif self.value_type == VALUE_TYPE_FLOAT:
             return float(value)
         elif self.value_type == VALUE_TYPE_EXPR:
-            return Expression(self.__cell.get('ExprID'), self.__worksheet, self)
+            expression = Expression(self.__cell.get('ExprID'), self.__worksheet, self)
+            if not compute_expression:
+                return expression
+            else:
+                if self.__cached_value is None:
+                    self.__cached_value = 0
+                    self.__cached_value = expression.value
+                return self.__cached_value
         else:
             return value
 

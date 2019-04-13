@@ -670,3 +670,12 @@ class SheetTests(unittest.TestCase):
             ws.delete_cell(1, 1)
         self.assertEqual(ws.get_cell_collection(), expected_cells)
 
+    @unittest.skip('Still need to implement inserting cells/rows/columns')
+    def test_inserting_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(self):
+        # This is needed because of the singleton nature of the Cell class
+        self.assertTrue(False)
+
+    @unittest.skip('Still need to implement removing cells/rows/columns')
+    def test_removing_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(self):
+        # This is needed because of the singleton nature of the Cell class
+        self.assertTrue(False)

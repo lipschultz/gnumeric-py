@@ -194,11 +194,12 @@ class ExpressionEvaluator(Transformer):
             sheet = self._cell.worksheet if ref_sheet is None else self._cell.worksheet.workbook.get_sheet_by_name(ref_sheet)
         except KeyError:
             raise ExpressionEvaluationException(EvaluationError.REF)
+
         try:
             cell = sheet.cell(*coordinate_from_spreadsheet(f'{ref_col}{ref_row}'), create=False)
         except IndexError:
             return 0
-        return cell.value
+        return cell.get_value(compute_expression=True)
 
     def concat(self, a, b):
         a = to_str(a)

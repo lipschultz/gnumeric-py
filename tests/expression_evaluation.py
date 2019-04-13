@@ -326,7 +326,6 @@ class CellReferenceTests(unittest.TestCase):
         actual_value = evaluate(test_cell.text, test_cell)
         self.assertEqual(7, actual_value)
 
-    @unittest.skip('Fails on "infinite" recursive loop')
     def test_circular_references_end_and_use_zero_as_the_value(self):
         first_cell = self.ws.cell(0, 0)
         first_cell.set_value('=B1')
@@ -338,6 +337,9 @@ class CellReferenceTests(unittest.TestCase):
         actual_second_cell = evaluate(second_cell.text, second_cell)
         self.assertEqual(0, actual_first_cell)
         self.assertEqual(0, actual_second_cell)
+
+    def test_updating_referenced_cell_updates_expression_cell_value(self):
+        pass
 
 
 class FunctionEvaluationTests(unittest.TestCase):

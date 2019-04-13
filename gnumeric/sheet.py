@@ -491,5 +491,8 @@ class Sheet:
                 self.__sheet_name == other.__sheet_name and
                 self.__sheet == other.__sheet)
 
+    def __hash__(self) -> int:
+        return hash(self.__workbook) + hash(self.__sheet)
+
     def __str__(self) -> str:
         return self.title
