@@ -124,7 +124,7 @@ class Cell:
         """
         value = self.text
         if self.value_type == VALUE_TYPE_BOOLEAN:
-            return bool(value)
+            return value.lower() == 'true'
         elif self.value_type == VALUE_TYPE_INTEGER:
             return int(value)
         elif self.value_type == VALUE_TYPE_FLOAT:

@@ -63,7 +63,7 @@ class CellTests(unittest.TestCase):
             elif test_cell.value_type == cell.VALUE_TYPE_FLOAT:
                 expected_value = float(expected_value)
             elif test_cell.value_type == cell.VALUE_TYPE_BOOLEAN:
-                expected_value = bool(expected_value)
+                expected_value = expected_value.lower() == 'true'
             elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
                 expected_value = None
             # TODO: Cell values of Error cells
@@ -198,6 +198,20 @@ class CellTests(unittest.TestCase):
         test_cell = self.ws.cell(0, 0)
         test_cell.value = 17
         self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_INTEGER)
+
+    def test_setting_true_stores_true_value(self):
+        test_cell = self.ws.cell(0, 0)
+        test_cell.value = True
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_BOOLEAN)
+        self.assertTrue(test_cell.value)
+        self.assertEqual(test_cell.text, 'TRUE')
+
+    def test_setting_false_stores_false_value(self):
+        test_cell = self.ws.cell(0, 0)
+        test_cell.value = False
+        self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_BOOLEAN)
+        self.assertFalse(test_cell.value)
+        self.assertEqual(test_cell.text, 'FALSE')
 
     def test_cells_equal(self):
         test_cell1 = self.ws.cell(0, 0)
