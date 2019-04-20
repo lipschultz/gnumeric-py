@@ -166,6 +166,7 @@ class SheetTests(unittest.TestCase):
         new_dimensions = old_dimensions[:2] + (15, 30)
         self.assertEqual(ws.calculate_dimension(), new_dimensions)
 
+    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_expression_does_increase_rectangle(self):
         ws = self.loaded_wb.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
@@ -191,6 +192,7 @@ class SheetTests(unittest.TestCase):
             ws.cell_text(0, 2)
             # TODO: should also confirm that the cell is not created
 
+    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_get_content_cells(self):
         ws = self.wb.create_sheet("Test")
         cells = set()
@@ -215,6 +217,7 @@ class SheetTests(unittest.TestCase):
 
         self.assertEqual(set(ws.get_cell_collection()), cells)
 
+    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_get_content_cells_including_empty(self):
         ws = self.wb.create_sheet("Test")
         cells = set()

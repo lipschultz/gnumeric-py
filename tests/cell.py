@@ -233,6 +233,7 @@ class CellTests(unittest.TestCase):
         ws = self.loaded_wb.get_sheet_by_name('Mine & Yours Sheet[s]!')
         self.assertEqual(ws.cell(0, 0).text_format, '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
 
+    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_copying_shared_expression_to_new_cell(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
 
@@ -257,6 +258,7 @@ class CellTests(unittest.TestCase):
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
 
+    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_sharing_a_non_shared_expression(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
 

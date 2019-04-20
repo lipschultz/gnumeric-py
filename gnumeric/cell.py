@@ -202,6 +202,7 @@ class Cell:
             self.__cell.text = str(value)
 
         self.__set_type(value_type)
+        self.__cached_value = self.get_value(compute_expression=True)
 
     value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
 

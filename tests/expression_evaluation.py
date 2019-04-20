@@ -338,6 +338,22 @@ class CellReferenceTests(unittest.TestCase):
         self.assertEqual(0, actual_first_cell)
         self.assertEqual(0, actual_second_cell)
 
+    def test_creating_a_circular_reference_from_existing_cell_uses_cells_old_value_when_determining_cells_new_value(self):
+        first_cell = self.ws.cell(0, 0)
+        first_cell.set_value(5)
+
+        second_cell = self.ws.cell(0, 1)
+        second_cell.set_value('=A1')
+
+        first_cell.set_value('=B1+5')
+
+        actual_second_cell = evaluate(second_cell.text, second_cell)
+        self.assertEqual(5, actual_second_cell)
+
+        actual_second_cell = evaluate(first_cell.text, first_cell)
+        self.assertEqual(10, actual_second_cell)
+
+    @unittest.skip('Not implemented yet')
     def test_updating_referenced_cell_updates_expression_cell_value(self):
         pass
 
