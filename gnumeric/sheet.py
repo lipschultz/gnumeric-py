@@ -333,9 +333,14 @@ class Sheet:
         key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, *, include_empty: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
+    def get_cell_collection(self, start=None, end=None, *, include_empty: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
         """
-        Return all cells as a list.
+        Return cells (as a list).
+
+        If `start` and `end` are provided, then only cells within the (inclusive) range are returned.  If just `start`
+        is given, then everything in a position greater than or equal to that cell's position are included.  If just
+        end` is given, then everything in a position less than or equal to that cell's position are included.  `start`
+        and `end` can be 'A1'-style coordinates, a (row, col) tuple (with 0-based indexes), or Cell objects.
 
         If `include_empty` is False (default), then only cells with content will be included.  If `include_empty` is
         True, then empty cells that have been created will be included.
@@ -350,6 +355,25 @@ class Sheet:
             cells = self.__get_non_empty_cells()
 
         cells = [self.__ce2c(c) for c in cells]
+
+        if start is None:
+            start = (0, 0)
+        elif isinstance(start, Cell):
+            start = (start.row, start.column)
+        elif isinstance(start, str):
+            start = coordinate_from_spreadsheet(start)
+
+        if end is None:
+            end = (self.max_allowed_row, self.max_allowed_column)
+        elif isinstance(end, Cell):
+            end = (end.row, end.column)
+        elif isinstance(end, str):
+            end = coordinate_from_spreadsheet(end)
+
+        start_row, start_column = start
+        end_row, end_column = end
+        cells = [c for c in cells if start_column <= c.column <= end_column and start_row <= c.row <= end_row]
+
         if sort:
             return self.__sort_cells(cells, sort == 'row')
         else:

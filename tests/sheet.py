@@ -23,7 +23,7 @@ from gnumeric.exceptions import UnsupportedOperationException
 from gnumeric.workbook import Workbook
 
 
-class SheetTests(unittest.TestCase):
+class SheetMetadataTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
         self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
@@ -109,6 +109,12 @@ class SheetTests(unittest.TestCase):
         ws = self.loaded_wb.get_sheet_by_name('Graph1')
         with self.assertRaises(UnsupportedOperationException):
             ws.calculate_dimension()
+
+
+class AccessCellTests(unittest.TestCase):
+    def setUp(self):
+        self.wb = Workbook()
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
 
     def test_get_cell_at_index(self):
         ws = self.loaded_wb.get_sheet_by_name('Sheet1')
@@ -242,6 +248,122 @@ class SheetTests(unittest.TestCase):
         cells.add(c)
 
         self.assertEqual(set(ws.get_cell_collection(include_empty=True)), cells)
+
+    def test_get_range_of_cells_by_passing_int_indices(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+
+        c = ws.cell(0, 4)
+        c.set_value('last')
+
+        self.assertEqual(set(ws.get_cell_collection((0, 1), (0, 3))), cells)
+
+    def test_get_range_of_cells_by_passing_coordinates(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+
+        c = ws.cell(0, 4)
+        c.set_value('last')
+
+        self.assertEqual(set(ws.get_cell_collection('B1', 'D1')), cells)
+
+    def test_get_range_of_cells_by_boundary_cells(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+        start_cell = c
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+        end_cell = c
+
+        c = ws.cell(0, 4)
+        c.set_value('last')
+
+        self.assertEqual(set(ws.get_cell_collection(start_cell, end_cell)), cells)
+
+    def test_get_range_of_cells_leaving_off_end_cell_returns_all_cells_greater_than_start_cells_position(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+        start_cell = c
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+
+        c = ws.cell(0, 3)
+
+        c = ws.cell(0, 4)
+        c.set_value('last')
+        cells.add(c)
+
+        self.assertEqual(set(ws.get_cell_collection(start_cell)), cells)
+
+    def test_get_range_of_cells_leaving_offstart_cell_returns_all_cells_less_than_end_cells_position(self):
+        ws = self.wb.create_sheet("Test")
+        cells = set()
+
+        c = ws.cell(0, 0)
+        c.set_value('string')
+        cells.add(c)
+
+        c = ws.cell(0, 1)
+        c.set_value(-17)
+        cells.add(c)
+
+        c = ws.cell(0, 2)
+        c.set_value(13.4)
+        cells.add(c)
+        end_cell = c
+
+        c = ws.cell(0, 3)
+
+        c = ws.cell(0, 4)
+        c.set_value('last')
+
+        self.assertEqual(set(ws.get_cell_collection(end=end_cell)), cells)
 
     def test_get_expression_map_from_worksheet_with_expressions(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
