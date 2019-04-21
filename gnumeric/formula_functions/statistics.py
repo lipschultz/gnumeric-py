@@ -1,9 +1,9 @@
-from gnumeric.evaluation_errors import EvaluationError
 from gnumeric.formula_functions.argument_helpers import get_just_numeric
 
 
-def gnm_sum(values):
-    return sum(get_just_numeric(values))
+def gnm_max(values):
+    values = get_just_numeric(values)
+    return max(values)
 
 
 local_objects = locals().copy()

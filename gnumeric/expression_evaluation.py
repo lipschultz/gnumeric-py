@@ -1,38 +1,19 @@
-import enum
 import math
 import re
 from typing import Optional, Tuple
 
 from lark import Lark, Transformer, v_args
-from lark.exceptions import VisitError
+from lark.exceptions import VisitError, UnexpectedCharacters
 
+from gnumeric.evaluation_errors import EvaluationError, ExpressionEvaluationException
+from gnumeric.formula_functions import mathematics, statistics
 from gnumeric.utils import coordinate_from_spreadsheet
-
-
-class EvaluationError(enum.Enum):
-    DIV0 = '#DIV/0!'
-    VALUE = '#VALUE!'
-    NA = '#N/A'
-    NAME = '#NAME?'
-    NUM = '#NUM!'  # =10000000000^1000000000
-    REF = '#REF!'
-    NULL = '#NULL!'  # occurs when the intersection of two areas don't actually intersect
-
-
-class ExpressionEvaluationException(Exception):
-    """
-    Evaulating the expression has failed.
-    """
-
-    def __init__(self, error: EvaluationError, msg=None):
-        msg = msg or error.value
-        super().__init__(msg)
-        self.error = error
-
 
 function_map = {
     'abs': abs,
     'len': lambda val: len(str(val)),
+    **mathematics.functions,
+    **statistics.functions,
 }
 
 
@@ -50,17 +31,23 @@ _grammar = f"""
         | product /[*\\/]/ exponentiation  -> arithmetic
     ?exponentiation: atom
                    | atom /\\^/ exponentiation   -> arithmetic
+
+    ?function_argument: root
+                      | cell_range
+    ?cell_range: sheet_cell_reference ":" cell_reference
+
     ?atom: NUMBER                                     -> number
-         | string
-         | "(" root ")"
-         | FUNC_NAME "(" [ root ( "," root )* ] ")"   -> function
          | "#REF!"                                    -> error_ref
          | ATOMIC_STR                                 -> atomic_string
-         // | cell_reference                             -> cell_lookup
+         | FUNC_NAME "(" [ function_argument ( "," function_argument )* ] ")"   -> function
+         | string
+         | "(" root ")"
+         // | sheet_cell_reference                       -> cell_lookup
 
     !logical_op: "=" | "<>" | "<" | "<=" | ">" | ">="
 
-    ?cell_reference: (SHEETNAME "!")? "$"? COLUMN "$"? ROW   -> cell_ref
+    ?sheet_cell_reference: (SHEETNAME "!")? cell_reference   -> sheet_cell_ref
+    ?cell_reference: "$"? COLUMN "$"? ROW                    -> cell_ref
     COLUMN: LETTER~1..3
     ROW: DIGIT~1..5
     SHEETNAME: LETTER+
@@ -86,6 +73,16 @@ def to_str(value) -> str:
     elif isinstance(value, bool):
         value = 'TRUE' if value else 'FALSE'
     return str(value)
+
+
+def get_cell(ref, formula_cell):
+    ref_sheet, ref_col, ref_row = ref
+    try:
+        sheet = formula_cell.worksheet if ref_sheet is None else formula_cell.worksheet.workbook.get_sheet_by_name(ref_sheet)
+    except KeyError:
+        raise ExpressionEvaluationException(EvaluationError.REF)
+
+    return sheet.cell(*coordinate_from_spreadsheet(f'{ref_col}{ref_row}'), create=True)
 
 
 @v_args(inline=True)
@@ -181,25 +178,26 @@ class ExpressionEvaluator(Transformer):
             except OverflowError as ex:
                 raise ExpressionEvaluationException(EvaluationError.NUM)
 
-    def cell_ref(self, *ref) -> Tuple[Optional[str], str, str]:
-        ref = [r.value for r in ref]
-        if len(ref) == 3:
-            return tuple(ref)
+    def cell_ref(self, *ref) -> Tuple[str, str]:
+        return ref[0].value, ref[1].value
+
+    def sheet_cell_ref(self, *ref) -> Tuple[Optional[str], str, str]:
+        if len(ref) == 1:
+            ref = (None, *ref[0])
         else:
-            return (None, *ref)
+            ref = (ref[0].value, *ref[1])
+        return ref
+
+    def cell_range(self, start, end):
+        start_cell = get_cell(start, self._cell)
+        end_cell = get_cell((None, ) + end, self._cell)
+        return start_cell.worksheet.get_cell_collection(start_cell, end_cell)
 
     def cell_lookup(self, ref):
-        ref_sheet, ref_col, ref_row = ref
-        try:
-            sheet = self._cell.worksheet if ref_sheet is None else self._cell.worksheet.workbook.get_sheet_by_name(ref_sheet)
-        except KeyError:
-            raise ExpressionEvaluationException(EvaluationError.REF)
-
-        try:
-            cell = sheet.cell(*coordinate_from_spreadsheet(f'{ref_col}{ref_row}'), create=False)
-        except IndexError:
+        cell = get_cell(ref, self._cell)
+        if cell is None:
             return 0
-        return cell.get_value(compute_expression=True)
+        return cell.result
 
     def concat(self, a, b):
         a = to_str(a)
@@ -227,8 +225,13 @@ _parser = Lark(_grammar, start='start', parser='earley')
 def evaluate(expression: str, cell):
     evaluator = ExpressionEvaluator(cell)
 
-    tree = _parser.parse(expression)
+    try:
+        tree = _parser.parse(expression)
+    except UnexpectedCharacters:
+        return EvaluationError.VALUE
+
     # print(tree.pretty())
+
     try:
         result = evaluator.transform(tree)
     except VisitError as ex:

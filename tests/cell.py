@@ -28,6 +28,33 @@ class CellTests(unittest.TestCase):
         self.wb = Workbook()
         self.ws = self.wb.create_sheet('Title')
 
+    def test_cells_equal(self):
+        test_cell1 = self.ws.cell(0, 0)
+        test_cell2 = self.ws.cell(0, 0)
+        self.assertTrue(test_cell1 == test_cell2)
+
+    def test_cells_unequal(self):
+        test_cell1 = self.ws.cell(0, 0)
+        test_cell2 = self.ws.cell(1, 0)
+        self.assertFalse(test_cell1 == test_cell2)
+
+    def test_cell_coordinate(self):
+        row = 6
+        col = 4
+        c = self.ws.cell(row, col)
+        self.assertEqual(c.coordinate, (row, col))
+
+    def test_get_text_format(self):
+        ws = self.loaded_wb.get_sheet_by_name('Mine & Yours Sheet[s]!')
+        self.assertEqual(ws.cell(0, 0).text_format, '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
+
+
+class TestCellType(unittest.TestCase):
+    def setUp(self):
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
+        self.wb = Workbook()
+        self.ws = self.wb.create_sheet('Title')
+
     def test_cell_types(self):
         ws = self.loaded_wb.get_sheet_by_name('CellTypes')
         for row in range(ws.max_row + 1):
@@ -51,90 +78,6 @@ class CellTests(unittest.TestCase):
             self.assertEqual(test_cell.value_type, expected_type,
                              str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
                              + ', but expected ' + str(expected_type))
-
-    def test_get_cell_values(self):
-        ws = self.loaded_wb.get_sheet_by_name('CellTypes')
-        for row in range(ws.max_row + 1):
-            test_cell = ws.cell(row, 1)
-
-            expected_value = test_cell.text
-            if test_cell.value_type == cell.VALUE_TYPE_INTEGER:
-                expected_value = int(expected_value)
-            elif test_cell.value_type == cell.VALUE_TYPE_FLOAT:
-                expected_value = float(expected_value)
-            elif test_cell.value_type == cell.VALUE_TYPE_BOOLEAN:
-                expected_value = expected_value.lower() == 'true'
-            elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
-                expected_value = None
-            # TODO: Cell values of Error cells
-
-            if test_cell.value_type == cell.VALUE_TYPE_EXPR:
-                self.assertEqual(test_cell.get_value().text, expected_value)
-            else:
-                self.assertEqual(test_cell.get_value(), expected_value,
-                                 str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
-                                 + ', but expected ' + str(expected_value))
-
-    def test_get_string_cell_value_returns_parsed_value(self):
-        ws = self.loaded_wb.get_sheet_by_name('Strings')
-        expected_values = ('TBD', 'Blåbærgrød', 'Greek Α α', 'Greek Β β', 'Greek Γ γ', 'Greek Δ δ', 'Greek Ε ε', 'Greek Ζ ζ', 'Greek Η η', 'Greek Θ θ', 'Greek Ι ι',
-                           'Greek Κ κ', 'Greek Λ λ', 'Greek Μ μ', 'Greek Ν ν', 'Greek Ξ ξ', 'Greek Ο ο', 'Greek Π π', 'Greek Ρ ρ', 'Greek Σ σς', 'Greek Τ τ', 'Greek Υ υ',
-                           'Greek Φ φ', 'Greek Χ χ', 'Greek Ψ ψ', 'Greek Ω ω', 'TBD', '10', '-10', '1.23', '1e1', '1e+01', '1E+01', '1D+01', '=2+2', 'TRUE', 'FALSE', '#N/A',
-                           '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', ' abc', 'abc ', 'abc"def', 'abc""def', "abc'def", "abc''def", "'abc", 'abc&def', 'abc&amp;def', 'abc<def',
-                           'abc>def', 'abc	def', 'hi<!--there')
-        for row in range(ws.max_row + 1):
-            expected = expected_values[row]
-
-            test_cell = ws.cell(row, 0)
-            actual = test_cell.value
-
-            self.assertEqual(cell.VALUE_TYPE_STRING, test_cell.value_type, f'Failed on row={row+1}, cell={actual}, expected={expected}')
-            self.assertEqual(expected, actual, f'Failed on row={row+1}, cell={actual}, expected={expected}')
-
-    def test_get_shared_expression_value_from_originating_cell(self):
-        ws = self.loaded_wb.get_sheet_by_name('Expressions')
-
-        expected_value = '=sum(A2:A10)'
-        expected_id = '1'
-        expected_originating_cell = ws.cell(1, 1)
-        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
-
-        c1 = ws.cell(1, 1)
-        c1_val = c1.value
-        self.assertEqual(c1_val.text, expected_value)
-        self.assertEqual(c1_val.id, expected_id)
-        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
-        self.assertEqual(c1_val.get_all_cells(), expected_cells)
-
-    def test_get_shared_expression_value_from_cell_using_expression(self):
-        ws = self.loaded_wb.get_sheet_by_name('Expressions')
-
-        expected_value = '=sum(A2:A10)'
-        expected_id = '1'
-        expected_originating_cell = ws.cell(1, 1)
-        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
-
-        c1 = ws.cell(4, 1)
-        c1_val = c1.value
-        self.assertEqual(c1_val.text, expected_value)
-        self.assertEqual(c1_val.id, expected_id)
-        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
-        self.assertEqual(c1_val.get_all_cells(), expected_cells)
-
-    def test_get_non_shared_expression_value(self):
-        ws = self.loaded_wb.get_sheet_by_name('Expressions')
-
-        expected_value = '=product(BoundingRegion!D7:J13)'
-        expected_id = None
-        expected_originating_cell = ws.cell(3, 1)
-        expected_cells = [expected_originating_cell]
-
-        c1 = ws.cell(3, 1)
-        c1_val = c1.value
-        self.assertEqual(c1_val.text, expected_value)
-        self.assertEqual(c1_val.id, expected_id)
-        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
-        self.assertEqual(c1_val.get_all_cells(), expected_cells)
 
     def test_set_cell_value_infer_bool(self):
         test_cell = self.ws.cell(0, 0)
@@ -213,27 +156,125 @@ class CellTests(unittest.TestCase):
         self.assertFalse(test_cell.value)
         self.assertEqual(test_cell.text, 'FALSE')
 
-    def test_cells_equal(self):
-        test_cell1 = self.ws.cell(0, 0)
-        test_cell2 = self.ws.cell(0, 0)
-        self.assertTrue(test_cell1 == test_cell2)
 
-    def test_cells_unequal(self):
-        test_cell1 = self.ws.cell(0, 0)
-        test_cell2 = self.ws.cell(1, 0)
-        self.assertFalse(test_cell1 == test_cell2)
+class TestCellValue(unittest.TestCase):
+    def setUp(self):
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
+        self.wb = Workbook()
+        self.ws = self.wb.create_sheet('Title')
 
-    def test_cell_coordinate(self):
-        row = 6
-        col = 4
-        c = self.ws.cell(row, col)
-        self.assertEqual(c.coordinate, (row, col))
+    def test_get_cell_values(self):
+        ws = self.loaded_wb.get_sheet_by_name('CellTypes')
+        for row in range(ws.max_row + 1):
+            test_cell = ws.cell(row, 1)
 
-    def test_get_text_format(self):
-        ws = self.loaded_wb.get_sheet_by_name('Mine & Yours Sheet[s]!')
-        self.assertEqual(ws.cell(0, 0).text_format, '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
+            expected_value = test_cell.text
+            if test_cell.value_type == cell.VALUE_TYPE_INTEGER:
+                expected_value = int(expected_value)
+            elif test_cell.value_type == cell.VALUE_TYPE_FLOAT:
+                expected_value = float(expected_value)
+            elif test_cell.value_type == cell.VALUE_TYPE_BOOLEAN:
+                expected_value = expected_value.lower() == 'true'
+            elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
+                expected_value = None
+            # TODO: Cell values of Error cells
 
-    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
+            if test_cell.value_type == cell.VALUE_TYPE_EXPR:
+                self.assertEqual(test_cell.get_value().text, expected_value)
+            else:
+                self.assertEqual(test_cell.get_value(), expected_value,
+                                 str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
+                                 + ', but expected ' + str(expected_value))
+
+    def test_get_string_cell_value_returns_parsed_value(self):
+        ws = self.loaded_wb.get_sheet_by_name('Strings')
+        expected_values = ('TBD', 'Blåbærgrød', 'Greek Α α', 'Greek Β β', 'Greek Γ γ', 'Greek Δ δ', 'Greek Ε ε', 'Greek Ζ ζ', 'Greek Η η', 'Greek Θ θ', 'Greek Ι ι',
+                           'Greek Κ κ', 'Greek Λ λ', 'Greek Μ μ', 'Greek Ν ν', 'Greek Ξ ξ', 'Greek Ο ο', 'Greek Π π', 'Greek Ρ ρ', 'Greek Σ σς', 'Greek Τ τ', 'Greek Υ υ',
+                           'Greek Φ φ', 'Greek Χ χ', 'Greek Ψ ψ', 'Greek Ω ω', 'TBD', '10', '-10', '1.23', '1e1', '1e+01', '1E+01', '1D+01', '=2+2', 'TRUE', 'FALSE', '#N/A',
+                           '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', ' abc', 'abc ', 'abc"def', 'abc""def', "abc'def", "abc''def", "'abc", 'abc&def', 'abc&amp;def', 'abc<def',
+                           'abc>def', 'abc	def', 'hi<!--there')
+        for row in range(ws.max_row + 1):
+            expected = expected_values[row]
+
+            test_cell = ws.cell(row, 0)
+            actual = test_cell.value
+
+            self.assertEqual(cell.VALUE_TYPE_STRING, test_cell.value_type, f'Failed on row={row+1}, cell={actual}, expected={expected}')
+            self.assertEqual(expected, actual, f'Failed on row={row+1}, cell={actual}, expected={expected}')
+
+    def test_getting_result(self):
+        ws = self.loaded_wb.get_sheet_by_name('CellTypes')
+        for row in range(ws.max_row + 1):
+            test_cell = ws.cell(row, 1)
+
+            expected_value = test_cell.text
+            if test_cell.value_type == cell.VALUE_TYPE_INTEGER:
+                expected_value = int(expected_value)
+            elif test_cell.value_type == cell.VALUE_TYPE_FLOAT:
+                expected_value = float(expected_value)
+            elif test_cell.value_type == cell.VALUE_TYPE_BOOLEAN:
+                expected_value = expected_value.lower() == 'true'
+            elif test_cell.value_type == cell.VALUE_TYPE_EMPTY:
+                expected_value = 0
+            elif test_cell.value_type == cell.VALUE_TYPE_EXPR:
+                expected_value = ws.cell(row, 2).value
+
+            self.assertEqual(test_cell.result, expected_value,
+                             str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
+                             + ', but expected ' + str(expected_value))
+
+
+class TestCellSharedExpression(unittest.TestCase):
+    def setUp(self):
+        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
+        self.wb = Workbook()
+        self.ws = self.wb.create_sheet('Title')
+
+    def test_get_shared_expression_value_from_originating_cell(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=sum(A2:A10)'
+        expected_id = '1'
+        expected_originating_cell = ws.cell(1, 1)
+        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
+
+        c1 = ws.cell(1, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.text, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+
+    def test_get_shared_expression_value_from_cell_using_expression(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=sum(A2:A10)'
+        expected_id = '1'
+        expected_originating_cell = ws.cell(1, 1)
+        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
+
+        c1 = ws.cell(4, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.text, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+
+    def test_get_non_shared_expression_value(self):
+        ws = self.loaded_wb.get_sheet_by_name('Expressions')
+
+        expected_value = '=product(BoundingRegion!D7:J13)'
+        expected_id = None
+        expected_originating_cell = ws.cell(3, 1)
+        expected_cells = [expected_originating_cell]
+
+        c1 = ws.cell(3, 1)
+        c1_val = c1.value
+        self.assertEqual(c1_val.text, expected_value)
+        self.assertEqual(c1_val.id, expected_id)
+        self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+
     def test_copying_shared_expression_to_new_cell(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
 
@@ -258,7 +299,6 @@ class CellTests(unittest.TestCase):
         self.assertEqual(nc_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(nc_val.get_all_cells(), expected_cells)
 
-    @unittest.skip('Expression evaluation cannot handle cell ranges yet')
     def test_sharing_a_non_shared_expression(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
 

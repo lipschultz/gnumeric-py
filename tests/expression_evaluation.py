@@ -19,7 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
 from gnumeric import Workbook
-from gnumeric.expression_evaluation import evaluate, EvaluationError
+from gnumeric.evaluation_errors import EvaluationError
+from gnumeric.expression_evaluation import evaluate
 
 
 class OperatorAndConstantTests(unittest.TestCase):
@@ -315,6 +316,37 @@ class CellReferenceTests(unittest.TestCase):
 
         actual_value = evaluate(test_cell.text, test_cell)
         self.assertEqual(EvaluationError.REF, actual_value)
+
+    def test_referencing_cell_range_results_in_value_error(self):
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=A1:A5')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(EvaluationError.VALUE, actual_value)
+
+    def test_referencing_cell_range_in_function(self):
+        expected_value = 0
+        for row in range(5):
+            self.ws.cell(row, 0).set_value(row)
+            expected_value += row
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=SUM(A1:A5)')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
+
+    def test_referencing_cell_range_with_sheetname_in_function(self):
+        expected_value = 0
+        for row in range(5):
+            self.ws.cell(row, 0).set_value(row)
+            expected_value += row
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=SUM(Title!A1:A5)')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(expected_value, actual_value)
 
     def test_referencing_formula_cell_gets_formulas_result(self):
         reference_cell = self.ws.cell(0, 0)

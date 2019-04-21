@@ -207,6 +207,16 @@ class Cell:
     value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
 
     @property
+    def result(self):
+        """
+        Gets the result of the cell.  For expressions, it returns the result of the expression.  For literals, it returns the literal.
+        """
+        value = self.get_value(compute_expression=True)
+        if value is None:
+            value = 0
+        return value
+
+    @property
     def text_format(self) -> str:
         """
         The format string used to format the text in the cell for display.  This is the "Number Format" in Gnumeric.
