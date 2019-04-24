@@ -191,7 +191,7 @@ class ExpressionEvaluator(Transformer):
     def cell_range(self, start, end):
         start_cell = get_cell(start, self._cell)
         end_cell = get_cell((None, ) + end, self._cell)
-        return start_cell.worksheet.get_cell_collection(start_cell, end_cell)
+        return start_cell.worksheet.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
 
     def cell_lookup(self, ref):
         cell = get_cell(ref, self._cell)

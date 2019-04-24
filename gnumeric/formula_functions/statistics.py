@@ -3,7 +3,10 @@ from gnumeric.formula_functions.argument_helpers import get_just_numeric
 
 def gnm_max(values):
     values = get_just_numeric(values)
-    return max(values)
+    if len(values) == 0:
+        return 0
+    else:
+        return max(values)
 
 
 local_objects = locals().copy()

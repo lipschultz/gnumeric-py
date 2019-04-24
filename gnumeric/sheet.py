@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from itertools import product
 from operator import attrgetter
 from typing import Callable, Iterable, Tuple, Union, List, Sequence, Optional, Generator, Dict
 
@@ -333,7 +334,7 @@ class Sheet:
         key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, start=None, end=None, *, include_empty: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
+    def get_cell_collection(self, start=None, end=None, *, include_empty: bool = False, create_cells: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
         """
         Return cells (as a list).
 
@@ -343,7 +344,8 @@ class Sheet:
         and `end` can be 'A1'-style coordinates, a (row, col) tuple (with 0-based indexes), or Cell objects.
 
         If `include_empty` is False (default), then only cells with content will be included.  If `include_empty` is
-        True, then empty cells that have been created will be included.
+        True, then empty cells that have been created will be included.  To get all empty cells, including those not
+        already created, set `create_cells` to True.
 
         Use `sort` to specify whether the cells should be sorted.  If `False` (default), then no sorting will take
         place.  If `sort` is `"row"`, then sorting will occur by row first, then by column within each row.  If `sort`
@@ -373,6 +375,12 @@ class Sheet:
         start_row, start_column = start
         end_row, end_column = end
         cells = [c for c in cells if start_column <= c.column <= end_column and start_row <= c.row <= end_row]
+
+        if create_cells:
+            already_created_cells = {(c.row, c.column) for c in cells}
+            for row, col in product(range(start_row, end_row + 1), range(start_column, end_column + 1)):
+                if (row, col) not in already_created_cells:
+                    cells.append(self.cell(row, col, create=True))
 
         if sort:
             return self.__sort_cells(cells, sort == 'row')

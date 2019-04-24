@@ -110,7 +110,7 @@ class TestCellType(unittest.TestCase):
 
     def test_set_cell_value_infer_expression(self):
         test_cell = self.ws.cell(0, 0)
-        test_cell.set_value('=max()')
+        test_cell.set_value('=max(A1:A2)')
         self.assertEqual(test_cell.value_type, cell.VALUE_TYPE_EXPR)
 
     def test_set_cell_value_infer_string(self):

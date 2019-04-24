@@ -112,6 +112,16 @@ class SheetMetadataTests(unittest.TestCase):
 
 
 class AccessCellTests(unittest.TestCase):
+    def assert_equal_cell_sets_by_coordinates(self, actual_cells, *, expected=None, expected_start=None, expected_end=None):
+        if expected_start is not None and expected_end is not None:
+            start_row, start_col = expected_start
+            end_row, end_col = expected_end
+            expected_coordinates = {(r, c) for r in range(start_row, end_row+1) for c in range(start_col, end_col+1)}
+            return self.assert_equal_cell_sets_by_coordinates(actual_cells, expected=expected_coordinates)
+        else:
+            actual_coordinates = {(c.row, c.column) for c in actual_cells}
+            self.assertEqual(set(expected), actual_coordinates)
+
     def setUp(self):
         self.wb = Workbook()
         self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
@@ -223,31 +233,35 @@ class AccessCellTests(unittest.TestCase):
 
     def test_get_content_cells_including_empty(self):
         ws = self.wb.create_sheet("Test")
-        cells = set()
+        expected_cells = set()
 
         c = ws.cell(0, 0)
         c.set_value('string')
-        cells.add(c)
+        expected_cells.add(c.coordinate)
 
         c = ws.cell(0, 1)
         c.set_value(-17)
-        cells.add(c)
+        expected_cells.add(c.coordinate)
 
         c = ws.cell(0, 2)
         c.set_value(13.4)
-        cells.add(c)
+        expected_cells.add(c.coordinate)
 
         c = ws.cell(0, 3)
-        cells.add(c)
+        expected_cells.add(c.coordinate)
 
         c = ws.cell(0, 4)
         c.set_value('=max(A1:A5)')
-        cells.add(c)
+        expected_cells.add(c.coordinate)
+        expected_cells.add((1, 0))
+        expected_cells.add((2, 0))
+        expected_cells.add((3, 0))
 
         c = ws.cell(4, 0)
-        cells.add(c)
+        expected_cells.add(c.coordinate)
 
-        self.assertEqual(set(ws.get_cell_collection(include_empty=True)), cells)
+        actual = ws.get_cell_collection(include_empty=True)
+        self.assert_equal_cell_sets_by_coordinates(actual, expected=expected_cells)
 
     def test_get_range_of_cells_by_passing_int_indices(self):
         ws = self.wb.create_sheet("Test")
@@ -316,6 +330,21 @@ class AccessCellTests(unittest.TestCase):
         c.set_value('last')
 
         self.assertEqual(set(ws.get_cell_collection(start_cell, end_cell)), cells)
+
+    def test_get_range_of_cells_by_boundary_cells_and_including_empties_and_creating_cells(self):
+        ws = self.wb.create_sheet("Test")
+
+        start_coord = (0, 0)
+        end_coord = (2, 5)
+
+        c = ws.cell(*start_coord)
+        start_cell = c
+
+        c = ws.cell(*end_coord)
+        end_cell = c
+
+        actual_cell_collection = ws.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
+        self.assert_equal_cell_sets_by_coordinates(actual_cell_collection, expected_start=start_coord, expected_end=end_coord)
 
     def test_get_range_of_cells_leaving_off_end_cell_returns_all_cells_greater_than_start_cells_position(self):
         ws = self.wb.create_sheet("Test")
