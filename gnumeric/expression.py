@@ -15,7 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+from typing import Set, Union
+
 from gnumeric import utils, expression_evaluation
+from gnumeric.evaluation_errors import EvaluationError
 
 
 class Expression:
@@ -99,6 +102,9 @@ class Expression:
             return [self.__cell]
         else:
             return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort=sort)
+
+    def get_referenced_cells(self) -> Union[Set, EvaluationError]:
+        return expression_evaluation.get_referenced_cells(self.text, self.__cell)
 
     def __str__(self):
         return self.text

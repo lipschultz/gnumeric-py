@@ -1,8 +1,9 @@
-from gnumeric.evaluation_errors import EvaluationError
+import itertools
+
 from gnumeric.formula_functions.argument_helpers import get_just_numeric
 
 
-def gnm_sum(values):
+def gnm_sum(*values):
     return sum(get_just_numeric(values))
 
 

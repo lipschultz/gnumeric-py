@@ -20,7 +20,7 @@ import unittest
 
 from gnumeric import Workbook
 from gnumeric.evaluation_errors import EvaluationError
-from gnumeric.expression_evaluation import evaluate
+from gnumeric.expression_evaluation import evaluate, get_referenced_cells
 
 
 class OperatorAndConstantTests(unittest.TestCase):
@@ -358,6 +358,16 @@ class CellReferenceTests(unittest.TestCase):
         actual_value = evaluate(test_cell.text, test_cell)
         self.assertEqual(7, actual_value)
 
+    def test_function_argument_references_another_cell_uses_the_cells_value(self):
+        reference_cell = self.ws.cell(0, 0)
+        reference_cell.set_value('=2-5')
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=ABS(A1)')
+
+        actual_value = evaluate(test_cell.text, test_cell)
+        self.assertEqual(3, actual_value)
+
     def test_circular_references_end_and_use_zero_as_the_value(self):
         first_cell = self.ws.cell(0, 0)
         first_cell.set_value('=B1')
@@ -388,6 +398,53 @@ class CellReferenceTests(unittest.TestCase):
     @unittest.skip('Not implemented yet')
     def test_updating_referenced_cell_updates_expression_cell_value(self):
         pass
+
+
+class GetCellReferenceTests(unittest.TestCase):
+    def setUp(self):
+        self.wb = Workbook()
+        self.ws = self.wb.create_sheet('Title')
+
+        for row in range(5):
+            cell = self.ws.cell(row, 0)
+            cell.set_value(row)
+
+    def test_gets_cell_when_only_one_cell_referenced(self):
+        expected_cells = {self.ws.cell(0, 0)}
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=5*A1')
+
+        actual_cells = get_referenced_cells(test_cell.text, test_cell)
+        self.assertEqual(expected_cells, actual_cells)
+
+    def test_get_all_cells_in_range_when_referencing_range_of_cell(self):
+        expected_cells = self.ws.get_cell_collection('A1', 'A5')
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=SUM(A1:A5)')
+
+        actual_cells = get_referenced_cells(test_cell.text, test_cell)
+        self.assertEqual(set(expected_cells), actual_cells)
+
+    def test_get_all_cells_in_range_when_referencing_multiple_cell_ranges(self):
+        expected_cells = self.ws.get_cell_collection('A1', 'A3') + self.ws.get_cell_collection('A5', 'A5')
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=SUM(A1:A3,A5)')
+
+        actual_cells = get_referenced_cells(test_cell.text, test_cell)
+        self.assertEqual(set(expected_cells), actual_cells)
+
+    def test_get_all_cells_when_referencing_cell_range_inside_function_and_referencing_cells_outside(self):
+
+        test_cell = self.ws.cell(0, 1)
+        test_cell.set_value('=SUM(A1:A3,A5)+A10')
+
+        actual_cells = get_referenced_cells(test_cell.text, test_cell)
+
+        expected_cells = self.ws.get_cell_collection('A1', 'A3') + self.ws.get_cell_collection('A5', 'A5') + self.ws.get_cell_collection('A10', 'A10', create_cells=True)
+        self.assertEqual(set(expected_cells), actual_cells)
 
 
 class FunctionEvaluationTests(unittest.TestCase):

@@ -1,6 +1,6 @@
 import math
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Set, Union
 
 from lark import Lark, Transformer, v_args
 from lark.exceptions import VisitError, UnexpectedCharacters
@@ -87,9 +87,9 @@ def get_cell(ref, formula_cell):
 
 @v_args(inline=True)
 class ExpressionEvaluator(Transformer):
-
     def __init__(self, cell):
         self._cell = cell
+        self.referenced_cells = set()
 
     def number(self, val):
         try:
@@ -191,10 +191,13 @@ class ExpressionEvaluator(Transformer):
     def cell_range(self, start, end):
         start_cell = get_cell(start, self._cell)
         end_cell = get_cell((None, ) + end, self._cell)
-        return start_cell.worksheet.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
+        cells = start_cell.worksheet.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
+        self.referenced_cells.update(cells)
+        return cells
 
     def cell_lookup(self, ref):
         cell = get_cell(ref, self._cell)
+        self.referenced_cells.add(cell)
         if cell is None:
             return 0
         return cell.result
@@ -222,16 +225,22 @@ class ExpressionEvaluator(Transformer):
 _parser = Lark(_grammar, start='start', parser='earley')
 
 
-def evaluate(expression: str, cell):
-    evaluator = ExpressionEvaluator(cell)
-
+def parse(expression: str):
     try:
         tree = _parser.parse(expression)
     except UnexpectedCharacters:
         return EvaluationError.VALUE
 
-    # print(tree.pretty())
+    print(tree.pretty())
+    return tree
 
+
+def evaluate(expression: str, cell):
+    tree = parse(expression)
+    if isinstance(tree, EvaluationError):
+        return tree
+
+    evaluator = ExpressionEvaluator(cell)
     try:
         result = evaluator.transform(tree)
     except VisitError as ex:
@@ -244,3 +253,23 @@ def evaluate(expression: str, cell):
         raise ex.orig_exc
 
     return result
+
+
+def get_referenced_cells(expression: str, cell) -> Union[Set, EvaluationError]:
+    tree = parse(expression)
+    if isinstance(tree, EvaluationError):
+        return tree
+
+    evaluator = ExpressionEvaluator(cell)
+    try:
+        evaluator.transform(tree)
+    except VisitError as ex:
+        if isinstance(ex.orig_exc, ZeroDivisionError):
+            return EvaluationError.DIV0
+        elif isinstance(ex.orig_exc, ExpressionEvaluationException):
+            return ex.orig_exc.error
+
+        print(type(ex.orig_exc), ex.orig_exc)
+        raise ex.orig_exc
+
+    return evaluator.referenced_cells
