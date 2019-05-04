@@ -1,13 +1,13 @@
 import math
 import re
-from typing import Optional, Tuple, Set, Union
+from typing import Set, Union
 
 from lark import Lark, Transformer, v_args
 from lark.exceptions import VisitError, UnexpectedCharacters
 
 from gnumeric.evaluation_errors import EvaluationError, ExpressionEvaluationException
 from gnumeric.formula_functions import mathematics, statistics
-from gnumeric.utils import coordinate_from_spreadsheet
+from gnumeric.utils import column_from_spreadsheet, row_from_spreadsheet, coordinate_to_spreadsheet
 
 function_map = {
     'abs': abs,
@@ -18,7 +18,7 @@ function_map = {
 
 
 class CellReference:
-    def __init__(self, formula_cell, ss_row, ss_col, sheet=None, row_is_fixed=False, col_is_fixed=False):
+    def __init__(self, formula_cell, ss_row, ss_col, sheet, row_is_fixed, col_is_fixed):
         self.formula_cell = formula_cell
         self.ss_row = ss_row
         self.ss_col = ss_col
@@ -33,7 +33,17 @@ class CellReference:
         except KeyError:
             raise ExpressionEvaluationException(EvaluationError.REF)
 
-        return sheet.cell(*coordinate_from_spreadsheet(f'{self.ss_col}{self.ss_row}'), create=True)
+        offset_row, offset_col = self.formula_cell.value.reference_coordinate_offset
+
+        col = column_from_spreadsheet(self.ss_col)
+        row = row_from_spreadsheet(self.ss_row)
+
+        if not self.col_is_fixed:
+            col += offset_col
+        if not self.row_is_fixed:
+            row += offset_row
+
+        return sheet.cell(row, col, create=True)
 
     @classmethod
     def create_from_cell_reference(cls, formula_cell, sheet, ss_col, ss_row):
@@ -98,16 +108,6 @@ def to_str(value) -> str:
     elif isinstance(value, bool):
         value = 'TRUE' if value else 'FALSE'
     return str(value)
-
-
-def get_cell(ref, formula_cell):
-    ref_sheet, ref_col, ref_row = ref
-    try:
-        sheet = formula_cell.worksheet if ref_sheet is None else formula_cell.worksheet.workbook.get_sheet_by_name(ref_sheet)
-    except KeyError:
-        raise ExpressionEvaluationException(EvaluationError.REF)
-
-    return sheet.cell(*coordinate_from_spreadsheet(f'{ref_col}{ref_row}'), create=True)
 
 
 @v_args(inline=True)
@@ -282,6 +282,7 @@ def _full_evaluation(expression: str, cell):
                 raise ex.orig_exc
 
     return result, referenced_cells
+
 
 def evaluate(expression: str, cell) -> Union[str, int, float, EvaluationError]:
     result, _ = _full_evaluation(expression, cell)

@@ -246,15 +246,19 @@ class TestCellSharedExpression(unittest.TestCase):
         expected_value = '=sum(A2:A10)'
         expected_id = '1'
         expected_originating_cell = ws.cell(1, 1)
-        expected_cells = [expected_originating_cell, ws.cell(4, 1)]
+        expected_cells_using_expr = [expected_originating_cell, ws.cell(4, 1)]
 
         c1 = ws.cell(1, 1)
         c1_val = c1.value
+        expected_cells_referenced_in_expr = set(ws.get_cell_collection('A2', 'A10', include_empty=True, create_cells=True))
+
         self.assertEqual(c1_val.original_text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
-        self.assertEqual(c1_val.get_all_cells(), expected_cells)
+        self.assertEqual(c1_val.get_all_cells(), expected_cells_using_expr)
         self.assertEqual(c1_val.reference_coordinate_offset, (0, 0))
+        self.assertEqual(c1_val.get_referenced_cells(), expected_cells_referenced_in_expr)
+        self.assertEqual(c1_val.value, 45)
 
     def test_get_shared_expression_value_from_cell_using_expression(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
@@ -266,11 +270,15 @@ class TestCellSharedExpression(unittest.TestCase):
 
         c1 = ws.cell(4, 1)
         c1_val = c1.value
+        expected_cells_referenced_in_expr = set(ws.get_cell_collection('A5', 'A13', include_empty=True, create_cells=True))
+
         self.assertEqual(c1_val.original_text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(c1_val.get_all_cells(), expected_cells)
         self.assertEqual(c1_val.reference_coordinate_offset, (3, 0))
+        self.assertEqual(c1_val.get_referenced_cells(), expected_cells_referenced_in_expr)
+        self.assertEqual(c1_val.value, 39)
 
     def test_get_non_shared_expression_value(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')
@@ -282,11 +290,15 @@ class TestCellSharedExpression(unittest.TestCase):
 
         c1 = ws.cell(3, 1)
         c1_val = c1.value
+        expected_cells_referenced_in_expr = set(self.loaded_wb.get_sheet_by_name('BoundingRegion').get_cell_collection('D7', 'J13', include_empty=True, create_cells=True))
+
         self.assertEqual(c1_val.original_text, expected_value)
         self.assertEqual(c1_val.id, expected_id)
         self.assertEqual(c1_val.get_originating_cell(), expected_originating_cell)
         self.assertEqual(c1_val.get_all_cells(), expected_cells)
         self.assertEqual(c1_val.reference_coordinate_offset, (0, 0))
+        self.assertEqual(c1_val.get_referenced_cells(), expected_cells_referenced_in_expr)
+        self.assertEqual(c1_val.value, 5040)
 
     def test_copying_shared_expression_to_new_cell(self):
         ws = self.loaded_wb.get_sheet_by_name('Expressions')

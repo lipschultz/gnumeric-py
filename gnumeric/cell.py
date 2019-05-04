@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 import datetime
+import re
 import time
 from typing import Optional, Tuple, Union
 
@@ -120,7 +121,7 @@ class Cell:
 
     def is_datetime(self) -> bool:
         style_format = self.text_format.lower()
-        return self.value_type == VALUE_TYPE_FLOAT and any(pattern in style_format for pattern in ('yy', 'm', 'd', 'h', 's'))
+        return self.value_type == VALUE_TYPE_FLOAT and (any(pattern in style_format for pattern in ('yy', 'm', 'h', 's')) or re.search(r'[^e]d', style_format))
 
     def __set_type(self, value_type: int):
         if value_type == VALUE_TYPE_EXPR:
