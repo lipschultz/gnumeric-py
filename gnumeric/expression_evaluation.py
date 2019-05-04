@@ -17,6 +17,31 @@ function_map = {
 }
 
 
+class CellReference:
+    def __init__(self, formula_cell, ss_row, ss_col, sheet=None, row_is_fixed=False, col_is_fixed=False):
+        self.formula_cell = formula_cell
+        self.ss_row = ss_row
+        self.ss_col = ss_col
+        self.sheet = sheet
+        self.row_is_fixed = row_is_fixed
+        self.col_is_fixed = col_is_fixed
+
+    @property
+    def cell(self):
+        try:
+            sheet = self.formula_cell.worksheet if self.sheet is None else self.formula_cell.worksheet.workbook.get_sheet_by_name(self.sheet)
+        except KeyError:
+            raise ExpressionEvaluationException(EvaluationError.REF)
+
+        return sheet.cell(*coordinate_from_spreadsheet(f'{self.ss_col}{self.ss_row}'), create=True)
+
+    @classmethod
+    def create_from_cell_reference(cls, formula_cell, sheet, ss_col, ss_row):
+        col_fixed = ss_col.startswith('$')
+        row_fixed = ss_row.startswith('$')
+        return cls(formula_cell, ss_row, ss_col, sheet, row_is_fixed=row_fixed, col_is_fixed=col_fixed)
+
+
 _grammar = f"""
     ?start: "=" root
           | "+" root
@@ -178,25 +203,27 @@ class ExpressionEvaluator(Transformer):
             except OverflowError as ex:
                 raise ExpressionEvaluationException(EvaluationError.NUM)
 
-    def cell_ref(self, *ref) -> Tuple[str, str]:
-        return ref[0].value, ref[1].value
+    def cell_ref(self, *ref) -> CellReference:
+        return CellReference.create_from_cell_reference(self._cell, None, ref[0].value, ref[1].value)
 
-    def sheet_cell_ref(self, *ref) -> Tuple[Optional[str], str, str]:
-        if len(ref) == 1:
-            ref = (None, *ref[0])
+    def sheet_cell_ref(self, *ref) -> CellReference:
+        if len(ref) > 1:
+            ref[1].sheet = ref[0].value
+            ref = ref[1]
         else:
-            ref = (ref[0].value, *ref[1])
+            ref = ref[0]
         return ref
 
     def cell_range(self, start, end):
-        start_cell = get_cell(start, self._cell)
-        end_cell = get_cell((None, ) + end, self._cell)
+        start_cell = start.cell
+        end_cell = end.cell
         cells = start_cell.worksheet.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
         self.referenced_cells.update(cells)
         return cells
 
     def cell_lookup(self, ref):
-        cell = get_cell(ref, self._cell)
+        cell_ref = CellReference.create_from_cell_reference(self._cell, ref[0], ref[1], ref[2])
+        cell = cell_ref.cell
         self.referenced_cells.add(cell)
         if cell is None:
             return 0
