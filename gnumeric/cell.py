@@ -15,6 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+import datetime
+import time
 from typing import Optional, Tuple, Union
 
 from lxml import etree
@@ -36,20 +38,27 @@ VALUE_TYPE_ARRAY = 80
 class Cell:
     _instances = {}
 
-    def __new__(cls, cell_element, style_element, worksheet, ns):
-        key = (cell_element, style_element, worksheet)
+    _BASE_DATETIME = datetime.datetime(1899, 12, 30)
+
+    def __new__(cls, cell_element, style_region_element, worksheet, ns):
+        key = (cell_element, style_region_element, worksheet)
         instance = cls._instances.get(key)
         if not instance:
             instance = super(Cell, cls).__new__(cls)
             instance.__cached_value = None
+            instance.__time_cached_value_set = None
             cls._instances[key] = instance
         return instance
 
-    def __init__(self, cell_element, style_element, worksheet, ns):
+    def __init__(self, cell_element, style_region_element, worksheet, ns):
         self.__cell = cell_element
-        self.__style = style_element
+        self.__style_region = style_region_element
         self.__worksheet = worksheet
         self.__ns = ns
+
+    def __get_style_element(self):
+        elements = self.__style_region.xpath('./gnm:Style', namespaces=self.__ns)
+        return elements[0] if elements else None
 
     def __set_expression_id(self, expr_id: str) -> None:
         self.__cell.set('ExprID', expr_id)
@@ -108,6 +117,10 @@ class Cell:
             return VALUE_TYPE_EXPR
         else:
             raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
+
+    def is_datetime(self) -> bool:
+        style_format = self.text_format.lower()
+        return self.value_type == VALUE_TYPE_FLOAT and any(pattern in style_format for pattern in ('yy', 'm', 'd', 'h', 's'))
 
     def __set_type(self, value_type: int):
         if value_type == VALUE_TYPE_EXPR:
@@ -214,6 +227,8 @@ class Cell:
         value = self.get_value(compute_expression=True)
         if value is None:
             value = 0
+        elif self.is_datetime():
+            value = self._BASE_DATETIME + datetime.timedelta(days=value)
         return value
 
     @property
@@ -221,7 +236,7 @@ class Cell:
         """
         The format string used to format the text in the cell for display.  This is the "Number Format" in Gnumeric.
         """
-        return str(self.__style.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0])
+        return str(self.__style_region.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0])
 
     def __str__(self) -> str:
         return repr(self.value)

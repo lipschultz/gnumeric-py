@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-
+import datetime
 import unittest
 
 from gnumeric import cell
@@ -222,6 +222,16 @@ class TestCellValue(unittest.TestCase):
             self.assertEqual(test_cell.result, expected_value,
                              str(test_cell.text) + ' (row=' + str(row) + ') has type ' + str(test_cell.value_type)
                              + ', but expected ' + str(expected_value))
+
+    def test_getting_dates(self):
+        ws = self.loaded_wb.get_sheet_by_name('Dates')
+        for row in range(ws.max_row + 1):
+            expected_cell = ws.cell(row, 1)
+            expected_datetime = datetime.datetime.strptime(expected_cell.value, '%Y-%m-%dT%H:%M:%S')
+
+            test_cell = ws.cell(row, 0)
+            self.assertTrue(test_cell.is_datetime())
+            self.assertEqual(expected_datetime, test_cell.result)
 
 
 class TestCellSharedExpression(unittest.TestCase):

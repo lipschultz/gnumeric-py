@@ -29,7 +29,7 @@ class WorkbookTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
         self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
-        self.loaded_wb_sheet_names = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Errors', 'Expressions', 'Mine & Yours Sheet[s]!')
+        self.loaded_wb_sheet_names = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Errors', 'Expressions', 'Dates', 'Mine & Yours Sheet[s]!')
         self.loaded_wb_graph_names = ('Graph1', )
         self.loaded_wb_all_names = self.loaded_wb_sheet_names + self.loaded_wb_graph_names
 
