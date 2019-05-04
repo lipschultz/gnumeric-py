@@ -258,45 +258,36 @@ def parse(expression: str):
     except UnexpectedCharacters:
         return EvaluationError.VALUE
 
-    print(tree.pretty())
+    # print(tree.pretty())
     return tree
 
 
-def evaluate(expression: str, cell):
+def _full_evaluation(expression: str, cell):
     tree = parse(expression)
+
     if isinstance(tree, EvaluationError):
-        return tree
+        result, referenced_cells = tree, set()
+    else:
+        evaluator = ExpressionEvaluator(cell)
+        try:
+            result = evaluator.transform(tree)
+            result, referenced_cells = result, evaluator.referenced_cells
+        except VisitError as ex:
+            if isinstance(ex.orig_exc, ZeroDivisionError):
+                result, referenced_cells = EvaluationError.DIV0, set()
+            elif isinstance(ex.orig_exc, ExpressionEvaluationException):
+                result, referenced_cells = ex.orig_exc.error, set()
+            else:
+                print(type(ex.orig_exc), ex.orig_exc)
+                raise ex.orig_exc
 
-    evaluator = ExpressionEvaluator(cell)
-    try:
-        result = evaluator.transform(tree)
-    except VisitError as ex:
-        if isinstance(ex.orig_exc, ZeroDivisionError):
-            return EvaluationError.DIV0
-        elif isinstance(ex.orig_exc, ExpressionEvaluationException):
-            return ex.orig_exc.error
+    return result, referenced_cells
 
-        print(type(ex.orig_exc), ex.orig_exc)
-        raise ex.orig_exc
-
+def evaluate(expression: str, cell) -> Union[str, int, float, EvaluationError]:
+    result, _ = _full_evaluation(expression, cell)
     return result
 
 
-def get_referenced_cells(expression: str, cell) -> Union[Set, EvaluationError]:
-    tree = parse(expression)
-    if isinstance(tree, EvaluationError):
-        return tree
-
-    evaluator = ExpressionEvaluator(cell)
-    try:
-        evaluator.transform(tree)
-    except VisitError as ex:
-        if isinstance(ex.orig_exc, ZeroDivisionError):
-            return EvaluationError.DIV0
-        elif isinstance(ex.orig_exc, ExpressionEvaluationException):
-            return ex.orig_exc.error
-
-        print(type(ex.orig_exc), ex.orig_exc)
-        raise ex.orig_exc
-
-    return evaluator.referenced_cells
+def get_referenced_cells(expression: str, cell) -> Set:
+    _, references = _full_evaluation(expression, cell)
+    return references
