@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-from typing import Set, Union
+from typing import Set, Union, Tuple
 
 from gnumeric import utils, expression_evaluation
 from gnumeric.evaluation_errors import EvaluationError
@@ -52,25 +52,42 @@ class Expression:
         return self.__exprid
 
     @property
-    def text(self) -> str:
+    def original_text(self) -> str:
         """
         Returns the text of the expression, with cell references from the perspective of the cell where the expression
-        is stored.
+        is stored (i.e. the original cell).
         """
         return self.__get_raw_originating_cell()[2]
+
+    @property
+    def text(self):
+        """
+        Returns the text of the exprsesion, with cell references updated to be from the perspective of the cell using the expression.
+        """
+        # TODO: fix this to actually return what it's supposed to
+        raise NotImplementedError
+
+    @property
+    def reference_coordinate_offset(self) -> Tuple[int, int]:
+        """
+        The (row, col) offset to translate the original coordinates into the coordinates based at the current cell.
+        """
+        original_coordinates = self.get_originating_cell_coordinate()
+        current_coordinates = self.__cell.coordinate
+        return current_coordinates[0] - original_coordinates[0], current_coordinates[1] - original_coordinates[1]
 
     @property
     def value(self):
         """
         Returns the result of the expression's evaluation.
         """
-        return expression_evaluation.evaluate(self.text, self.__cell)
+        return expression_evaluation.evaluate(self.original_text, self.__cell)
 
     @property
     def worksheet(self):
         return self.__worksheet
 
-    def get_originating_cell_coordinate(self, representation_format='index'):
+    def get_originating_cell_coordinate(self, representation_format='index') -> Union[Tuple[int, int], str]:
         """
         Returns the cell coordinate for the cell Gnumeric is using to store the expression.
 
@@ -104,11 +121,11 @@ class Expression:
             return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort=sort)
 
     def get_referenced_cells(self) -> Union[Set, EvaluationError]:
-        return expression_evaluation.get_referenced_cells(self.text, self.__cell)
+        return expression_evaluation.get_referenced_cells(self.original_text, self.__cell)
 
     def __str__(self):
-        return self.text
+        return self.original_text
 
     def __repr__(self):
         return 'Expression(id=%s, text="%s", ws=%s, cell=(%d, %d))' % (
-            self.id, self.text, self.__worksheet, self.__cell.row, self.__cell.column)
+            self.id, self.original_text, self.__worksheet, self.__cell.row, self.__cell.column)
