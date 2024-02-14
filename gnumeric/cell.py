@@ -120,8 +120,15 @@ class Cell:
             raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
 
     def is_datetime(self) -> bool:
-        style_format = self.text_format.lower()
-        return self.value_type == VALUE_TYPE_FLOAT and (any(pattern in style_format for pattern in ('yy', 'm', 'h', 's')) or re.search(r'[^e]d', style_format))
+        if self.value_type != VALUE_TYPE_FLOAT:
+            return False
+        # In gnumeric v10.dtd, release 1.12.48 ValueFormat
+        # seems to indicate date and text_format is 'General'
+        style_format = self.__cell.get('ValueFormat')
+        if style_format is None:
+            style_format = self.text_format
+        style_format = style_format.lower()
+        return (any(pattern in style_format for pattern in ('yy', 'm', 'h', 's')) or re.search(r'[^e]d', style_format))
 
     def __set_type(self, value_type: int):
         if value_type == VALUE_TYPE_EXPR:
