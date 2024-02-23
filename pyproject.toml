@@ -1,4 +1,40 @@
 [build-system]
-requires = [
-    "setuptools"
-]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Gnumeric-py"
+dynamic = ["version", "license", "authors", "maintainers"]
+description="A python library for reading and writing Gnumeric files."
+readme = "README.md"
+# maybe require newer python for build system?
+requires-python = ">=3.3.0"
+classifiers=['Development Status :: 3 - Alpha',
+            'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 3',
+            'Topic :: Office/Business :: Financial :: Spreadsheet']
+dependencies = ["lxml", "python-dateutil", "lark-parser"]
+
+[project.urls]
+# This value is also in `.constants.json` and could, perhaps, be dynamic too.
+# But I'm not sure if that will work for something not in the primary [project] 
+# section. RB
+"Source code" = "https://github.com/lipschultz/gnumeric-py"
+
+
+### old stuff from setup.py
+# author=__author__,
+# author_email=__author_email__,
+# url=__url__,  # done manually above
+# license=__license__,
+# package_dir={'gnumeric': 'gnumeric'},
+# packages=['gnumeric', 'gnumeric.formula_functions'],
+
+# data_files=[('', ['LICENSE', 'README.md', 'gnumeric/.constants.json'])],
+
+### end of old stuff
+
+[tool.hatch.metadata.hooks.custom]
+# activates custom metadata processing
+# from hatch_build.py by default
