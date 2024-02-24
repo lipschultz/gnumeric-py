@@ -22,19 +22,9 @@ dependencies = ["lxml", "python-dateutil", "lark-parser"]
 # section. RB
 "Source code" = "https://github.com/lipschultz/gnumeric-py"
 
-
-### old stuff from setup.py
-# author=__author__,
-# author_email=__author_email__,
-# url=__url__,  # done manually above
-# license=__license__,
-# package_dir={'gnumeric': 'gnumeric'},
-# packages=['gnumeric', 'gnumeric.formula_functions'],
-
-# data_files=[('', ['LICENSE', 'README.md', 'gnumeric/.constants.json'])],
-
-### end of old stuff
-
 [tool.hatch.metadata.hooks.custom]
 # activates custom metadata processing
 # from hatch_build.py by default
+
+[tool.hatch.build]
+packages = ["gnumeric"]
