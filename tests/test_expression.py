@@ -26,4 +26,3 @@ class TestSharedExpression(unittest.TestCase):
         self.loaded_ws = self.loaded_wb.get_sheet_by_name('SharedExpressions')
         self.wb = Workbook()
         self.ws = self.wb.create_sheet('Title')
-
