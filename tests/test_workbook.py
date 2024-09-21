@@ -19,10 +19,21 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from datetime import datetime
 
+import pytest
 from dateutil.tz import tzutc
 
 from gnumeric.exceptions import DuplicateTitleException, WrongWorkbookException
 from gnumeric.workbook import Workbook
+
+
+TEST_GNUMERIC_FILE_PATH = 'samples/test.gnumeric'
+SHEET_NAMES = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Errors', 'Expressions', 'Dates', 'Mine & Yours Sheet[s]!')
+GRAPH_NAMES = ('Graph1', )
+ALL_NAMES = SHEET_NAMES + GRAPH_NAMES
+
+
+TEST_SHEET_NAME_FILE_PATH = 'samples/sheet-names.xml'
+SHEET_NAME_SHEET_NAMES = ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1')
 
 
 class WorkbookTests(unittest.TestCase):
@@ -34,260 +45,301 @@ class WorkbookTests(unittest.TestCase):
         self.loaded_wb_all_names = self.loaded_wb_sheet_names + self.loaded_wb_graph_names
 
     def test_equality_of_same_workbook(self):
-        self.assertTrue(self.wb == self.wb)
+        workbook = Workbook()
+        assert workbook == workbook
 
     def test_different_workbooks_are_not_equal(self):
+        workbook = Workbook()
         wb2 = Workbook()
-        self.assertFalse(self.wb == wb2)
+        assert workbook != wb2
 
     def test_creating_empty_workbook_has_zero_sheets(self):
-        self.assertEqual(len(self.wb), 0)
-        self.assertEqual(len(self.wb.get_sheet_names()), 0)
+        workbook = Workbook()
+        assert len(workbook) == 0
+        assert len(workbook.get_sheet_names()) == 0
 
     def test_creating_workbook_has_version_1_12_28(self):
-        self.assertEqual(self.wb.version, "1.12.28")
+        workbook = Workbook()
+        assert workbook.version == "1.12.28"
 
     def test_creating_sheet_in_empty_book_adds_sheet_to_book(self):
+        workbook = Workbook()
         title = 'Title'
-        ws = self.wb.create_sheet(title)
-        self.assertEqual(len(self.wb), 1)
-        self.assertEqual(self.wb.get_sheet_names(), [title])
+        ws = workbook.create_sheet(title)
+        assert len(workbook) == 1
+        assert workbook.get_sheet_names() == [title]
 
     def test_creating_sheet_with_name_used_by_another_sheet_raises_exception(self):
+        workbook = Workbook()
         title = 'Title'
-        self.wb.create_sheet(title)
-        with self.assertRaises(DuplicateTitleException):
-            self.wb.create_sheet(title)
+        workbook.create_sheet(title)
+        with pytest.raises(DuplicateTitleException):
+            workbook.create_sheet(title)
 
     def test_creating_sheet_appends_to_list_of_sheets(self):
+        workbook = Workbook()
         titles = ['Title1', 'Title2']
         for title in titles:
-            ws = self.wb.create_sheet(title)
-        self.assertEqual(len(self.wb), 2)
-        self.assertEqual(self.wb.get_sheet_names(), titles)
+            ws = workbook.create_sheet(title)
+        assert len(workbook) == 2
+        assert workbook.get_sheet_names() == titles
 
     def test_prepending_new_sheet(self):
+        workbook = Workbook()
         titles = ['Title1', 'Title2']
         for title in titles:
-            ws = self.wb.create_sheet(title)
-        self.assertEqual(self.wb.get_sheet_names(), titles)
+            ws = workbook.create_sheet(title)
+        assert workbook.get_sheet_names() == titles
 
     def test_inserting_new_sheet(self):
+        workbook = Workbook()
         titles = ['Title1', 'Title3', 'Title2']
-        ws = self.wb.create_sheet(titles[0])
-        ws = self.wb.create_sheet(titles[2])
-        ws = self.wb.create_sheet(titles[1], index=1)
-        self.assertEqual(self.wb.get_sheet_names(), titles)
+        ws = workbook.create_sheet(titles[0])
+        ws = workbook.create_sheet(titles[2])
+        ws = workbook.create_sheet(titles[1], index=1)
+        assert workbook.get_sheet_names() == titles
 
     def test_creation_date_on_new_workbook(self):
         before = datetime.now()
-        wb = Workbook()
+        workbook = Workbook()
         after = datetime.now()
-        self.assertTrue(before < wb.creation_date < after)
+        assert (before < workbook.creation_date < after) is True
 
     def test_setting_creation_date(self):
+        workbook = Workbook()
         creation_date = datetime.now()
-        self.wb.creation_date = creation_date
-        self.assertEqual(self.wb.creation_date, creation_date)
+        workbook.creation_date = creation_date
+        assert workbook.creation_date == creation_date
 
     def test_getting_sheet_by_index_with_positive_index(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 3
-        ws = self.wb.get_sheet_by_index(index)
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook.get_sheet_by_index(index)
+        assert ws == worksheets[index]
 
     def test_getting_sheet_by_index_with_negative_index(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = -2
-        ws = self.wb.get_sheet_by_index(index)
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook.get_sheet_by_index(index)
+        assert ws == worksheets[index]
 
     def test_getting_sheet_out_of_bounds_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        with self.assertRaises(IndexError):
-            self.wb.get_sheet_by_index(len(worksheets) + 10)
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        with pytest.raises(IndexError):
+            workbook.get_sheet_by_index(len(worksheets) + 10)
 
     def test_getting_sheet_by_name(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
-        ws = self.wb.get_sheet_by_name('Title' + str(index))
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook.get_sheet_by_name('Title' + str(index))
+        assert ws == worksheets[index]
 
     def test_getting_sheet_with_nonexistent_name_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        with self.assertRaises(KeyError):
-            self.wb.get_sheet_by_name('NotASheet')
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        with pytest.raises(KeyError):
+            workbook.get_sheet_by_name('NotASheet')
 
     def test_getting_sheet_with_getitem_using_positive_index(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 3
-        ws = self.wb[index]
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook[index]
+        assert ws == worksheets[index]
 
     def test_getting_sheet_with_getitem_using_negative_index(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = -2
-        ws = self.wb[index]
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook[index]
+        assert ws == worksheets[index]
 
     def test_getting_sheet_with_getitem_out_of_bounds_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        with self.assertRaises(IndexError):
-            _ = self.wb[len(worksheets) + 10]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        with pytest.raises(IndexError):
+            _ = workbook[len(worksheets) + 10]
 
     def test_getting_sheet_with_getitem_using_bad_key_type_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        with self.assertRaises(TypeError):
-            _ = self.wb[2.0]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        with pytest.raises(TypeError):
+            _ = workbook[2.0]
 
     def test_getting_sheet_with_getitem_by_name(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
-        ws = self.wb['Title' + str(index)]
-        self.assertEqual(ws, worksheets[index])
+        ws = workbook['Title' + str(index)]
+        assert ws == worksheets[index]
 
     def test_getting_sheet_with_getitem_using_nonexistent_name_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        with self.assertRaises(KeyError):
-            _ = self.wb['NotASheet']
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        with pytest.raises(KeyError):
+            _ = workbook['NotASheet']
 
     def test_getting_index_of_worksheet(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
-        self.assertEqual(self.wb.get_index(ws2), index)
+        assert workbook.get_index(ws2) == index
 
     def test_getting_index_of_worksheet_from_different_workbook_but_with_name_raises_exception(self):
+        workbook = Workbook()
         wb2 = Workbook()
         title = 'Title'
-        ws = self.wb.create_sheet(title)
+        ws = workbook.create_sheet(title)
         ws2 = wb2.create_sheet(title)
-        with self.assertRaises(WrongWorkbookException):
-            self.wb.get_index(ws2)
+        with pytest.raises(WrongWorkbookException):
+            workbook.get_index(ws2)
 
     def test_deleting_worksheet(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
         title = ws2.title
-        self.wb.remove_sheet(ws2)
-        self.assertEqual(len(self.wb), len(worksheets) - 1)
-        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
-        self.assertNotIn(title, self.wb.sheetnames)
-        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+        workbook.remove_sheet(ws2)
+        assert len(workbook) == len(worksheets) - 1
+        assert len(workbook.sheetnames) == len(worksheets) - 1
+        assert title not in workbook.sheetnames
+        assert all(ws2 != workbook[i] for i in range(len(workbook)))
 
     def test_deleting_worksheet_twice_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
         title = ws2.title
-        self.wb.remove_sheet(ws2)
-        with self.assertRaises(ValueError):
-            self.wb.remove_sheet(ws2)
+        workbook.remove_sheet(ws2)
+        with pytest.raises(ValueError):
+            workbook.remove_sheet(ws2)
 
     def test_deleting_worksheet_from_another_workbook_raises_exception(self):
+        workbook = Workbook()
         wb2 = Workbook()
-        [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        for i in range(5):
+            workbook.create_sheet(f'Title{i}')
         ws2 = wb2.create_sheet('Title2')
 
-        with self.assertRaises(WrongWorkbookException):
-            self.wb.remove_sheet(ws2)
+        with pytest.raises(WrongWorkbookException):
+            workbook.remove_sheet(ws2)
 
     def test_deleting_worksheet_by_name(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
         title = ws2.title
-        self.wb.remove_sheet_by_name(title)
-        self.assertEqual(len(self.wb), len(worksheets) - 1)
-        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
-        self.assertNotIn(title, self.wb.sheetnames)
-        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+        workbook.remove_sheet_by_name(title)
+        assert len(workbook) == len(worksheets) - 1
+        assert len(workbook.sheetnames) == len(worksheets) - 1
+        assert title not in workbook.sheetnames
+        assert all(ws2 != workbook[i] for i in range(len(workbook)))
 
     def test_deleting_worksheet_by_non_existent_name_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         title = "NotATitle"
 
-        with self.assertRaises(KeyError):
-            self.wb.remove_sheet_by_name(title)
+        with pytest.raises(KeyError):
+            workbook.remove_sheet_by_name(title)
 
-        self.assertEqual(len(self.wb), len(worksheets))
-        self.assertEqual(len(self.wb.sheetnames), len(worksheets))
+        assert len(workbook) == len(worksheets)
+        assert len(workbook.sheetnames) == len(worksheets)
 
     def test_deleting_worksheet_by_index(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
         title = ws2.title
-        self.wb.remove_sheet_by_index(index)
-        self.assertEqual(len(self.wb), len(worksheets) - 1)
-        self.assertEqual(len(self.wb.sheetnames), len(worksheets) - 1)
-        self.assertNotIn(title, self.wb.sheetnames)
-        self.assertTrue(all(ws2 != self.wb[i] for i in range(len(self.wb))))
+        workbook.remove_sheet_by_index(index)
+        assert len(workbook) == len(worksheets) - 1
+        assert len(workbook.sheetnames) == len(worksheets) - 1
+        assert title not in workbook.sheetnames
+        assert all(ws2 != workbook[i] for i in range(len(workbook)))
 
     def test_deleting_worksheet_by_out_of_bounds_index_raises_exception(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = len(worksheets) + 10
 
-        with self.assertRaises(IndexError):
-            self.wb.remove_sheet_by_index(index)
+        with pytest.raises(IndexError):
+            workbook.remove_sheet_by_index(index)
 
-        self.assertEqual(len(self.wb), len(worksheets))
-        self.assertEqual(len(self.wb.sheetnames), len(worksheets))
+        assert len(workbook) == len(worksheets)
+        assert len(workbook.sheetnames) == len(worksheets)
 
     def test_getting_all_sheets(self):
-        worksheets = [self.wb.create_sheet('Title' + str(i)) for i in range(5)]
-        self.assertEqual(self.wb.sheets, worksheets)
+        workbook = Workbook()
+        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        assert workbook.sheets == worksheets
 
     def test_getting_all_sheets_of_mixed_type(self):
-        ws = self.loaded_wb.sheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_all_names]
-        self.assertEqual(ws, selected_ws)
+        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+        ws = workbook.sheets
+        selected_ws = [workbook.get_sheet_by_name(n) for n in ALL_NAMES]
+        assert ws == selected_ws
 
     def test_getting_worksheets_only(self):
-        ws = self.loaded_wb.worksheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_sheet_names]
-        self.assertEqual(ws, selected_ws)
+        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+        ws = workbook.worksheets
+        selected_ws = [workbook.get_sheet_by_name(n) for n in SHEET_NAMES]
+        assert ws == selected_ws
 
     def test_getting_chartsheets_only(self):
-        ws = self.loaded_wb.chartsheets
-        selected_ws = [self.loaded_wb.get_sheet_by_name(n) for n in self.loaded_wb_graph_names]
-        self.assertEqual(ws, selected_ws)
+        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+        ws = workbook.chartsheets
+        selected_ws = [workbook.get_sheet_by_name(n) for n in GRAPH_NAMES]
+        assert ws == selected_ws
 
     def test_loading_compressed_file(self):
-        self.assertEqual(self.loaded_wb.sheetnames, list(self.loaded_wb_all_names))
-        self.assertEqual(self.loaded_wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
-        self.assertEqual(self.loaded_wb.version, '1.12.35')
+        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+        assert workbook.sheetnames == list(ALL_NAMES)
+        assert workbook.creation_date == datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc())
+        assert self.loaded_wb.version == '1.12.35'
 
     def test_loading_uncompressed_file(self):
-        wb = Workbook.load_workbook('samples/sheet-names.xml')
-        self.assertEqual(wb.sheetnames, ['Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1'])
-        self.assertEqual(wb.creation_date, datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc()))
-        self.assertEqual(wb.version, '1.12.28')
+        wb = Workbook.load_workbook(TEST_SHEET_NAME_FILE_PATH)
+        assert wb.sheetnames == list(SHEET_NAME_SHEET_NAMES)
+        assert wb.creation_date == datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc())
+        assert wb.version == '1.12.28'
 
     def test_getting_active_sheet(self):
-        self.assertEqual(self.loaded_wb.get_active_sheet(), self.loaded_wb.get_sheet_by_name('Strings'))
+        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+        assert workbook.get_active_sheet() == workbook.get_sheet_by_name('Strings')
 
     def test_getting_active_sheet_from_empty_workbook(self):
-        self.assertIsNone(self.wb.get_active_sheet())
+        workbook = Workbook()
+        assert workbook.get_active_sheet() is None
 
     def test_setting_active_sheet_by_index(self):
-        self.wb.create_sheet("Sheet1")
-        ws = self.wb.create_sheet("Sheet2")
-        self.wb.create_sheet("Sheet3")
-        self.wb.set_active_sheet(1)
-        self.assertEqual(self.wb.get_active_sheet(), ws)
+        workbook = Workbook()
+        workbook.create_sheet("Sheet1")
+        ws = workbook.create_sheet("Sheet2")
+        workbook.create_sheet("Sheet3")
+        workbook.set_active_sheet(1)
+        assert workbook.get_active_sheet() == ws
 
     def test_setting_active_sheet_by_name(self):
-        self.wb.create_sheet("Sheet1")
-        ws = self.wb.create_sheet("Sheet2")
-        self.wb.create_sheet("Sheet3")
-        self.wb.set_active_sheet("Sheet2")
-        self.assertEqual(self.wb.get_active_sheet(), ws)
+        workbook = Workbook()
+        workbook.create_sheet("Sheet1")
+        ws = workbook.create_sheet("Sheet2")
+        workbook.create_sheet("Sheet3")
+        workbook.set_active_sheet("Sheet2")
+        assert workbook.get_active_sheet() == ws
 
     def test_setting_active_sheet_by_sheet(self):
-        self.wb.create_sheet("Sheet1")
-        ws = self.wb.create_sheet("Sheet2")
-        self.wb.create_sheet("Sheet3")
-        self.wb.set_active_sheet(ws)
-        self.assertEqual(self.wb.get_active_sheet(), ws)
+        workbook = Workbook()
+        workbook.create_sheet("Sheet1")
+        ws = workbook.create_sheet("Sheet2")
+        workbook.create_sheet("Sheet3")
+        workbook.set_active_sheet(ws)
+        assert workbook.get_active_sheet() == ws
