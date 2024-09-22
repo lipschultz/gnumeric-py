@@ -15,9 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+
 import datetime
 import re
-import time
 from typing import Optional, Tuple, Union
 
 from lxml import etree
@@ -117,11 +117,16 @@ class Cell:
         elif self.__cell.get('ExprID') is not None or self.text.startswith('='):
             return VALUE_TYPE_EXPR
         else:
-            raise UnrecognizedCellTypeException('Cell is: "' + str(etree.tostring(self.__cell)) + '"')
+            raise UnrecognizedCellTypeException(
+                'Cell is: "' + str(etree.tostring(self.__cell)) + '"'
+            )
 
     def is_datetime(self) -> bool:
         style_format = self.text_format.lower()
-        return self.value_type == VALUE_TYPE_FLOAT and (any(pattern in style_format for pattern in ('yy', 'm', 'h', 's')) or re.search(r'[^e]d', style_format))
+        return self.value_type == VALUE_TYPE_FLOAT and (
+            any(pattern in style_format for pattern in ('yy', 'm', 'h', 's'))
+            or re.search(r'[^e]d', style_format)
+        )
 
     def __set_type(self, value_type: int):
         if value_type == VALUE_TYPE_EXPR:
@@ -130,7 +135,9 @@ class Cell:
         else:
             self.__cell.set('ValueType', str(value_type))
 
-    def get_value(self, *, compute_expression: bool=False) -> Union[bool, int, float, Expression, str]:
+    def get_value(
+        self, *, compute_expression: bool = False
+    ) -> Union[bool, int, float, Expression, str]:
         """
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
 
@@ -175,7 +182,11 @@ class Cell:
         Warning: This method does no type checking, so it is possible to save a string into a cell whose type is
         `VALUE_TYPE_INTEGER`.  This could result in problems when opening the workbook in Gnumeric.
         """
-        val_types = {bool: VALUE_TYPE_BOOLEAN, int: VALUE_TYPE_INTEGER, float: VALUE_TYPE_FLOAT}
+        val_types = {
+            bool: VALUE_TYPE_BOOLEAN,
+            int: VALUE_TYPE_INTEGER,
+            float: VALUE_TYPE_FLOAT,
+        }
         if value_type == 'infer':
             if type(value) in val_types:
                 value_type = val_types[type(value)]
@@ -183,8 +194,13 @@ class Cell:
                 value_type = VALUE_TYPE_EMPTY
             elif isinstance(value, Expression) or value[0] == '=':
                 value_type = VALUE_TYPE_EXPR
-            elif self.value_type in (VALUE_TYPE_EMPTY, VALUE_TYPE_BOOLEAN, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
-                                     VALUE_TYPE_ERROR):
+            elif self.value_type in (
+                VALUE_TYPE_EMPTY,
+                VALUE_TYPE_BOOLEAN,
+                VALUE_TYPE_INTEGER,
+                VALUE_TYPE_FLOAT,
+                VALUE_TYPE_ERROR,
+            ):
                 value_type = VALUE_TYPE_STRING
             else:
                 value_type = self.value_type
@@ -197,11 +213,18 @@ class Cell:
             self.__cell.text = None
         elif value_type == VALUE_TYPE_EXPR and isinstance(value, Expression):
             if self.__worksheet != value.worksheet:
-                raise NotImplementedError('Copying expression to different worksheet is not yet supported')  # TODO
+                raise NotImplementedError(
+                    'Copying expression to different worksheet is not yet supported'
+                )  # TODO
 
             expr_id = str(value.id)
-            if expr_id not in self.__worksheet.get_expression_map() and value.id is None:
-                expr_id = str(max(int(k) for k in self.__worksheet.get_expression_map()) + 1)
+            if (
+                expr_id not in self.__worksheet.get_expression_map()
+                and value.id is None
+            ):
+                expr_id = str(
+                    max(int(k) for k in self.__worksheet.get_expression_map()) + 1
+                )
 
             if len(value.get_all_cells()) == 1 and value.get_originating_cell() == self:
                 # copying expression over itself, so don't add it to cells using this expression
@@ -218,7 +241,11 @@ class Cell:
         self.__set_type(value_type)
         self.__cached_value = self.get_value(compute_expression=True)
 
-    value = property(get_value, set_value, doc='Get or set the value in the cell, converted into the correct type.')
+    value = property(
+        get_value,
+        set_value,
+        doc='Get or set the value in the cell, converted into the correct type.',
+    )
 
     @property
     def result(self):
@@ -237,19 +264,28 @@ class Cell:
         """
         The format string used to format the text in the cell for display.  This is the "Number Format" in Gnumeric.
         """
-        return str(self.__style_region.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0])
+        return str(
+            self.__style_region.xpath('./gnm:Style/@Format', namespaces=self.__ns)[0]
+        )
 
     def __str__(self) -> str:
         return repr(self.value)
 
     def __repr__(self) -> str:
-        return 'Cell[%s, (%d, %d), ws="%s"]' % (str(self), self.row, self.column, self.__worksheet.title)
+        return 'Cell[%s, (%d, %d), ws="%s"]' % (
+            str(self),
+            self.row,
+            self.column,
+            self.__worksheet.title,
+        )
 
     def __eq__(self, other) -> bool:
-        return (isinstance(other, Cell) and
-                self.__worksheet == other.__worksheet and
-                self.row == other.row and
-                self.column == other.column)
+        return (
+            isinstance(other, Cell)
+            and self.__worksheet == other.__worksheet
+            and self.row == other.row
+            and self.column == other.column
+        )
 
     def __hash__(self) -> int:
         return hash(self.__cell)

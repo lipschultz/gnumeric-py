@@ -15,9 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-from typing import Set, Union, Tuple
 
-from gnumeric import utils, expression_evaluation
+from typing import Set, Tuple, Union
+
+from gnumeric import expression_evaluation, utils
 from gnumeric.evaluation_errors import EvaluationError
 
 
@@ -74,7 +75,9 @@ class Expression:
         """
         original_coordinates = self.get_originating_cell_coordinate()
         current_coordinates = self.__cell.coordinate
-        return current_coordinates[0] - original_coordinates[0], current_coordinates[1] - original_coordinates[1]
+        return current_coordinates[0] - original_coordinates[0], current_coordinates[
+            1
+        ] - original_coordinates[1]
 
     @property
     def value(self):
@@ -87,7 +90,9 @@ class Expression:
     def worksheet(self):
         return self.__worksheet
 
-    def get_originating_cell_coordinate(self, representation_format='index') -> Union[Tuple[int, int], str]:
+    def get_originating_cell_coordinate(
+        self, representation_format='index'
+    ) -> Union[Tuple[int, int], str]:
         """
         Returns the cell coordinate for the cell Gnumeric is using to store the expression.
 
@@ -105,7 +110,9 @@ class Expression:
         """
         Returns the cell Gnumeric is using to store the expression.
         """
-        return self.__worksheet.cell(*self.get_originating_cell_coordinate(), create=False)
+        return self.__worksheet.cell(
+            *self.get_originating_cell_coordinate(), create=False
+        )
 
     def get_all_cells(self, sort=False):
         """
@@ -118,14 +125,23 @@ class Expression:
         if self.__exprid is None:
             return [self.__cell]
         else:
-            return self.__worksheet.get_all_cells_with_expression(self.__exprid, sort=sort)
+            return self.__worksheet.get_all_cells_with_expression(
+                self.__exprid, sort=sort
+            )
 
     def get_referenced_cells(self) -> Union[Set, EvaluationError]:
-        return expression_evaluation.get_referenced_cells(self.original_text, self.__cell)
+        return expression_evaluation.get_referenced_cells(
+            self.original_text, self.__cell
+        )
 
     def __str__(self):
         return self.original_text
 
     def __repr__(self):
         return 'Expression(id=%s, text="%s", ws=%s, cell=(%d, %d))' % (
-            self.id, self.original_text, self.__worksheet, self.__cell.row, self.__cell.column)
+            self.id,
+            self.original_text,
+            self.__worksheet,
+            self.__cell.row,
+            self.__cell.column,
+        )

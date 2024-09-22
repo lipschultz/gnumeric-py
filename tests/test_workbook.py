@@ -25,24 +25,49 @@ from dateutil.tz import tzutc
 from gnumeric.exceptions import DuplicateTitleException, WrongWorkbookException
 from gnumeric.workbook import Workbook
 
-
 TEST_GNUMERIC_FILE_PATH = 'samples/test.gnumeric'
-SHEET_NAMES = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Errors', 'Expressions', 'Dates', 'Mine & Yours Sheet[s]!')
-GRAPH_NAMES = ('Graph1', )
+SHEET_NAMES = (
+    'Sheet1',
+    'BoundingRegion',
+    'CellTypes',
+    'Strings',
+    'Errors',
+    'Expressions',
+    'Dates',
+    'Mine & Yours Sheet[s]!',
+)
+GRAPH_NAMES = ('Graph1',)
 ALL_NAMES = SHEET_NAMES + GRAPH_NAMES
 
 
 TEST_SHEET_NAME_FILE_PATH = 'samples/sheet-names.xml'
-SHEET_NAME_SHEET_NAMES = ('Sheet1', 'Sheet2', 'Sheet3', 'Mine & Yours Sheet[s]!', 'Graph1')
+SHEET_NAME_SHEET_NAMES = (
+    'Sheet1',
+    'Sheet2',
+    'Sheet3',
+    'Mine & Yours Sheet[s]!',
+    'Graph1',
+)
 
 
 class WorkbookTests(unittest.TestCase):
     def setUp(self):
         self.wb = Workbook()
         self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
-        self.loaded_wb_sheet_names = ('Sheet1', 'BoundingRegion', 'CellTypes', 'Strings', 'Errors', 'Expressions', 'Dates', 'Mine & Yours Sheet[s]!')
-        self.loaded_wb_graph_names = ('Graph1', )
-        self.loaded_wb_all_names = self.loaded_wb_sheet_names + self.loaded_wb_graph_names
+        self.loaded_wb_sheet_names = (
+            'Sheet1',
+            'BoundingRegion',
+            'CellTypes',
+            'Strings',
+            'Errors',
+            'Expressions',
+            'Dates',
+            'Mine & Yours Sheet[s]!',
+        )
+        self.loaded_wb_graph_names = ('Graph1',)
+        self.loaded_wb_all_names = (
+            self.loaded_wb_sheet_names + self.loaded_wb_graph_names
+        )
 
     def test_equality_of_same_workbook(self):
         workbook = Workbook()
@@ -60,12 +85,12 @@ class WorkbookTests(unittest.TestCase):
 
     def test_creating_workbook_has_version_1_12_28(self):
         workbook = Workbook()
-        assert workbook.version == "1.12.28"
+        assert workbook.version == '1.12.28'
 
     def test_creating_sheet_in_empty_book_adds_sheet_to_book(self):
         workbook = Workbook()
         title = 'Title'
-        ws = workbook.create_sheet(title)
+        workbook.create_sheet(title)
         assert len(workbook) == 1
         assert workbook.get_sheet_names() == [title]
 
@@ -80,7 +105,7 @@ class WorkbookTests(unittest.TestCase):
         workbook = Workbook()
         titles = ['Title1', 'Title2']
         for title in titles:
-            ws = workbook.create_sheet(title)
+            workbook.create_sheet(title)
         assert len(workbook) == 2
         assert workbook.get_sheet_names() == titles
 
@@ -88,15 +113,15 @@ class WorkbookTests(unittest.TestCase):
         workbook = Workbook()
         titles = ['Title1', 'Title2']
         for title in titles:
-            ws = workbook.create_sheet(title)
+            workbook.create_sheet(title)
         assert workbook.get_sheet_names() == titles
 
     def test_inserting_new_sheet(self):
         workbook = Workbook()
         titles = ['Title1', 'Title3', 'Title2']
-        ws = workbook.create_sheet(titles[0])
-        ws = workbook.create_sheet(titles[2])
-        ws = workbook.create_sheet(titles[1], index=1)
+        workbook.create_sheet(titles[0])
+        workbook.create_sheet(titles[2])
+        workbook.create_sheet(titles[1], index=1)
         assert workbook.get_sheet_names() == titles
 
     def test_creation_date_on_new_workbook(self):
@@ -140,7 +165,8 @@ class WorkbookTests(unittest.TestCase):
 
     def test_getting_sheet_with_nonexistent_name_raises_exception(self):
         workbook = Workbook()
-        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        for i in range(5):
+            workbook.create_sheet(f'Title{i}')
         with pytest.raises(KeyError):
             workbook.get_sheet_by_name('NotASheet')
 
@@ -166,7 +192,8 @@ class WorkbookTests(unittest.TestCase):
 
     def test_getting_sheet_with_getitem_using_bad_key_type_raises_exception(self):
         workbook = Workbook()
-        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        for i in range(5):
+            workbook.create_sheet(f'Title{i}')
         with pytest.raises(TypeError):
             _ = workbook[2.0]
 
@@ -179,7 +206,8 @@ class WorkbookTests(unittest.TestCase):
 
     def test_getting_sheet_with_getitem_using_nonexistent_name_raises_exception(self):
         workbook = Workbook()
-        worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
+        for i in range(5):
+            workbook.create_sheet(f'Title{i}')
         with pytest.raises(KeyError):
             _ = workbook['NotASheet']
 
@@ -190,11 +218,13 @@ class WorkbookTests(unittest.TestCase):
         ws2 = worksheets[index]
         assert workbook.get_index(ws2) == index
 
-    def test_getting_index_of_worksheet_from_different_workbook_but_with_name_raises_exception(self):
+    def test_getting_index_of_worksheet_from_different_workbook_but_with_name_raises_exception(
+        self,
+    ):
         workbook = Workbook()
         wb2 = Workbook()
         title = 'Title'
-        ws = workbook.create_sheet(title)
+        workbook.create_sheet(title)
         ws2 = wb2.create_sheet(title)
         with pytest.raises(WrongWorkbookException):
             workbook.get_index(ws2)
@@ -216,7 +246,6 @@ class WorkbookTests(unittest.TestCase):
         worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
         index = 2
         ws2 = worksheets[index]
-        title = ws2.title
         workbook.remove_sheet(ws2)
         with pytest.raises(ValueError):
             workbook.remove_sheet(ws2)
@@ -246,7 +275,7 @@ class WorkbookTests(unittest.TestCase):
     def test_deleting_worksheet_by_non_existent_name_raises_exception(self):
         workbook = Workbook()
         worksheets = [workbook.create_sheet('Title' + str(i)) for i in range(5)]
-        title = "NotATitle"
+        title = 'NotATitle'
 
         with pytest.raises(KeyError):
             workbook.remove_sheet_by_name(title)
@@ -303,7 +332,9 @@ class WorkbookTests(unittest.TestCase):
     def test_loading_compressed_file(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         assert workbook.sheetnames == list(ALL_NAMES)
-        assert workbook.creation_date == datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc())
+        assert workbook.creation_date == datetime(
+            2017, 4, 29, 17, 56, 48, tzinfo=tzutc()
+        )
         assert self.loaded_wb.version == '1.12.35'
 
     def test_loading_uncompressed_file(self):
@@ -322,24 +353,24 @@ class WorkbookTests(unittest.TestCase):
 
     def test_setting_active_sheet_by_index(self):
         workbook = Workbook()
-        workbook.create_sheet("Sheet1")
-        ws = workbook.create_sheet("Sheet2")
-        workbook.create_sheet("Sheet3")
+        workbook.create_sheet('Sheet1')
+        ws = workbook.create_sheet('Sheet2')
+        workbook.create_sheet('Sheet3')
         workbook.set_active_sheet(1)
         assert workbook.get_active_sheet() == ws
 
     def test_setting_active_sheet_by_name(self):
         workbook = Workbook()
-        workbook.create_sheet("Sheet1")
-        ws = workbook.create_sheet("Sheet2")
-        workbook.create_sheet("Sheet3")
-        workbook.set_active_sheet("Sheet2")
+        workbook.create_sheet('Sheet1')
+        ws = workbook.create_sheet('Sheet2')
+        workbook.create_sheet('Sheet3')
+        workbook.set_active_sheet('Sheet2')
         assert workbook.get_active_sheet() == ws
 
     def test_setting_active_sheet_by_sheet(self):
         workbook = Workbook()
-        workbook.create_sheet("Sheet1")
-        ws = workbook.create_sheet("Sheet2")
-        workbook.create_sheet("Sheet3")
+        workbook.create_sheet('Sheet1')
+        ws = workbook.create_sheet('Sheet2')
+        workbook.create_sheet('Sheet3')
         workbook.set_active_sheet(ws)
         assert workbook.get_active_sheet() == ws

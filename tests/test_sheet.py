@@ -22,7 +22,6 @@ from gnumeric import sheet
 from gnumeric.exceptions import UnsupportedOperationException
 from gnumeric.workbook import Workbook
 
-
 TEST_GNUMERIC_FILE_PATH = 'samples/test.gnumeric'
 
 
@@ -130,12 +129,20 @@ class TestSheetMetadata:
 
 class TestAccessCell:
     @classmethod
-    def assert_equal_cell_sets_by_coordinates(cls, actual_cells, *, expected=None, expected_start=None, expected_end=None):
+    def assert_equal_cell_sets_by_coordinates(
+        cls, actual_cells, *, expected=None, expected_start=None, expected_end=None
+    ):
         if expected_start is not None and expected_end is not None:
             start_row, start_col = expected_start
             end_row, end_col = expected_end
-            expected_coordinates = {(r, c) for r in range(start_row, end_row+1) for c in range(start_col, end_col+1)}
-            return cls.assert_equal_cell_sets_by_coordinates(actual_cells, expected=expected_coordinates)
+            expected_coordinates = {
+                (r, c)
+                for r in range(start_row, end_row + 1)
+                for c in range(start_col, end_col + 1)
+            }
+            return cls.assert_equal_cell_sets_by_coordinates(
+                actual_cells, expected=expected_coordinates
+            )
         else:
             actual_coordinates = {(c.row, c.column) for c in actual_cells}
             assert set(expected) == actual_coordinates
@@ -170,24 +177,30 @@ class TestAccessCell:
         c02 = ws.cell(0, 2)
         assert c02.row == 0
         assert c02.column == 2
-        assert c02.text == None
+        assert c02.text is None
 
-    def test_getting_non_existent_cell_outside_bounding_rectangle_does_not_increase_rectangle(self):
+    def test_getting_non_existent_cell_outside_bounding_rectangle_does_not_increase_rectangle(
+        self,
+    ):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
         ws.cell(15, 30)
         assert ws.calculate_dimension() == old_dimensions
 
-    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_empty_string_does_not_increase_rectangle(self):
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_empty_string_does_not_increase_rectangle(
+        self,
+    ):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
         c = ws.cell(15, 30)
-        c.set_value("")
+        c.set_value('')
         assert ws.calculate_dimension() == old_dimensions
 
-    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_None_does_not_increase_rectangle(self):
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_None_does_not_increase_rectangle(
+        self,
+    ):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
@@ -195,21 +208,25 @@ class TestAccessCell:
         c.set_value(None)
         assert ws.calculate_dimension() == old_dimensions
 
-    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_string_does_increase_rectangle(self):
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_string_does_increase_rectangle(
+        self,
+    ):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
         c = ws.cell(15, 30)
-        c.set_value("new value")
+        c.set_value('new value')
         new_dimensions = old_dimensions[:2] + (15, 30)
         assert ws.calculate_dimension() == new_dimensions
 
-    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_expression_does_increase_rectangle(self):
+    def test_getting_non_existent_cell_outside_bounding_rectangle_and_assigning_expression_does_increase_rectangle(
+        self,
+    ):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Sheet1')
         old_dimensions = ws.calculate_dimension()
         c = ws.cell(15, 30)
-        c.set_value("=max(A1:A5)")
+        c.set_value('=max(A1:A5)')
         new_dimensions = old_dimensions[:2] + (15, 30)
         assert ws.calculate_dimension() == new_dimensions
 
@@ -235,7 +252,7 @@ class TestAccessCell:
 
     def test_get_content_cells(self):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -260,7 +277,7 @@ class TestAccessCell:
 
     def test_get_content_cells_including_empty(self):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         expected_cells = set()
 
         c = ws.cell(0, 0)
@@ -293,7 +310,7 @@ class TestAccessCell:
 
     def test_get_range_of_cells_by_passing_int_indices(self):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -316,7 +333,7 @@ class TestAccessCell:
 
     def test_get_range_of_cells_by_passing_coordinates(self):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -339,7 +356,7 @@ class TestAccessCell:
 
     def test_get_range_of_cells_by_boundary_cells(self):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -362,9 +379,11 @@ class TestAccessCell:
 
         assert set(ws.get_cell_collection(start_cell, end_cell)) == cells
 
-    def test_get_range_of_cells_by_boundary_cells_and_including_empties_and_creating_cells(self):
+    def test_get_range_of_cells_by_boundary_cells_and_including_empties_and_creating_cells(
+        self,
+    ):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
 
         start_coord = (0, 0)
         end_coord = (2, 5)
@@ -375,12 +394,18 @@ class TestAccessCell:
         c = ws.cell(*end_coord)
         end_cell = c
 
-        actual_cell_collection = ws.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
-        self.assert_equal_cell_sets_by_coordinates(actual_cell_collection, expected_start=start_coord, expected_end=end_coord)
+        actual_cell_collection = ws.get_cell_collection(
+            start_cell, end_cell, include_empty=True, create_cells=True
+        )
+        self.assert_equal_cell_sets_by_coordinates(
+            actual_cell_collection, expected_start=start_coord, expected_end=end_coord
+        )
 
-    def test_get_range_of_cells_leaving_off_end_cell_returns_all_cells_greater_than_start_cells_position(self):
+    def test_get_range_of_cells_leaving_off_end_cell_returns_all_cells_greater_than_start_cells_position(
+        self,
+    ):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -403,9 +428,11 @@ class TestAccessCell:
 
         assert set(ws.get_cell_collection(start_cell)) == cells
 
-    def test_get_range_of_cells_leaving_offstart_cell_returns_all_cells_less_than_end_cells_position(self):
+    def test_get_range_of_cells_leaving_offstart_cell_returns_all_cells_less_than_end_cells_position(
+        self,
+    ):
         workbook = Workbook()
-        ws = workbook.create_sheet("Test")
+        ws = workbook.create_sheet('Test')
         cells = set()
 
         c = ws.cell(0, 0)
@@ -431,9 +458,10 @@ class TestAccessCell:
     def test_get_expression_map_from_worksheet_with_expressions(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Expressions')
-        expected_map = {'1': ((1, 1), '=sum(A2:A10)'),
-                        '2': ((2, 1), '=counta(A$1:A$65536)')
-                        }
+        expected_map = {
+            '1': ((1, 1), '=sum(A2:A10)'),
+            '2': ((2, 1), '=counta(A$1:A$65536)'),
+        }
         assert ws.get_expression_map() == expected_map
 
     def test_get_expression_map_from_worksheet_with_no_expressions(self):
@@ -452,7 +480,10 @@ class TestAccessCell:
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Expressions')
         expected_cells = []
-        assert ws.get_all_cells_with_expression("DOESN'T EXIST", sort='row') == expected_cells
+        assert (
+            ws.get_all_cells_with_expression("DOESN'T EXIST", sort='row')
+            == expected_cells
+        )
 
     def test_get_max_allowed_column(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
@@ -544,22 +575,22 @@ class TestAccessCell:
 
         all_cells = set()
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
         all_cells.add(cell)
         cell = ws.cell(0, 2)
-        cell.value = "1:C"
+        cell.value = '1:C'
         all_cells.add(cell)
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
         all_cells.add(cell)
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
         all_cells.add(cell)
         cell = ws.cell(1, 2)
-        cell.value = "2:C"
+        cell.value = '2:C'
         all_cells.add(cell)
         cell = ws.cell(1, 1)
-        cell.value = "2:B"
+        cell.value = '2:B'
         all_cells.add(cell)
 
         ordered_cells = ws.get_cell_collection(sort='row')
@@ -583,22 +614,22 @@ class TestAccessCell:
 
         all_cells = set()
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
         all_cells.add(cell)
         cell = ws.cell(0, 2)
-        cell.value = "1:C"
+        cell.value = '1:C'
         all_cells.add(cell)
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
         all_cells.add(cell)
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
         all_cells.add(cell)
         cell = ws.cell(1, 2)
-        cell.value = "2:C"
+        cell.value = '2:C'
         all_cells.add(cell)
         cell = ws.cell(1, 1)
-        cell.value = "2:B"
+        cell.value = '2:B'
         all_cells.add(cell)
 
         ordered_cells = ws.get_cell_collection(sort='column')
@@ -624,7 +655,7 @@ class TestAccessCell:
 
         assert col == []
 
-    @pytest.mark.skip("takes too long to complete in a reasonable amount of time")
+    @pytest.mark.skip('takes too long to complete in a reasonable amount of time')
     def test_get_empty_col_and_create_cells_returns_cells_for_all_rows(self):
         workbook = Workbook()
         ws = workbook.create_sheet('Title')
@@ -636,54 +667,54 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
         cell = ws.cell(3, 0)
-        cell.value = "4:A"
+        cell.value = '4:A'
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
         cell = ws.cell(1, 0)
-        cell.value = "2:A"
+        cell.value = '2:A'
 
         col = ws.get_column(0)
-        assert [c.text for c in col] == ["1:A", "2:A", "4:A"]
+        assert [c.text for c in col] == ['1:A', '2:A', '4:A']
 
     def test_get_col_within_range_only_returns_cells_within_that_range(self):
         workbook = Workbook()
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(3, 0)
-        cell.value = "4:A"
+        cell.value = '4:A'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(1, 0)
-        cell.value = "2:A"
+        cell.value = '2:A'
 
         col = ws.get_column(0, min_row=1, max_row=2)
-        assert [c.text for c in col] == ["2:A"]
+        assert [c.text for c in col] == ['2:A']
 
     def test_get_col_and_create_cells_will_return_all_cells_in_sorted_order(self):
         workbook = Workbook()
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(3, 0)
-        cell.value = "4:A"
+        cell.value = '4:A'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(1, 0)
-        cell.value = "2:A"
+        cell.value = '2:A'
 
         col = ws.get_column(0, max_row=10, create_cells=True)
-        assert [c.text for c in col] == ["1:A", "2:A", None, "4:A"] + [None] * 7
+        assert [c.text for c in col] == ['1:A', '2:A', None, '4:A'] + [None] * 7
 
     def test_max_row_in_empty_row_is_negative_one(self):
         workbook = Workbook()
@@ -700,16 +731,16 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(3, 0)
-        cell.value = "4:A"
+        cell.value = '4:A'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(1, 0)
-        cell.value = "2:A"
+        cell.value = '2:A'
 
         assert ws.max_row_in_column(0) == 3
 
@@ -718,16 +749,16 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(3, 0)
-        cell.value = "4:A"
+        cell.value = '4:A'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(1, 0)
-        cell.value = "2:A"
+        cell.value = '2:A'
 
         assert ws.min_row_in_column(0) == 0
 
@@ -752,51 +783,51 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 0)
-        cell.value = "3:C"
+        cell.value = '3:C'
         cell = ws.cell(0, 3)
-        cell.value = "1:D"
+        cell.value = '1:D'
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
 
         row = ws.get_row(0)
-        assert [r.text for r in row] == ["1:A", "1:B", "1:D"]
+        assert [r.text for r in row] == ['1:A', '1:B', '1:D']
 
     def test_get_row_within_range_only_returns_cells_within_that_range(self):
         workbook = Workbook()
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 0)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(0, 3)
-        cell.value = "1:D"
+        cell.value = '1:D'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
 
         row = ws.get_row(0, min_col=1, max_col=2)
-        assert [r.text for r in row] == ["1:B"]
+        assert [r.text for r in row] == ['1:B']
 
     def test_get_row_and_create_cells_will_return_all_cells_in_sorted_order(self):
         workbook = Workbook()
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 2)
-        cell.value = "3:C"
+        cell.value = '3:C'
         cell = ws.cell(0, 3)
-        cell.value = "1:D"
+        cell.value = '1:D'
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
 
         row = ws.get_row(0, max_col=10, create_cells=True)
-        assert [r.text for r in row] == ["1:A", "1:B", None, "1:D"] + [None] * 7
+        assert [r.text for r in row] == ['1:A', '1:B', None, '1:D'] + [None] * 7
 
     def test_max_column_in_empty_row_is_negative_one(self):
         workbook = Workbook()
@@ -813,16 +844,16 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 0)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(0, 3)
-        cell.value = "1:D"
+        cell.value = '1:D'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
 
         assert ws.max_column_in_row(0) == 3
 
@@ -831,16 +862,16 @@ class TestAccessCell:
         ws = workbook.create_sheet('Title')
 
         cell = ws.cell(2, 0)
-        cell.value = "3:C"
+        cell.value = '3:C'
 
         cell = ws.cell(0, 3)
-        cell.value = "1:D"
+        cell.value = '1:D'
 
         cell = ws.cell(0, 0)
-        cell.value = "1:A"
+        cell.value = '1:A'
 
         cell = ws.cell(0, 1)
-        cell.value = "1:B"
+        cell.value = '1:B'
 
         assert ws.min_column_in_row(0) == 0
 
@@ -907,11 +938,15 @@ class TestAccessCell:
         assert ws.get_cell_collection() == expected_cells
 
     @pytest.mark.skip('Still need to implement inserting cells/rows/columns')
-    def test_inserting_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(self):
+    def test_inserting_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(
+        self,
+    ):
         # This is needed because of the singleton nature of the Cell class
         self.assertTrue(False)
 
     @pytest.mark.skip('Still need to implement removing cells/rows/columns')
-    def test_removing_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(self):
+    def test_removing_cell_before_another_cell_does_not_cause_the_existing_cell_to_be_recreated(
+        self,
+    ):
         # This is needed because of the singleton nature of the Cell class
         self.assertTrue(False)

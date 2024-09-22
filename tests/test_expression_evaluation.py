@@ -76,20 +76,20 @@ class TestOperatorAndConstant:
             ('=2+3', 5),
             ('=2-3', -1),
             ('=2*3', 6),
-            ('=2/3', 2/3),
+            ('=2/3', 2 / 3),
             ('=2^3', 2**3),
             ('=-2+3*4-10/5', 8),
-            ('=2*(8-3)^2^3', 2*(8-3)**2**3),
+            ('=2*(8-3)^2^3', 2 * (8 - 3) ** 2**3),
             ('=TRUE+4', 5),
             ('=FALSE+4', 4),
             ('=1/0', EvaluationError.DIV0),
             ('=#REF!+1', EvaluationError.REF),
             ('=4+#REF!*3', EvaluationError.REF),
-        ]
+        ],
     )
     def test_basic_arithmetic_evaluation(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert expected == actual, f'Result mismatch on {case}'
+        assert expected == actual
 
     @pytest.mark.parametrize(
         'formula',
@@ -104,11 +104,13 @@ class TestOperatorAndConstant:
             '="string"/4',
             '=4^"string"',
             '="string"^4',
-        ]
+        ],
     )
-    def test_arithmetic_operations_between_numbers_and_strings_results_in_value_error(self, formula):
+    def test_arithmetic_operations_between_numbers_and_strings_results_in_value_error(
+        self, formula
+    ):
         actual = evaluate(formula, self.ANY_CELL)
-        assert EvaluationError.VALUE == actual, f'Result mismatch on {case}'
+        assert EvaluationError.VALUE == actual
 
     @pytest.mark.parametrize(
         'formula',
@@ -116,11 +118,11 @@ class TestOperatorAndConstant:
             '=10000000000^10000000000',
             '=10000000000^1000',
             '=10^10000000000',
-        ]
+        ],
     )
     def test_arithmetic_operations_on_large_numbers_results_in_num_error(self, formula):
         actual = evaluate(formula, self.ANY_CELL)
-        assert EvaluationError.NUM == actual, f'Result mismatch on {case}'
+        assert EvaluationError.NUM == actual
 
     @pytest.mark.parametrize(
         'formula, expected',
@@ -133,11 +135,11 @@ class TestOperatorAndConstant:
             ('=2<>3', True),
             ('=2<1+5', True),
             ('=2<#REF!', EvaluationError.REF),
-        ]
+        ],
     )
     def test_numeric_logical_evaluation(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert expected == actual, f'Result mismatch on {case}'
+        assert expected == actual
 
     @pytest.mark.parametrize(
         'formula, expected',
@@ -148,11 +150,11 @@ class TestOperatorAndConstant:
             ('="case">="test"', False),
             ('="case"="test"', False),
             ('="case"<>"test"', True),
-        ]
+        ],
     )
     def test_string_logical_evaluation(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert actual is expected, f'Result mismatch on {case}'
+        assert actual is expected
 
     @pytest.mark.parametrize(
         'formula, expected',
@@ -163,11 +165,11 @@ class TestOperatorAndConstant:
             ('="case">="CASE"', True),
             ('="case"="CASE"', True),
             ('="case"<>"CASE"', False),
-        ]
+        ],
     )
     def test_string_logical_evaluation_is_case_insensitive(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert actual is expected, f'Result mismatch on {case}'
+        assert actual is expected
 
     @pytest.mark.parametrize(
         'formula, expected',
@@ -178,83 +180,77 @@ class TestOperatorAndConstant:
             ('=50<="2"', True),
             ('=2>"1"', False),
             ('=2>="1"', False),
-
-            (f'=2=TRUE', False),
-            (f'=2<>TRUE', True),
-            (f'=50<TRUE', True),
-            (f'=50<=TRUE', True),
-            (f'=2>TRUE', False),
-            (f'=2>=TRUE', False),
-
-            (f'=2=FALSE', False),
-            (f'=2<>FALSE', True),
-            (f'=50<FALSE', True),
-            (f'=50<=FALSE', True),
-            (f'=2>FALSE', False),
-            (f'=2>=FALSE', False),
-        ]
+            ('=2=TRUE', False),
+            ('=2<>TRUE', True),
+            ('=50<TRUE', True),
+            ('=50<=TRUE', True),
+            ('=2>TRUE', False),
+            ('=2>=TRUE', False),
+            ('=2=FALSE', False),
+            ('=2<>FALSE', True),
+            ('=50<FALSE', True),
+            ('=50<=FALSE', True),
+            ('=2>FALSE', False),
+            ('=2>=FALSE', False),
+        ],
     )
     def test_numbers_always_less_than_text_and_bools(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert expected == actual, f'Result mismatch on {case}'
+        assert expected == actual
 
     @pytest.mark.parametrize(
         'formula, expected',
         [
-            (f'="cat"=TRUE', False),
-            (f'="cat"<>TRUE', True),
-            (f'="cat"<TRUE', True),
-            (f'="cat"<=TRUE', True),
-            (f'="cat">TRUE', False),
-            (f'="cat">=TRUE', False),
-
-            (f'="cat"=FALSE', False),
-            (f'="cat"<>FALSE', True),
-            (f'="cat"<FALSE', True),
-            (f'="cat"<=FALSE', True),
-            (f'="cat">FALSE', False),
-            (f'="cat">=FALSE', False),
-
-            (f'=""=FALSE', False),
-            (f'=""<>FALSE', True),
-            (f'=""<FALSE', True),
-            (f'=""<=FALSE', True),
-            (f'="">FALSE', False),
-            (f'="">=FALSE', False),
-        ]
+            ('="cat"=TRUE', False),
+            ('="cat"<>TRUE', True),
+            ('="cat"<TRUE', True),
+            ('="cat"<=TRUE', True),
+            ('="cat">TRUE', False),
+            ('="cat">=TRUE', False),
+            ('="cat"=FALSE', False),
+            ('="cat"<>FALSE', True),
+            ('="cat"<FALSE', True),
+            ('="cat"<=FALSE', True),
+            ('="cat">FALSE', False),
+            ('="cat">=FALSE', False),
+            ('=""=FALSE', False),
+            ('=""<>FALSE', True),
+            ('=""<FALSE', True),
+            ('=""<=FALSE', True),
+            ('="">FALSE', False),
+            ('="">=FALSE', False),
+        ],
     )
     def test_text_always_less_than_bools(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert actual is expected, f'Result mismatch on {case}'
+        assert actual is expected
 
     @pytest.mark.parametrize(
         'formula, expected',
         [
-            (f'=TRUE=TRUE', True),
-            (f'=TRUE<>TRUE', False),
-            (f'=TRUE<TRUE', False),
-            (f'=TRUE<=TRUE', True),
-            (f'=TRUE>TRUE', False),
-            (f'=TRUE>=TRUE', True),
-
-            (f'=TRUE=FALSE', False),
-            (f'=TRUE<>FALSE', True),
-            (f'=TRUE<FALSE', False),
-            (f'=TRUE<=FALSE', False),
-            (f'=TRUE>FALSE', True),
-            (f'=TRUE>=FALSE', True),
-
-            (f'=FALSE=FALSE', True),
-            (f'=FALSE<>FALSE', False),
-            (f'=FALSE<FALSE', False),
-            (f'=FALSE<=FALSE', True),
-            (f'=FALSE>FALSE', False),
-            (f'=FALSE>=FALSE', True),
-        ]
+            ('=TRUE=TRUE', True),
+            ('=TRUE<>TRUE', False),
+            ('=TRUE<TRUE', False),
+            ('=TRUE<=TRUE', True),
+            ('=TRUE>TRUE', False),
+            ('=TRUE>=TRUE', True),
+            ('=TRUE=FALSE', False),
+            ('=TRUE<>FALSE', True),
+            ('=TRUE<FALSE', False),
+            ('=TRUE<=FALSE', False),
+            ('=TRUE>FALSE', True),
+            ('=TRUE>=FALSE', True),
+            ('=FALSE=FALSE', True),
+            ('=FALSE<>FALSE', False),
+            ('=FALSE<FALSE', False),
+            ('=FALSE<=FALSE', True),
+            ('=FALSE>FALSE', False),
+            ('=FALSE>=FALSE', True),
+        ],
     )
     def test_boolean_logical_evaluation(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert actual is expected, f'Result mismatch on {case}'
+        assert actual is expected
 
     @pytest.mark.parametrize(
         'formula, expected',
@@ -267,11 +263,11 @@ class TestOperatorAndConstant:
             ('=(2>3)&"cat"', 'FALSEcat'),
             ('=(2>3)&"cat"', 'FALSEcat'),
             ('=#REF!&"cat"', EvaluationError.REF),
-        ]
+        ],
     )
     def test_text_concatenation(self, formula, expected):
         actual = evaluate(formula, self.ANY_CELL)
-        assert expected == actual, f'Result mismatch on {case}'
+        assert expected == actual
 
 
 class TestCellReference:
@@ -286,7 +282,9 @@ class TestCellReference:
         actual_value = evaluate(test_cell.text, test_cell)
         assert expected_value == actual_value
 
-    def test_referencing_string_cell_with_absolutes_gets_correct_value(self, empty_worksheet):
+    def test_referencing_string_cell_with_absolutes_gets_correct_value(
+        self, empty_worksheet
+    ):
         expected_value = 'string'
         reference_cell = empty_worksheet.cell(0, 0)
         reference_cell.set_value(expected_value)
@@ -316,7 +314,9 @@ class TestCellReference:
         actual_value = evaluate(test_cell.text, test_cell)
         assert expected_value == actual_value
 
-    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space(self, workbook_and_worksheet):
+    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space(
+        self, workbook_and_worksheet
+    ):
         other_sheet = workbook_and_worksheet['workbook'].create_sheet('Other Sheet')
         expected_value = 'string'
         reference_cell = other_sheet.cell(0, 0)
@@ -328,7 +328,9 @@ class TestCellReference:
         actual_value = evaluate(test_cell.text, test_cell)
         assert expected_value == actual_value
 
-    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space_and_column_and_row_are_absolute_references(self, workbook_and_worksheet):
+    def test_referencing_cell_in_another_sheet_whose_name_contains_a_space_and_column_and_row_are_absolute_references(
+        self, workbook_and_worksheet
+    ):
         other_sheet = workbook_and_worksheet['workbook'].create_sheet('Other Sheet')
         expected_value = 'string'
         reference_cell = other_sheet.cell(0, 0)
@@ -340,7 +342,9 @@ class TestCellReference:
         actual_value = evaluate(test_cell.text, test_cell)
         assert expected_value == actual_value
 
-    def test_referencing_cell_in_nonexistent_sheet_results_in_ref_error(self, empty_worksheet):
+    def test_referencing_cell_in_nonexistent_sheet_results_in_ref_error(
+        self, empty_worksheet
+    ):
         test_cell = empty_worksheet.cell(0, 1)
         test_cell.set_value('=Other!A1')
 
@@ -388,7 +392,9 @@ class TestCellReference:
         actual_value = evaluate(test_cell.text, test_cell)
         assert 7 == actual_value
 
-    def test_function_argument_references_another_cell_uses_the_cells_value(self, empty_worksheet):
+    def test_function_argument_references_another_cell_uses_the_cells_value(
+        self, empty_worksheet
+    ):
         reference_cell = empty_worksheet.cell(0, 0)
         reference_cell.set_value('=2-5')
 
@@ -410,7 +416,9 @@ class TestCellReference:
         assert 0 == actual_first_cell
         assert 0 == actual_second_cell
 
-    def test_creating_a_circular_reference_from_existing_cell_uses_cells_old_value_when_determining_cells_new_value(self, empty_worksheet):
+    def test_creating_a_circular_reference_from_existing_cell_uses_cells_old_value_when_determining_cells_new_value(
+        self, empty_worksheet
+    ):
         first_cell = empty_worksheet.cell(0, 0)
         first_cell.set_value(5)
 
@@ -443,7 +451,9 @@ class TestGetCellReference:
         actual_cells = get_referenced_cells(test_cell.text, test_cell)
         assert expected_cells == actual_cells
 
-    def test_get_all_cells_in_range_when_referencing_range_of_cell(self, empty_worksheet):
+    def test_get_all_cells_in_range_when_referencing_range_of_cell(
+        self, empty_worksheet
+    ):
         for row in range(5):
             cell = empty_worksheet.cell(row, 0)
             cell.set_value(row)
@@ -455,11 +465,15 @@ class TestGetCellReference:
         actual_cells = get_referenced_cells(test_cell.text, test_cell)
         assert set(expected_cells) == actual_cells
 
-    def test_get_all_cells_in_range_when_referencing_multiple_cell_ranges(self, empty_worksheet):
+    def test_get_all_cells_in_range_when_referencing_multiple_cell_ranges(
+        self, empty_worksheet
+    ):
         for row in range(5):
             cell = empty_worksheet.cell(row, 0)
             cell.set_value(row)
-        expected_cells = empty_worksheet.get_cell_collection('A1', 'A3') + empty_worksheet.get_cell_collection('A5', 'A5')
+        expected_cells = empty_worksheet.get_cell_collection(
+            'A1', 'A3'
+        ) + empty_worksheet.get_cell_collection('A5', 'A5')
 
         test_cell = empty_worksheet.cell(0, 1)
         test_cell.set_value('=SUM(A1:A3,A5)')
@@ -467,7 +481,9 @@ class TestGetCellReference:
         actual_cells = get_referenced_cells(test_cell.text, test_cell)
         assert set(expected_cells) == actual_cells
 
-    def test_get_all_cells_when_referencing_cell_range_inside_function_and_referencing_cells_outside(self, empty_worksheet):
+    def test_get_all_cells_when_referencing_cell_range_inside_function_and_referencing_cells_outside(
+        self, empty_worksheet
+    ):
         for row in range(5):
             cell = empty_worksheet.cell(row, 0)
             cell.set_value(row)
@@ -476,17 +492,18 @@ class TestGetCellReference:
 
         actual_cells = get_referenced_cells(test_cell.text, test_cell)
 
-        expected_cells = empty_worksheet.get_cell_collection('A1', 'A3') + empty_worksheet.get_cell_collection('A5', 'A5') + empty_worksheet.get_cell_collection('A10', 'A10', create_cells=True)
+        expected_cells = (
+            empty_worksheet.get_cell_collection('A1', 'A3')
+            + empty_worksheet.get_cell_collection('A5', 'A5')
+            + empty_worksheet.get_cell_collection('A10', 'A10', create_cells=True)
+        )
         assert set(expected_cells) == actual_cells
 
 
 class TestFunctionEvaluation:
     ANY_CELL = None
 
-    @pytest.mark.parametrize(
-        'formula',
-        ['=NAMEDOESNOTEXIST()', '=ABS']
-    )
+    @pytest.mark.parametrize('formula', ['=NAMEDOESNOTEXIST()', '=ABS'])
     def test_name_error(self, formula):
         assert EvaluationError.NAME == evaluate(formula, self.ANY_CELL)
 
@@ -502,7 +519,7 @@ class TestFunctionEvaluation:
             ('=ABS("string")', EvaluationError.VALUE),
             ('=ABS(#REF!)', EvaluationError.REF),
             ('=ABS()', EvaluationError.NA),
-        ]
+        ],
     )
     def test_abs(self, formula, expected):
         assert expected == evaluate(formula, self.ANY_CELL)
@@ -517,7 +534,7 @@ class TestFunctionEvaluation:
             ('=LEN(12/5)', 3),
             ('=LEN(5/3)', 18),
             ('=LEN(#REF!)', EvaluationError.REF),
-        ]
+        ],
     )
     def test_len(self, formula, expected):
         assert expected == evaluate(formula, self.ANY_CELL)

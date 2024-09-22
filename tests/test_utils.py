@@ -46,7 +46,9 @@ class TestBasicUtility:
         idx = utils.column_from_spreadsheet('AE')
         assert idx == 30
 
-    def test_column_letter_to_index_raises_IndexError_when_non_alphabetic_character_in_name(self):
+    def test_column_letter_to_index_raises_IndexError_when_non_alphabetic_character_in_name(
+        self,
+    ):
         with pytest.raises(IndexError):
             utils.column_from_spreadsheet('A:E')
 

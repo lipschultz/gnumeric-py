@@ -15,13 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+
 import datetime
 
 import pytest
 
 from gnumeric import cell
 from gnumeric.workbook import Workbook
-
 
 TEST_GNUMERIC_FILE_PATH = 'samples/test.gnumeric'
 
@@ -57,7 +57,10 @@ class TestCell:
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
 
         worksheet = workbook.get_sheet_by_name('Mine & Yours Sheet[s]!')
-        assert worksheet.cell(0, 0).text_format == '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+        assert (
+            worksheet.cell(0, 0).text_format
+            == '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+        )
 
 
 class TestCellType:
@@ -83,7 +86,9 @@ class TestCellType:
                 expected_type = cell.VALUE_TYPE_EMPTY
 
             test_cell = ws.cell(row, 1)
-            assert test_cell.value_type == expected_type, f"{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_type}"
+            assert (
+                test_cell.value_type == expected_type
+            ), f'{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_type}'
 
     def test_set_cell_value_infer_bool(self, empty_worksheet):
         test_cell = empty_worksheet.cell(0, 0)
@@ -133,7 +138,9 @@ class TestCellType:
         test_cell.set_value(17)
         assert test_cell.value_type == cell.VALUE_TYPE_INTEGER
 
-    def test_save_int_into_cell_value_using_keep_when_cell_value_is_string(self, empty_worksheet):
+    def test_save_int_into_cell_value_using_keep_when_cell_value_is_string(
+        self, empty_worksheet
+    ):
         test_cell = empty_worksheet.cell(0, 0)
         test_cell.set_value('asdf')
         assert test_cell.value_type == cell.VALUE_TYPE_STRING
@@ -188,25 +195,83 @@ class TestCellValue:
             if test_cell.value_type == cell.VALUE_TYPE_EXPR:
                 assert test_cell.get_value().original_text == expected_value
             else:
-                assert test_cell.get_value() == expected_value, f"{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_value}"
+                assert (
+                    test_cell.get_value() == expected_value
+                ), f'{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_value}'
 
     def test_get_string_cell_value_returns_parsed_value(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
         ws = workbook.get_sheet_by_name('Strings')
 
-        expected_values = ('TBD', 'Blåbærgrød', 'Greek Α α', 'Greek Β β', 'Greek Γ γ', 'Greek Δ δ', 'Greek Ε ε', 'Greek Ζ ζ', 'Greek Η η', 'Greek Θ θ', 'Greek Ι ι',
-                           'Greek Κ κ', 'Greek Λ λ', 'Greek Μ μ', 'Greek Ν ν', 'Greek Ξ ξ', 'Greek Ο ο', 'Greek Π π', 'Greek Ρ ρ', 'Greek Σ σς', 'Greek Τ τ', 'Greek Υ υ',
-                           'Greek Φ φ', 'Greek Χ χ', 'Greek Ψ ψ', 'Greek Ω ω', 'TBD', '10', '-10', '1.23', '1e1', '1e+01', '1E+01', '1D+01', '=2+2', 'TRUE', 'FALSE', '#N/A',
-                           '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', ' abc', 'abc ', 'abc"def', 'abc""def', "abc'def", "abc''def", "'abc", 'abc&def', 'abc&amp;def', 'abc<def',
-                           'abc>def', 'abc	def', 'hi<!--there')
+        expected_values = (
+            'TBD',
+            'Blåbærgrød',
+            'Greek Α α',
+            'Greek Β β',
+            'Greek Γ γ',
+            'Greek Δ δ',
+            'Greek Ε ε',
+            'Greek Ζ ζ',
+            'Greek Η η',
+            'Greek Θ θ',
+            'Greek Ι ι',
+            'Greek Κ κ',
+            'Greek Λ λ',
+            'Greek Μ μ',
+            'Greek Ν ν',
+            'Greek Ξ ξ',
+            'Greek Ο ο',
+            'Greek Π π',
+            'Greek Ρ ρ',
+            'Greek Σ σς',
+            'Greek Τ τ',
+            'Greek Υ υ',
+            'Greek Φ φ',
+            'Greek Χ χ',
+            'Greek Ψ ψ',
+            'Greek Ω ω',
+            'TBD',
+            '10',
+            '-10',
+            '1.23',
+            '1e1',
+            '1e+01',
+            '1E+01',
+            '1D+01',
+            '=2+2',
+            'TRUE',
+            'FALSE',
+            '#N/A',
+            '#DIV/0!',
+            '#VALUE!',
+            '#NAME?',
+            '#NUM!',
+            ' abc',
+            'abc ',
+            'abc"def',
+            'abc""def',
+            "abc'def",
+            "abc''def",
+            "'abc",
+            'abc&def',
+            'abc&amp;def',
+            'abc<def',
+            'abc>def',
+            'abc	def',
+            'hi<!--there',
+        )
         for row in range(ws.max_row + 1):
             expected = expected_values[row]
 
             test_cell = ws.cell(row, 0)
             actual = test_cell.value
 
-            assert cell.VALUE_TYPE_STRING == test_cell.value_type, f'Failed on row={row+1}, cell={actual}, expected={expected}'
-            assert expected == actual, f'Failed on row={row+1}, cell={actual}, expected={expected}'
+            assert (
+                cell.VALUE_TYPE_STRING == test_cell.value_type
+            ), f'Failed on row={row+1}, cell={actual}, expected={expected}'
+            assert (
+                expected == actual
+            ), f'Failed on row={row+1}, cell={actual}, expected={expected}'
 
     def test_getting_result(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
@@ -227,7 +292,9 @@ class TestCellValue:
             elif test_cell.value_type == cell.VALUE_TYPE_EXPR:
                 expected_value = ws.cell(row, 2).value
 
-            assert test_cell.result == expected_value, f"{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_value}"
+            assert (
+                test_cell.result == expected_value
+            ), f'{test_cell.text} (row={row}) has type {test_cell.value_type}, but expected {expected_value}'
 
     def test_getting_dates(self):
         workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
@@ -235,7 +302,9 @@ class TestCellValue:
 
         for row in range(ws.max_row + 1):
             expected_cell = ws.cell(row, 1)
-            expected_datetime = datetime.datetime.strptime(expected_cell.value, '%Y-%m-%dT%H:%M:%S')
+            expected_datetime = datetime.datetime.strptime(
+                expected_cell.value, '%Y-%m-%dT%H:%M:%S'
+            )
 
             test_cell = ws.cell(row, 0)
             assert test_cell.is_datetime() is True
@@ -254,7 +323,9 @@ class TestCellSharedExpression:
 
         c1 = ws.cell(1, 1)
         c1_val = c1.value
-        expected_cells_referenced_in_expr = set(ws.get_cell_collection('A2', 'A10', include_empty=True, create_cells=True))
+        expected_cells_referenced_in_expr = set(
+            ws.get_cell_collection('A2', 'A10', include_empty=True, create_cells=True)
+        )
 
         assert c1_val.original_text == expected_value
         assert c1_val.id == expected_id
@@ -275,7 +346,9 @@ class TestCellSharedExpression:
 
         c1 = ws.cell(4, 1)
         c1_val = c1.value
-        expected_cells_referenced_in_expr = set(ws.get_cell_collection('A5', 'A13', include_empty=True, create_cells=True))
+        expected_cells_referenced_in_expr = set(
+            ws.get_cell_collection('A5', 'A13', include_empty=True, create_cells=True)
+        )
 
         assert c1_val.original_text == expected_value
         assert c1_val.id == expected_id
@@ -296,7 +369,11 @@ class TestCellSharedExpression:
 
         c1 = ws.cell(3, 1)
         c1_val = c1.value
-        expected_cells_referenced_in_expr = set(workbook.get_sheet_by_name('BoundingRegion').get_cell_collection('D7', 'J13', include_empty=True, create_cells=True))
+        expected_cells_referenced_in_expr = set(
+            workbook.get_sheet_by_name('BoundingRegion').get_cell_collection(
+                'D7', 'J13', include_empty=True, create_cells=True
+            )
+        )
 
         assert c1_val.original_text == expected_value
         assert c1_val.id == expected_id

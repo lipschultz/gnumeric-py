@@ -15,14 +15,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-from typing import Optional, Union, Tuple
+
+from typing import Optional, Tuple, Union
 
 
 def column_to_spreadsheet(col_int: int, abs_ref: bool = False) -> str:
     """
-        Convert 0-indexed column number into standard spreadsheet notation.  For example: `30` -> `'AE'`.
+    Convert 0-indexed column number into standard spreadsheet notation.  For example: `30` -> `'AE'`.
 
-        Raises `IndexError` when `col_int` is negative.
+    Raises `IndexError` when `col_int` is negative.
     """
     if col_int < 0:
         raise IndexError('The column index must be positive: ' + str(col_int))
@@ -46,10 +47,10 @@ def column_from_spreadsheet(col_letter: str) -> int:
     """
     col_letter = col_letter.replace('$', '')
     index = 0
-    for l in col_letter:
-        if not l.isalpha():
-            raise IndexError('Illegal character in column name: ' + l)
-        index = index * 26 + (ord(l) - ord('A') + 1)
+    for letter in col_letter:
+        if not letter.isalpha():
+            raise IndexError(f'Illegal character in column name: {letter}')
+        index = index * 26 + (ord(letter) - ord('A') + 1)
     return index - 1
 
 
@@ -80,7 +81,12 @@ def row_from_spreadsheet(row: str) -> int:
     return row - 1
 
 
-def coordinate_to_spreadsheet(coord: Union[int, Tuple[int, int]], col: Optional[int] = None, abs_ref_row: bool = False, abs_ref_col: bool = False) -> str:
+def coordinate_to_spreadsheet(
+    coord: Union[int, Tuple[int, int]],
+    col: Optional[int] = None,
+    abs_ref_row: bool = False,
+    abs_ref_col: bool = False,
+) -> str:
     """
     Convert a coordinate into spreadsheet notation.  If `col` is `None`, then `coord` is assumed to be a (row, column)
     tuple.  If `col` is not `None`, then `coord` is the row and col is the column.
@@ -93,7 +99,9 @@ def coordinate_to_spreadsheet(coord: Union[int, Tuple[int, int]], col: Optional[
     if col is None:
         coord, col = coord
 
-    return column_to_spreadsheet(col, abs_ref_col) + row_to_spreadsheet(coord, abs_ref_row)
+    return column_to_spreadsheet(col, abs_ref_col) + row_to_spreadsheet(
+        coord, abs_ref_row
+    )
 
 
 def coordinate_from_spreadsheet(coord: str) -> Tuple[int, int]:
@@ -112,4 +120,6 @@ def coordinate_from_spreadsheet(coord: str) -> Tuple[int, int]:
 
         i += 1
 
-    return row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(coord[:first_row_position])
+    return row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(
+        coord[:first_row_position]
+    )

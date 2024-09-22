@@ -3,11 +3,11 @@ import re
 from typing import Set, Union
 
 from lark import Lark, Transformer, v_args
-from lark.exceptions import VisitError, UnexpectedCharacters
+from lark.exceptions import UnexpectedCharacters, VisitError
 
 from gnumeric.evaluation_errors import EvaluationError, ExpressionEvaluationException
 from gnumeric.formula_functions import mathematics, statistics
-from gnumeric.utils import column_from_spreadsheet, row_from_spreadsheet, coordinate_to_spreadsheet
+from gnumeric.utils import column_from_spreadsheet, row_from_spreadsheet
 
 function_map = {
     'abs': abs,
@@ -29,7 +29,11 @@ class CellReference:
     @property
     def cell(self):
         try:
-            sheet = self.formula_cell.worksheet if self.sheet is None else self.formula_cell.worksheet.workbook.get_sheet_by_name(self.sheet)
+            sheet = (
+                self.formula_cell.worksheet
+                if self.sheet is None
+                else self.formula_cell.worksheet.workbook.get_sheet_by_name(self.sheet)
+            )
         except KeyError:
             raise ExpressionEvaluationException(EvaluationError.REF)
 
@@ -49,7 +53,14 @@ class CellReference:
     def create_from_cell_reference(cls, formula_cell, sheet, ss_col, ss_row):
         col_fixed = ss_col.startswith('$')
         row_fixed = ss_row.startswith('$')
-        return cls(formula_cell, ss_row, ss_col, sheet, row_is_fixed=row_fixed, col_is_fixed=col_fixed)
+        return cls(
+            formula_cell,
+            ss_row,
+            ss_col,
+            sheet,
+            row_is_fixed=row_fixed,
+            col_is_fixed=col_fixed,
+        )
 
 
 _grammar = f"""
@@ -134,7 +145,9 @@ class ExpressionEvaluator(Transformer):
         elif name == 'FALSE':
             return False
         else:
-            res = re.match(r"('?[A-Za-z0-9_ ]+'?!)?(\$?[A-Za-z]{1,3})(\$?\d{1,5})", name)
+            res = re.match(
+                r"('?[A-Za-z0-9_ ]+'?!)?(\$?[A-Za-z]{1,3})(\$?\d{1,5})", name
+            )
             if res:
                 sheet, col, row = res.groups()
                 sheet = sheet[:-1] if sheet is not None else None
@@ -143,7 +156,9 @@ class ExpressionEvaluator(Transformer):
                     sheet = sheet[1:-1]
 
                 cell_value = self.cell_lookup((sheet, col, row))
-                if cell_value is not None and not isinstance(cell_value, (int, float, str)):
+                if cell_value is not None and not isinstance(
+                    cell_value, (int, float, str)
+                ):
                     cell_value = cell_value.value
                 return cell_value
 
@@ -158,15 +173,13 @@ class ExpressionEvaluator(Transformer):
         if isinstance(b, str):
             b = str(b).lower()
 
-        # Numbers are always less than strings and strings always less than bools, so to simplify the logic below, just use different values for a and b if there's a type mismatch
-        a_type = type(a) if type(a) != int else float
-        b_type = type(b) if type(b) != int else float
+        # Numbers are always less than strings and strings always less
+        # than bools, so to simplify the logic below, just use different
+        # values for a and b if there's a type mismatch
+        a_type = float if isinstance(a, int) and not isinstance(a, bool) else type(a)
+        b_type = float if isinstance(b, int) and not isinstance(b, bool) else type(b)
         if a_type != b_type:
-            type_val_mapper = {
-                float: 0,
-                str: 50,
-                bool: 100
-            }
+            type_val_mapper = {float: 0, str: 50, bool: 100}
             a = type_val_mapper[a_type]
             b = type_val_mapper[b_type]
 
@@ -200,11 +213,13 @@ class ExpressionEvaluator(Transformer):
         elif op == '^':
             try:
                 return math.pow(a, b)
-            except OverflowError as ex:
+            except OverflowError:
                 raise ExpressionEvaluationException(EvaluationError.NUM)
 
     def cell_ref(self, *ref) -> CellReference:
-        return CellReference.create_from_cell_reference(self._cell, None, ref[0].value, ref[1].value)
+        return CellReference.create_from_cell_reference(
+            self._cell, None, ref[0].value, ref[1].value
+        )
 
     def sheet_cell_ref(self, *ref) -> CellReference:
         if len(ref) > 1:
@@ -217,12 +232,16 @@ class ExpressionEvaluator(Transformer):
     def cell_range(self, start, end):
         start_cell = start.cell
         end_cell = end.cell
-        cells = start_cell.worksheet.get_cell_collection(start_cell, end_cell, include_empty=True, create_cells=True)
+        cells = start_cell.worksheet.get_cell_collection(
+            start_cell, end_cell, include_empty=True, create_cells=True
+        )
         self.referenced_cells.update(cells)
         return cells
 
     def cell_lookup(self, ref):
-        cell_ref = CellReference.create_from_cell_reference(self._cell, ref[0], ref[1], ref[2])
+        cell_ref = CellReference.create_from_cell_reference(
+            self._cell, ref[0], ref[1], ref[2]
+        )
         cell = cell_ref.cell
         self.referenced_cells.add(cell)
         if cell is None:

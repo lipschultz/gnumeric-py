@@ -10,4 +10,6 @@ def gnm_max(values):
 
 
 local_objects = locals().copy()
-functions = {name[4:]: obj for name, obj in local_objects.items() if name.startswith('gnm_')}
+functions = {
+    name[4:]: obj for name, obj in local_objects.items() if name.startswith('gnm_')
+}

@@ -15,18 +15,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+
+import gzip
 from datetime import datetime
 from typing import List, Optional, Union
 
-from lxml import etree
 import dateutil.parser
-import gzip
+from lxml import etree
 
 from gnumeric import sheet
 from gnumeric.exceptions import DuplicateTitleException, WrongWorkbookException
 from gnumeric.sheet import Sheet
 
-EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
+EMPTY_WORKBOOK = b"""<?xml version="1.0" encoding="UTF-8"?>
 <gnm:Workbook xmlns:gnm="http://www.gnumeric.org/v10.dtd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gnumeric.org/v9.xsd">
   <gnm:Version Epoch="1" Major="12" Minor="28" Full="1.12.28"/>
   <gnm:Attributes>
@@ -64,17 +65,19 @@ EMPTY_WORKBOOK = b'''<?xml version="1.0" encoding="UTF-8"?>
   </gnm:Sheets>
   <gnm:UIData SelectedTab="0"/>
 </gnm:Workbook>
-'''
-ALL_NAMESPACES = {'gnm': "http://www.gnumeric.org/v10.dtd",
-                  'xsi': "http://www.w3.org/2001/XMLSchema-instance",
-                  'office': "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
-                  'xlink': "http://www.w3.org/1999/xlink",
-                  'dc': "http://purl.org/dc/elements/1.1/",
-                  'meta': "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
-                  'ooo': "http://openoffice.org/2004/office"}
+"""
+ALL_NAMESPACES = {
+    'gnm': 'http://www.gnumeric.org/v10.dtd',
+    'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+    'office': 'urn:oasis:names:tc:opendocument:xmlns:office:1.0',
+    'xlink': 'http://www.w3.org/1999/xlink',
+    'dc': 'http://purl.org/dc/elements/1.1/',
+    'meta': 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0',
+    'ooo': 'http://openoffice.org/2004/office',
+}
 
-NEW_SHEET_NAME = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>'''
-NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
+NEW_SHEET_NAME = b"""<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd"><gnm:SheetName gnm:Cols="256" gnm:Rows="65536"></gnm:SheetName></gnm:ROOT>"""
+NEW_SHEET = b"""<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Sheet DisplayFormulas="0" HideZero="0" HideGrid="0" HideColHeader="0" HideRowHeader="0" DisplayOutlines="1" OutlineSymbolsBelow="1" OutlineSymbolsRight="1" Visibility="GNM_SHEET_VISIBILITY_VISIBLE" GridColor="0:0:0">
   <gnm:Name></gnm:Name>
   <gnm:MaxCol>-1</gnm:MaxCol>
@@ -136,7 +139,7 @@ NEW_SHEET = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http:
   <gnm:Solver ModelType="0" ProblemType="0" MaxTime="60" MaxIter="1000" NonNeg="1" Discr="0" AutoScale="0" ProgramR="0" SensitivityR="0"/>
 </gnm:Sheet>
 </gnm:ROOT>
-'''
+"""
 
 
 class Workbook:
@@ -149,7 +152,9 @@ class Workbook:
             self.__root = workbook_root_element
 
     def __creation_date_element(self):
-        return self.__root.find('office:document-meta/office:meta/meta:creation-date', self._ns)
+        return self.__root.find(
+            'office:document-meta/office:meta/meta:creation-date', self._ns
+        )
 
     def __sheet_name_elements(self):
         return self.__root.find('gnm:SheetNameIndex', self._ns)
@@ -225,7 +230,9 @@ class Workbook:
         if len(self) == 0:
             return None
         else:
-            return self.get_sheet_by_index(int(self.__get_ui_data_element().get('SelectedTab')))
+            return self.get_sheet_by_index(
+                int(self.__get_ui_data_element().get('SelectedTab'))
+            )
 
     def set_active_sheet(self, sheet: Union[int, str, Sheet]) -> None:
         """
@@ -246,10 +253,9 @@ class Workbook:
         Get the sheet at the specified index.
         :raises IndexError: When index is out of bounds
         """
-        return Sheet(self.__sheet_name_elements()[index],
-                     self.__sheet_elements()[index],
-                     self
-                     )
+        return Sheet(
+            self.__sheet_name_elements()[index], self.__sheet_elements()[index], self
+        )
 
     def get_sheet_by_name(self, name: str) -> Sheet:
         """
@@ -276,7 +282,7 @@ class Workbook:
         elif isinstance(key, int):
             return self.get_sheet_by_index(key)
         else:
-            raise TypeError("Unexpected type (%s) for key: %s" % (type(key), str(key)))
+            raise TypeError('Unexpected type (%s) for key: %s' % (type(key), str(key)))
 
     def get_index(self, ws: Sheet) -> int:
         """
@@ -284,7 +290,9 @@ class Workbook:
         """
         index = self.sheetnames.index(ws.title)
         if ws != self.get_sheet_by_index(index):
-            raise WrongWorkbookException("The worksheet does not belong to this workbook.")
+            raise WrongWorkbookException(
+                'The worksheet does not belong to this workbook.'
+            )
         return index
 
     def index(self, ws: Sheet) -> int:
