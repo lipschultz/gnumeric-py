@@ -1,3 +1,0 @@
-lxml
-python-dateutil
-lark-parser

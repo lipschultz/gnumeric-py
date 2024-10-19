@@ -15,9 +15,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+
 from itertools import product
 from operator import attrgetter
-from typing import Callable, Iterable, Tuple, Union, List, Sequence, Optional, Generator, Dict
+from typing import (
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from lxml import etree
 
@@ -25,9 +36,9 @@ from gnumeric import cell
 from gnumeric.exceptions import UnsupportedOperationException
 from gnumeric.utils import coordinate_from_spreadsheet
 
-NEW_CELL = b'''<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
+NEW_CELL = b"""<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Cell Row="%(row)a" Col="%(col)a" ValueType="%(value_type)a"/>
-</gnm:ROOT>'''
+</gnm:ROOT>"""
 
 SHEET_TYPE_REGULAR = None
 SHEET_TYPE_OBJECT = 'object'
@@ -38,9 +49,11 @@ Cell = cell.Cell
 
 
 class Sheet:
-    __EMPTY_CELL_XPATH_SELECTOR = ('@ValueType="'
-                                   + str(cell.VALUE_TYPE_EMPTY)
-                                   + '" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)')
+    __EMPTY_CELL_XPATH_SELECTOR = (
+        '@ValueType="'
+        + str(cell.VALUE_TYPE_EMPTY)
+        + '" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)'
+    )
 
     def __init__(self, sheet_name_element, sheet_element, workbook):
         self.__sheet_name = sheet_name_element
@@ -52,17 +65,23 @@ class Sheet:
 
     def __get_empty_cells(self):
         all_cells = self.__get_cells()
-        return all_cells.xpath('./gnm:Cell[' + self.__EMPTY_CELL_XPATH_SELECTOR + ']',
-                               namespaces=self.__workbook._ns)
+        return all_cells.xpath(
+            './gnm:Cell[' + self.__EMPTY_CELL_XPATH_SELECTOR + ']',
+            namespaces=self.__workbook._ns,
+        )
 
     def __get_non_empty_cells(self):
         all_cells = self.__get_cells()
-        return all_cells.xpath('./gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
-                               namespaces=self.__workbook._ns)
+        return all_cells.xpath(
+            './gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
+            namespaces=self.__workbook._ns,
+        )
 
     def __get_cell_element(self, row: int, col: int):
         cells = self.__get_cells()
-        return cells.find('gnm:Cell[@Row="%d"][@Col="%d"]' % (row, col), self.__workbook._ns)
+        return cells.find(
+            'gnm:Cell[@Row="%d"][@Col="%d"]' % (row, col), self.__workbook._ns
+        )
 
     def __get_expression_id_cells(self):
         all_cells = self.__get_cells()
@@ -74,23 +93,36 @@ class Sheet:
     def __get_cell_style(self, cell_element):
         row = cell_element.get('Row')
         col = cell_element.get('Col')
-        return self.__get_styles().xpath('./gnm:StyleRegion[@startCol<="' + col + '" and "' + col + '"<=@endCol '
-                                         + 'and @startRow<="' + row + '" and "' + row + '"<=@endRow]',
-                                         namespaces=self.__workbook._ns)[0]
+        return self.__get_styles().xpath(
+            './gnm:StyleRegion[@startCol<="'
+            + col
+            + '" and "'
+            + col
+            + '"<=@endCol '
+            + 'and @startRow<="'
+            + row
+            + '" and "'
+            + row
+            + '"<=@endRow]',
+            namespaces=self.__workbook._ns,
+        )[0]
 
     def __create_and_get_new_cell(self, row_idx: int, col_idx: int) -> cell.Cell:
         """
         Creates a new cell, adds it to the worksheet, and returns it.
         """
         new_cell = etree.fromstring(
-                NEW_CELL % {b'row': row_idx, b'col': col_idx,
-                            b'value_type': cell.VALUE_TYPE_EMPTY}).getchildren()[0]
+            NEW_CELL
+            % {b'row': row_idx, b'col': col_idx, b'value_type': cell.VALUE_TYPE_EMPTY}
+        ).getchildren()[0]
         cells = self.__get_cells()
         cells.append(new_cell)
         return new_cell
 
     def __cell_element_to_class(self, element) -> Cell:
-        return cell.Cell(element, self.__get_cell_style(element), self, self.__workbook._ns)
+        return cell.Cell(
+            element, self.__get_cell_style(element), self, self.__workbook._ns
+        )
 
     __ce2c = __cell_element_to_class
 
@@ -137,7 +169,11 @@ class Sheet:
             raise UnsupportedOperationException('Chartsheet does not have ' + rc)
 
         content_cells = self.__get_non_empty_cells()
-        return -1 if len(content_cells) == 0 else mm_fn(getattr(self.__ce2c(c), rc) for c in content_cells)
+        return (
+            -1
+            if len(content_cells) == 0
+            else mm_fn(getattr(self.__ce2c(c), rc) for c in content_cells)
+        )
 
     @property
     def max_column(self) -> int:
@@ -249,7 +285,9 @@ class Sheet:
         :return: A four-tuple of ints: (min_row, min_col, max_row, max_col)
         """
         if self.type == SHEET_TYPE_OBJECT:
-            raise UnsupportedOperationException('Chartsheet does not have rows or columns')
+            raise UnsupportedOperationException(
+                'Chartsheet does not have rows or columns'
+            )
         return self.min_row, self.min_column, self.max_row, self.max_column
 
     def __is_valid_rc(self, rc: str, idx: int) -> bool:
@@ -285,18 +323,30 @@ class Sheet:
         empty (since Gnumeric does not seem to store empty cells).
         """
         if not self.is_valid_row(row_idx):
-            raise IndexError('Row (' + str(row_idx) + ') for cell is out of allowed bounds of [0, '
-                             + str(self.max_allowed_row) + ']')
+            raise IndexError(
+                'Row ('
+                + str(row_idx)
+                + ') for cell is out of allowed bounds of [0, '
+                + str(self.max_allowed_row)
+                + ']'
+            )
         elif not self.is_valid_column(col_idx):
-            raise IndexError('Column (' + str(col_idx) + ') for cell is out of allowed bounds of [0, '
-                             + str(self.max_allowed_column) + ']')
+            raise IndexError(
+                'Column ('
+                + str(col_idx)
+                + ') for cell is out of allowed bounds of [0, '
+                + str(self.max_allowed_column)
+                + ']'
+            )
 
         cell_found = self.__get_cell_element(row_idx, col_idx)
         if cell_found is None:
             if create:
                 cell_found = self.__create_and_get_new_cell(row_idx, col_idx)
             else:
-                raise IndexError('No cell exists at position (%d, %d)' % (row_idx, col_idx))
+                raise IndexError(
+                    'No cell exists at position (%d, %d)' % (row_idx, col_idx)
+                )
 
         return self.__ce2c(cell_found)
 
@@ -331,10 +381,20 @@ class Sheet:
         each row, columns will be sorted.  If `row_major` is False, then the opposite will happen: first sort by column,
         then by row within each column.
         """
-        key_fn = attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
+        key_fn = (
+            attrgetter('row', 'column') if row_major else attrgetter('column', 'row')
+        )
         return sorted(cells, key=key_fn)
 
-    def get_cell_collection(self, start=None, end=None, *, include_empty: bool = False, create_cells: bool = False, sort: Union[bool, str] = False) -> List[Cell]:
+    def get_cell_collection(
+        self,
+        start=None,
+        end=None,
+        *,
+        include_empty: bool = False,
+        create_cells: bool = False,
+        sort: Union[bool, str] = False,
+    ) -> List[Cell]:
         """
         Return cells (as a list).
 
@@ -374,11 +434,17 @@ class Sheet:
 
         start_row, start_column = start
         end_row, end_column = end
-        cells = [c for c in cells if start_column <= c.column <= end_column and start_row <= c.row <= end_row]
+        cells = [
+            c
+            for c in cells
+            if start_column <= c.column <= end_column and start_row <= c.row <= end_row
+        ]
 
         if create_cells:
             already_created_cells = {(c.row, c.column) for c in cells}
-            for row, col in product(range(start_row, end_row + 1), range(start_column, end_column + 1)):
+            for row, col in product(
+                range(start_row, end_row + 1), range(start_column, end_column + 1)
+            ):
                 if (row, col) not in already_created_cells:
                     cells.append(self.cell(row, col, create=True))
 
@@ -387,7 +453,9 @@ class Sheet:
         else:
             return cells
 
-    def __get_rc(self, rc: str, idx: int, min_cr: int, max_cr: Optional[int], create_cells: bool) -> Generator[Cell, None, None]:
+    def __get_rc(
+        self, rc: str, idx: int, min_cr: int, max_cr: Optional[int], create_cells: bool
+    ) -> Generator[Cell, None, None]:
         """
         The abstracted method for `get_column` and `get_row`.
         :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
@@ -396,34 +464,76 @@ class Sheet:
         rc_attr = rc[:3].title()
         cr_attr = cr[:3].title()
         if not self.__is_valid_rc(rc, idx):
-            raise IndexError(rc.title() + ' (' + str(idx) + ') is out of allowed bounds of [0, '
-                             + str(self.__max_allowed_rc(rc)) + ']')
+            raise IndexError(
+                rc.title()
+                + ' ('
+                + str(idx)
+                + ') is out of allowed bounds of [0, '
+                + str(self.__max_allowed_rc(rc))
+                + ']'
+            )
 
         if not self.__is_valid_rc(cr, min_cr):
-            raise IndexError('Min ' + cr + ' (' + str(min_cr) + ') is out of allowed bounds of [0, '
-                             + str(self.__max_allowed_rc(cr)) + ']')
+            raise IndexError(
+                'Min '
+                + cr
+                + ' ('
+                + str(min_cr)
+                + ') is out of allowed bounds of [0, '
+                + str(self.__max_allowed_rc(cr))
+                + ']'
+            )
 
         if max_cr is not None and not self.__is_valid_rc(cr, max_cr):
-            raise IndexError('Max ' + cr + ' (' + str(max_cr) + ') is out of allowed bounds of [0, '
-                             + str(self.__max_allowed_rc(cr)) + ']')
+            raise IndexError(
+                'Max '
+                + cr
+                + ' ('
+                + str(max_cr)
+                + ') is out of allowed bounds of [0, '
+                + str(self.__max_allowed_rc(cr))
+                + ']'
+            )
         elif max_cr is None:
             max_cr = self.__maxmin_rc_in_cr(rc, max, idx)
             if max_cr == -1:
                 max_cr = self.__max_allowed_rc(cr)
 
         existing_cells = self.__get_cells().xpath(
-                './gnm:Cell[@' + rc_attr + '="' + str(idx)
-                + '" and "' + str(min_cr) + '"<=@' + cr_attr + ' and @' + cr_attr + '<="' + str(max_cr) + '"]',
-                namespaces=self.__workbook._ns)
+            './gnm:Cell[@'
+            + rc_attr
+            + '="'
+            + str(idx)
+            + '" and "'
+            + str(min_cr)
+            + '"<=@'
+            + cr_attr
+            + ' and @'
+            + cr_attr
+            + '<="'
+            + str(max_cr)
+            + '"]',
+            namespaces=self.__workbook._ns,
+        )
         cells = self.__sort_cell_elements(existing_cells, False)
 
         if create_cells:
             cell_map = dict([(getattr(c, cr), c) for c in cells])
-            return (cell_map[i] if i in cell_map else self.cell(i, idx) for i in range(min_cr, max_cr + 1))
+            return (
+                cell_map[i] if i in cell_map else self.cell(i, idx)
+                for i in range(min_cr, max_cr + 1)
+            )
         else:
             return (c for c in cells)
 
-    def get_column(self, column: int, *, min_row: int = 0, max_row: Optional[int] = None, create_cells: bool = False) -> Generator[Cell, None, None]:
+    def get_column(
+        self,
+        column: int,
+        *,
+        min_row: int = 0,
+        max_row: Optional[int] = None,
+        create_cells: bool = False,
+    ) -> Generator[Cell, None, None]:
         """
         Get the cells in the specified column (index starting at 0).
 
@@ -441,7 +551,14 @@ class Sheet:
         """
         return self.__get_rc('column', column, min_row, max_row, create_cells)
 
-    def get_row(self, row: int, *, min_col: int = 0, max_col: Optional[int] = None, create_cells: bool = False) -> Generator[Cell, None, None]:
+    def get_row(
+        self,
+        row: int,
+        *,
+        min_col: int = 0,
+        max_col: Optional[int] = None,
+        create_cells: bool = False,
+    ) -> Generator[Cell, None, None]:
         """
         Get the cells in the specified row (index starting at 0).
 
@@ -469,9 +586,15 @@ class Sheet:
         may not have an id and thus will not be returned by this method.
         """
         cells = self.__get_expression_id_cells()
-        return {c.get('ExprID'): ((int(c.get('Row')), int(c.get('Col'))), c.text) for c in cells if c.text is not None}
+        return {
+            c.get('ExprID'): ((int(c.get('Row')), int(c.get('Col'))), c.text)
+            for c in cells
+            if c.text is not None
+        }
 
-    def get_all_cells_with_expression(self, id: str, *, sort: Union[bool, str] = False) -> List[Cell]:
+    def get_all_cells_with_expression(
+        self, id: str, *, sort: Union[bool, str] = False
+    ) -> List[Cell]:
         """
         Returns a list of all cells referencing/using the expression with the provided id.
 
@@ -496,7 +619,9 @@ class Sheet:
         if cell is None:
             return
         elif cell.get('ExprID') is not None and cell.text is not None:
-            raise UnsupportedOperationException("Can't delete originating cell for an expression")
+            raise UnsupportedOperationException(
+                "Can't delete originating cell for an expression"
+            )
 
         all_cells = self.__get_cells()
         all_cells.remove(cell)
@@ -518,10 +643,12 @@ class Sheet:
         self.__sheet.find('gnm:MaxRow', self.__workbook._ns).text = str(self.max_row)
 
     def __eq__(self, other) -> bool:
-        return (isinstance(other, Sheet) and
-                self.__workbook == other.__workbook and
-                self.__sheet_name == other.__sheet_name and
-                self.__sheet == other.__sheet)
+        return (
+            isinstance(other, Sheet)
+            and self.__workbook == other.__workbook
+            and self.__sheet_name == other.__sheet_name
+            and self.__sheet == other.__sheet
+        )
 
     def __hash__(self) -> int:
         return hash(self.__workbook) + hash(self.__sheet)

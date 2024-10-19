@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
+
 import unittest
 
 from gnumeric import Workbook
@@ -26,4 +27,3 @@ class TestSharedExpression(unittest.TestCase):
         self.loaded_ws = self.loaded_wb.get_sheet_by_name('SharedExpressions')
         self.wb = Workbook()
         self.ws = self.wb.create_sheet('Title')
-
