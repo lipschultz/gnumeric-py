@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import unittest
 from datetime import datetime
 
 import pytest
@@ -50,25 +49,7 @@ SHEET_NAME_SHEET_NAMES = (
 )
 
 
-class WorkbookTests(unittest.TestCase):
-    def setUp(self):
-        self.wb = Workbook()
-        self.loaded_wb = Workbook.load_workbook('samples/test.gnumeric')
-        self.loaded_wb_sheet_names = (
-            'Sheet1',
-            'BoundingRegion',
-            'CellTypes',
-            'Strings',
-            'Errors',
-            'Expressions',
-            'Dates',
-            'Mine & Yours Sheet[s]!',
-        )
-        self.loaded_wb_graph_names = ('Graph1',)
-        self.loaded_wb_all_names = (
-            self.loaded_wb_sheet_names + self.loaded_wb_graph_names
-        )
-
+class TestWorkbook:
     def test_equality_of_same_workbook(self):
         workbook = Workbook()
         assert workbook == workbook
@@ -335,7 +316,7 @@ class WorkbookTests(unittest.TestCase):
         assert workbook.creation_date == datetime(
             2017, 4, 29, 17, 56, 48, tzinfo=tzutc()
         )
-        assert self.loaded_wb.version == '1.12.57'
+        assert workbook.version == '1.12.57'
 
     def test_loading_uncompressed_file(self):
         wb = Workbook.load_workbook(TEST_SHEET_NAME_FILE_PATH)
