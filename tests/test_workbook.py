@@ -335,7 +335,7 @@ class WorkbookTests(unittest.TestCase):
         assert workbook.creation_date == datetime(
             2017, 4, 29, 17, 56, 48, tzinfo=tzutc()
         )
-        assert self.loaded_wb.version == '1.12.35'
+        assert self.loaded_wb.version == '1.12.57'
 
     def test_loading_uncompressed_file(self):
         wb = Workbook.load_workbook(TEST_SHEET_NAME_FILE_PATH)
