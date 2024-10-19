@@ -17,7 +17,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import datetime
-import re
 from typing import Optional, Tuple, Union
 
 from lxml import etree
@@ -122,10 +121,9 @@ class Cell:
             )
 
     def is_datetime(self) -> bool:
-        style_format = self.text_format.lower()
-        return self.value_type == VALUE_TYPE_FLOAT and (
-            any(pattern in style_format for pattern in ('yy', 'm', 'h', 's'))
-            or re.search(r'[^e]d', style_format)
+        return (
+            self.value_type == VALUE_TYPE_FLOAT
+            and self.__cell.get('ValueFormat') == 'yyyy-mmm-dd'
         )
 
     def __set_type(self, value_type: int):
