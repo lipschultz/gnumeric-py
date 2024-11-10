@@ -17,12 +17,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 import datetime
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from lxml import etree
 
 from gnumeric.exceptions import UnrecognizedCellTypeException
 from gnumeric.expression import Expression
+from gnumeric.utils import RowColReference
 
 VALUE_TYPE_EXPR = -10
 VALUE_TYPE_EMPTY = 10
@@ -65,6 +66,9 @@ class Cell:
 
     @property
     def worksheet(self):
+        """
+        The worksheet this cell belongs to.
+        """
         return self.__worksheet
 
     @property
@@ -82,11 +86,11 @@ class Cell:
         return int(self.__cell.get('Row'))
 
     @property
-    def coordinate(self) -> Tuple[int, int]:
+    def coordinate(self) -> RowColReference:
         """
-        The (row, column) of the cell.
+        The (row, column) of the cell (0-indexed)
         """
-        return self.row, self.column
+        return RowColReference(self.row, self.column)
 
     @property
     def text(self) -> Optional[str]:
@@ -139,7 +143,8 @@ class Cell:
         """
         Gets the value stored in the cell, converted into the appropriate Python datatype when possible.
 
-        If the cell is an expression: If `compute_expression` is True, the the result of the expression is returned, otherwise an Expression object is returned.
+        If the cell is an expression: If `compute_expression` is True, the the result of the expression
+        is returned, otherwise an Expression object is returned.
         """
         value = self.text
         if self.value_type == VALUE_TYPE_BOOLEAN:

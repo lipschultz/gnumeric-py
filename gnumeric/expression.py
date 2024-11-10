@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Set, Tuple, Union
+from typing import Set, Union
 
 from gnumeric import expression_evaluation, utils
 from gnumeric.evaluation_errors import EvaluationError
@@ -69,15 +69,16 @@ class Expression:
         raise NotImplementedError
 
     @property
-    def reference_coordinate_offset(self) -> Tuple[int, int]:
+    def reference_coordinate_offset(self) -> utils.RowColReference:
         """
         The (row, col) offset to translate the original coordinates into the coordinates based at the current cell.
         """
         original_coordinates = self.get_originating_cell_coordinate()
         current_coordinates = self.__cell.coordinate
-        return current_coordinates[0] - original_coordinates[0], current_coordinates[
-            1
-        ] - original_coordinates[1]
+        return utils.RowColReference(
+            current_coordinates[0] - original_coordinates[0],
+            current_coordinates[1] - original_coordinates[1],
+        )
 
     @property
     def value(self):
@@ -88,11 +89,14 @@ class Expression:
 
     @property
     def worksheet(self):
+        """
+        The worksheet this expression is created in.
+        """
         return self.__worksheet
 
     def get_originating_cell_coordinate(
         self, representation_format='index'
-    ) -> Union[Tuple[int, int], str]:
+    ) -> Union[utils.RowColReference, str]:
         """
         Returns the cell coordinate for the cell Gnumeric is using to store the expression.
 
@@ -102,7 +106,7 @@ class Expression:
         """
         row, col = self.__get_raw_originating_cell()[:2]
         if representation_format == 'index':
-            return row, col
+            return utils.RowColReference(row, col)
         elif representation_format == 'spreadsheet':
             return utils.coordinate_to_spreadsheet(row, col)
 
