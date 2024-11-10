@@ -16,7 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
+
+
+class RowColReference(NamedTuple):
+    row: int
+    col: int
 
 
 def column_to_spreadsheet(col_int: int, abs_ref: bool = False) -> str:
@@ -82,7 +87,7 @@ def row_from_spreadsheet(row: str) -> int:
 
 
 def coordinate_to_spreadsheet(
-    coord: Union[int, Tuple[int, int]],
+    coord: Union[int, RowColReference],
     col: Optional[int] = None,
     abs_ref_row: bool = False,
     abs_ref_col: bool = False,
@@ -104,7 +109,7 @@ def coordinate_to_spreadsheet(
     )
 
 
-def coordinate_from_spreadsheet(coord: str) -> Tuple[int, int]:
+def coordinate_from_spreadsheet(coord: str) -> RowColReference:
     """
     Convert a coordinate from spreadsheet notation into a (row, column) tuple.
 
@@ -120,6 +125,7 @@ def coordinate_from_spreadsheet(coord: str) -> Tuple[int, int]:
 
         i += 1
 
-    return row_from_spreadsheet(coord[first_row_position:]), column_from_spreadsheet(
-        coord[:first_row_position]
+    return RowColReference(
+        row_from_spreadsheet(coord[first_row_position:]),
+        column_from_spreadsheet(coord[:first_row_position]),
     )

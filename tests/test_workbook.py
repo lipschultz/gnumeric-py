@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import gzip
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from dateutil.tz import tzutc
@@ -362,3 +364,39 @@ class TestWorkbook:
         workbook.create_sheet('Sheet3')
         workbook.set_active_sheet(ws)
         assert workbook.get_active_sheet() == ws
+
+
+class TestWorkbookSave:
+    def test_saving_compressed_file(self, monkeypatch):
+        workbook = Workbook()
+
+        mocked_open = MagicMock()
+        monkeypatch.setattr(gzip, 'open', mocked_open)
+
+        workbook.save('anyfile.gnumeric')
+
+        mocked_open.assert_called_once_with(
+            'anyfile.gnumeric', mode='wb', compresslevel=9
+        )
+
+    def test_saving_compressed_file_setting_compression_level(self, monkeypatch):
+        workbook = Workbook()
+
+        mocked_open = MagicMock()
+        monkeypatch.setattr(gzip, 'open', mocked_open)
+
+        workbook.save('anyfile.gnumeric', compress=2)
+
+        mocked_open.assert_called_once_with(
+            'anyfile.gnumeric', mode='wb', compresslevel=2
+        )
+
+    def test_saving_uncompressed_file(self, monkeypatch):
+        workbook = Workbook()
+
+        mocked_open = MagicMock()
+        monkeypatch.setattr('builtins.open', mocked_open)
+
+        workbook.save('anyfile.gnumeric', compress=False)
+
+        mocked_open.assert_called_once_with('anyfile.gnumeric', mode='wb')

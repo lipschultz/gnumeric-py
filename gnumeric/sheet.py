@@ -34,7 +34,7 @@ from lxml import etree
 
 from gnumeric import cell
 from gnumeric.exceptions import UnsupportedOperationException
-from gnumeric.utils import coordinate_from_spreadsheet
+from gnumeric.utils import RowColReference, coordinate_from_spreadsheet
 
 NEW_CELL = b"""<?xml version="1.0" encoding="UTF-8"?><gnm:ROOT xmlns:gnm="http://www.gnumeric.org/v10.dtd">
 <gnm:Cell Row="%(row)a" Col="%(col)a" ValueType="%(value_type)a"/>
@@ -49,11 +49,7 @@ Cell = cell.Cell
 
 
 class Sheet:
-    __EMPTY_CELL_XPATH_SELECTOR = (
-        '@ValueType="'
-        + str(cell.VALUE_TYPE_EMPTY)
-        + '" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)'
-    )
+    __EMPTY_CELL_XPATH_SELECTOR = f'@ValueType="{cell.VALUE_TYPE_EMPTY}" or (not(@ValueType) and not(@ExprID) and string-length(text())=0)'
 
     def __init__(self, sheet_name_element, sheet_element, workbook):
         self.__sheet_name = sheet_name_element
@@ -66,22 +62,20 @@ class Sheet:
     def __get_empty_cells(self):
         all_cells = self.__get_cells()
         return all_cells.xpath(
-            './gnm:Cell[' + self.__EMPTY_CELL_XPATH_SELECTOR + ']',
+            f'./gnm:Cell[{self.__EMPTY_CELL_XPATH_SELECTOR}]',
             namespaces=self.__workbook._ns,
         )
 
     def __get_non_empty_cells(self):
         all_cells = self.__get_cells()
         return all_cells.xpath(
-            './gnm:Cell[not(' + self.__EMPTY_CELL_XPATH_SELECTOR + ')]',
+            f'./gnm:Cell[not({self.__EMPTY_CELL_XPATH_SELECTOR})]',
             namespaces=self.__workbook._ns,
         )
 
     def __get_cell_element(self, row: int, col: int):
         cells = self.__get_cells()
-        return cells.find(
-            'gnm:Cell[@Row="%d"][@Col="%d"]' % (row, col), self.__workbook._ns
-        )
+        return cells.find(f'gnm:Cell[@Row="{row}"][@Col="{col}"]', self.__workbook._ns)
 
     def __get_expression_id_cells(self):
         all_cells = self.__get_cells()
@@ -94,16 +88,9 @@ class Sheet:
         row = cell_element.get('Row')
         col = cell_element.get('Col')
         return self.__get_styles().xpath(
-            './gnm:StyleRegion[@startCol<="'
-            + col
-            + '" and "'
-            + col
-            + '"<=@endCol '
-            + 'and @startRow<="'
-            + row
-            + '" and "'
-            + row
-            + '"<=@endRow]',
+            './gnm:StyleRegion['
+            + f'@startCol<="{col}" and "{col}"<=@endCol '
+            + f'and @startRow<="{row}" and "{row}"<=@endRow]',
             namespaces=self.__workbook._ns,
         )[0]
 
@@ -128,6 +115,9 @@ class Sheet:
 
     @property
     def workbook(self):
+        """
+        The workbook this sheet belongs to
+        """
         return self.__workbook
 
     def get_title(self) -> str:
@@ -293,6 +283,7 @@ class Sheet:
     def __is_valid_rc(self, rc: str, idx: int) -> bool:
         """
         The abstracted method for `is_valid_column` and `is_valid_row`.
+
         :param rc: A string indiciating whether this is for a `"column"` or `"row"`.
         :param idx: The column or row.
         :return: bool
@@ -302,14 +293,14 @@ class Sheet:
 
     def is_valid_column(self, column: int) -> bool:
         """
-        Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns False
+        Returns `True` if column is between `0` and `ws.max_allowed_column`, otherwise returns `False`
         :return: bool
         """
         return self.__is_valid_rc('column', column)
 
     def is_valid_row(self, row: int) -> bool:
         """
-        Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns False
+        Returns `True` if row is between `0` and `ws.max_allowed_row`, otherwise returns `False`
         :return: bool
         """
         return self.__is_valid_rc('row', row)
@@ -324,19 +315,11 @@ class Sheet:
         """
         if not self.is_valid_row(row_idx):
             raise IndexError(
-                'Row ('
-                + str(row_idx)
-                + ') for cell is out of allowed bounds of [0, '
-                + str(self.max_allowed_row)
-                + ']'
+                f'Row ({row_idx}) for cell is out of allowed bounds of [0, {self.max_allowed_row}]'
             )
         elif not self.is_valid_column(col_idx):
             raise IndexError(
-                'Column ('
-                + str(col_idx)
-                + ') for cell is out of allowed bounds of [0, '
-                + str(self.max_allowed_column)
-                + ']'
+                f'Column ({col_idx}) for cell is out of allowed bounds of [0, {self.max_allowed_column}]'
             )
 
         cell_found = self.__get_cell_element(row_idx, col_idx)
@@ -344,22 +327,20 @@ class Sheet:
             if create:
                 cell_found = self.__create_and_get_new_cell(row_idx, col_idx)
             else:
-                raise IndexError(
-                    'No cell exists at position (%d, %d)' % (row_idx, col_idx)
-                )
+                raise IndexError(f'No cell exists at position ({row_idx}, {col_idx})')
 
         return self.__ce2c(cell_found)
 
-    def __getitem__(self, idx: Union[Tuple[int, int], str]) -> Cell:
+    def __getitem__(self, idx: Union[RowColReference, str]) -> Cell:
         if isinstance(idx, tuple) and len(idx) == 2:
             return self.cell(*idx)
         elif isinstance(idx, str):
             return self.cell(*coordinate_from_spreadsheet(idx))
-        raise IndexError('Unrecognized index: ' + repr(idx))
+        raise IndexError(f'Unrecognized index: {idx!r}')
 
     def cell_text(self, row_idx: int, col_idx: int) -> str:
         """
-        Returns a the cell's text at the specific row and column.
+        Returns the cell's text at the specific row and column.
 
         If the cell does not exist, then it will raise an IndexError.
         """
@@ -388,8 +369,8 @@ class Sheet:
 
     def get_cell_collection(
         self,
-        start=None,
-        end=None,
+        start: Optional[Union[str, RowColReference, Cell]] = None,
+        end: Optional[Union[str, RowColReference, Cell]] = None,
         *,
         include_empty: bool = False,
         create_cells: bool = False,
@@ -400,7 +381,7 @@ class Sheet:
 
         If `start` and `end` are provided, then only cells within the (inclusive) range are returned.  If just `start`
         is given, then everything in a position greater than or equal to that cell's position are included.  If just
-        end` is given, then everything in a position less than or equal to that cell's position are included.  `start`
+        `end` is given, then everything in a position less than or equal to that cell's position are included.  `start`
         and `end` can be 'A1'-style coordinates, a (row, col) tuple (with 0-based indexes), or Cell objects.
 
         If `include_empty` is False (default), then only cells with content will be included.  If `include_empty` is
@@ -458,6 +439,7 @@ class Sheet:
     ) -> Generator[Cell, None, None]:
         """
         The abstracted method for `get_column` and `get_row`.
+
         :param rc: `str` indiciating whether this is for `"column"` or `"row"`.
         """
         cr = 'row' if rc == 'column' else 'column'
@@ -576,7 +558,7 @@ class Sheet:
         """
         return self.__get_rc('row', row, min_col, max_col, create_cells)
 
-    def get_expression_map(self) -> Dict[str, Tuple[Tuple[int, int], str]]:
+    def get_expression_map(self) -> Dict[str, Tuple[RowColReference, str]]:
         """
         In each worksheet, Gnumeric stores an expression/formula once (in the cell it's first used), then references it
         by an id in all other cells that use the expression.  This method will return a dict of
@@ -587,7 +569,10 @@ class Sheet:
         """
         cells = self.__get_expression_id_cells()
         return {
-            c.get('ExprID'): ((int(c.get('Row')), int(c.get('Col'))), c.text)
+            c.get('ExprID'): (
+                RowColReference(int(c.get('Row')), int(c.get('Col'))),
+                c.text,
+            )
             for c in cells
             if c.text is not None
         }

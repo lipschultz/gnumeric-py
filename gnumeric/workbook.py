@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import gzip
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional, Self, Union
 from pathlib import Path
 
 import dateutil.parser
@@ -168,6 +168,9 @@ class Workbook:
 
     @property
     def version(self) -> str:
+        """
+        The Gnumeric format version of the workbook
+        """
         version = self.__root.find('gnm:Version', self._ns)
         return version.get('Full')
 
@@ -188,6 +191,9 @@ class Workbook:
     creation_date = property(get_creation_date, set_creation_date)
 
     def __len__(self) -> int:
+        """
+        The number of sheets in the workbook
+        """
         return len(self.__sheet_elements())
 
     def get_sheet_names(self) -> List[str]:
@@ -198,11 +204,15 @@ class Workbook:
 
     @property
     def sheetnames(self) -> List[str]:
+        """
+        The list of sheet names, in the order they occur in the workbook.
+        """
         return self.get_sheet_names()
 
     def create_sheet(self, title: str, *, index: int = -1) -> Sheet:
         """
         Create a new worksheet
+
         :param title: Title, or name, of worksheet
         :param index: Where to insert the new sheet within the list of sheets. Default is `-1` (to append).
         :raises DuplicateTitleException: When a sheet with the same title already exists in the workbook
@@ -226,7 +236,8 @@ class Workbook:
     def get_active_sheet(self) -> Optional[Sheet]:
         """
         The sheet that is selected, or active, in the workbook.
-        :return: `sheet`
+
+        :return: The active sheet, or `None` if there are no sheets.
         """
         if len(self) == 0:
             return None
@@ -238,6 +249,7 @@ class Workbook:
     def set_active_sheet(self, sheet: Union[int, str, Sheet]) -> None:
         """
         Given a sheet, set it as the active sheet in the workbook.
+
         :param sheet: An `int` (the sheet's index), a `str` (the name of the sheet), or a `Sheet` object
         """
         if isinstance(sheet, int):
@@ -252,6 +264,9 @@ class Workbook:
     def get_sheet_by_index(self, index: int) -> Sheet:
         """
         Get the sheet at the specified index.
+
+        Supports negative indexing, so `-1` will get the last sheet.
+
         :raises IndexError: When index is out of bounds
         """
         return Sheet(
@@ -261,7 +276,8 @@ class Workbook:
     def get_sheet_by_name(self, name: str) -> Sheet:
         """
         Get the sheet with the specified title/name
-        :raises KeyError: When not worksheet with that name exists
+
+        :raises KeyError: When no worksheet with that name exists
         """
         names = self.sheetnames
         try:
@@ -296,8 +312,7 @@ class Workbook:
             )
         return index
 
-    def index(self, ws: Sheet) -> int:
-        return self.get_index(ws)
+    index = get_index
 
     def remove_sheet_by_name(self, name: str) -> None:
         """
@@ -325,6 +340,7 @@ class Workbook:
     def remove(self, ws: Union[int, str, Sheet]) -> None:
         """
         Remove the specified worksheet
+
         :param ws: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
         """
         if isinstance(ws, int):
@@ -337,6 +353,7 @@ class Workbook:
     def __delitem__(self, key: Union[int, str, Sheet]) -> None:
         """
         Remove the specified worksheet
+
         :param key: Can be the worksheet to remove, the index of the worksheet, or the name of the worksheet.
         """
         self.remove(key)
@@ -371,22 +388,26 @@ class Workbook:
 
         :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still
             write it as a gzip-compressed Gnumeric file) and 9 (slowest but most compressed; default).  A `False` value
-            will write a uncompressed Gnumeric file.
+            will write a uncompressed Gnumeric file (i.e. `.xml`).
         """
         for s in self.sheets:
             s._clean_data()
+
         xml = etree.tostring(self.__root)
-        if compress:
-            with gzip.open(filepath, mode='wb', compresslevel=compress) as fout:
+
+        if compress is False:
+            with open(filepath, mode='wb') as fout:
                 fout.write(xml)
         else:
-            with open(filepath, mode='wb') as fout:
+            with gzip.open(filepath, mode='wb', compresslevel=compress) as fout:
                 fout.write(xml)
 
     @classmethod
-    def load_workbook(clas, filepath: Union[str, Path]) -> 'Workbook':
+    def load_workbook(clas, filepath: Union[str, Path]) -> Self:
         """
         Open the given filepath and return the workbook.
+
+        Handles both uncompressed (`.xml`) and compressed (`.gnumeric`) Gnumeric files.
         """
         filepath = str(filepath)
 
