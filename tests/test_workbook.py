@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from dateutil.tz import tzutc
@@ -310,16 +311,22 @@ class TestWorkbook:
         selected_ws = [workbook.get_sheet_by_name(n) for n in GRAPH_NAMES]
         assert ws == selected_ws
 
-    def test_loading_compressed_file(self):
-        workbook = Workbook.load_workbook(TEST_GNUMERIC_FILE_PATH)
+    @pytest.mark.parametrize(
+        'filepath', [str(TEST_GNUMERIC_FILE_PATH), Path(TEST_GNUMERIC_FILE_PATH)]
+    )
+    def test_loading_compressed_file(self, filepath):
+        workbook = Workbook.load_workbook(filepath)
         assert workbook.sheetnames == list(ALL_NAMES)
         assert workbook.creation_date == datetime(
             2017, 4, 29, 17, 56, 48, tzinfo=tzutc()
         )
         assert workbook.version == '1.12.57'
 
-    def test_loading_uncompressed_file(self):
-        wb = Workbook.load_workbook(TEST_SHEET_NAME_FILE_PATH)
+    @pytest.mark.parametrize(
+        'filepath', [str(TEST_SHEET_NAME_FILE_PATH), Path(TEST_SHEET_NAME_FILE_PATH)]
+    )
+    def test_loading_uncompressed_file(self, filepath):
+        wb = Workbook.load_workbook(filepath)
         assert wb.sheetnames == list(SHEET_NAME_SHEET_NAMES)
         assert wb.creation_date == datetime(2017, 4, 29, 17, 56, 48, tzinfo=tzutc())
         assert wb.version == '1.12.28'

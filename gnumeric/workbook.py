@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import gzip
 from datetime import datetime
 from typing import List, Optional, Union
+from pathlib import Path
 
 import dateutil.parser
 from lxml import etree
@@ -364,28 +365,32 @@ class Workbook:
     def __str__(self) -> str:
         return 'Workbook' + str(self.sheetnames)
 
-    def save(self, filepath: str, *, compress: int = 9) -> None:
+    def save(self, filepath: Union[str, Path], *, compress: int = 9) -> None:
         """
         Save the workbook to `filepath`.
+
         :param compress: The level of compression to apply to the file.  A value between 0 (no compression, but still
             write it as a gzip-compressed Gnumeric file) and 9 (slowest but most compressed; default).  A `False` value
             will write a uncompressed Gnumeric file.
         """
-        [s._clean_data() for s in self.sheets]
+        for s in self.sheets:
+            s._clean_data()
         xml = etree.tostring(self.__root)
         if compress:
-            with gzip.open(filepath, mode='wb') as fout:
+            with gzip.open(filepath, mode='wb', compresslevel=compress) as fout:
                 fout.write(xml)
         else:
             with open(filepath, mode='wb') as fout:
                 fout.write(xml)
 
     @classmethod
-    def load_workbook(clas, filepath: str) -> 'Workbook':
+    def load_workbook(clas, filepath: Union[str, Path]) -> 'Workbook':
         """
         Open the given filepath and return the workbook.
         """
-        if filepath.endswith('.xml'):
+        filepath = str(filepath)
+
+        if filepath.lower().endswith('.xml'):
             open_method = open
         else:
             open_method = gzip.open
