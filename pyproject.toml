@@ -5,7 +5,7 @@ description = "A python library for reading and writing Gnumeric files"
 authors = [{ name = "Michael Lipschultz", email = "michael.lipschultz@gmail.com" }]
 requires-python = ">=3.11,<4"
 readme = "README.md"
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
