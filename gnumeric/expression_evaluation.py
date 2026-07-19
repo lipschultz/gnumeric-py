@@ -78,6 +78,7 @@ _grammar = f"""
     ?exponentiation: atom
                    | atom /\\^/ exponentiation   -> arithmetic
 
+    ?function_arguments: function_argument ( "," function_argument )*
     ?function_argument: root
                       | cell_range
     ?cell_range: sheet_cell_reference ":" cell_reference
@@ -85,7 +86,8 @@ _grammar = f"""
     ?atom: NUMBER                                     -> number
          | "#REF!"                                    -> error_ref
          | ATOMIC_STR                                 -> atomic_string
-         | FUNC_NAME "(" [ function_argument ( "," function_argument )* ] ")"   -> function
+         | FUNC_NAME "(" function_arguments ")"       -> function
+         | FUNC_NAME "(" ")"                          -> function
          | string
          | "(" root ")"
          // | sheet_cell_reference                       -> cell_lookup
