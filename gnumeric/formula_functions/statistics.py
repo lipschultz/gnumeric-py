@@ -9,6 +9,14 @@ def gnm_max(values):
         return max(values)
 
 
+def gnm_min(values):
+    values = get_just_numeric(values)
+    if len(values) == 0:
+        return 0
+    else:
+        return min(values)
+
+
 local_objects = locals().copy()
 functions = {
     name[4:]: obj for name, obj in local_objects.items() if name.startswith('gnm_')
