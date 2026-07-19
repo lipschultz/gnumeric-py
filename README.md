@@ -29,5 +29,5 @@ cell_a1.get_value()
 
 Currently, this library does not support:
 
-1. Evaluating expressions
+1. Evaluating almost all expressions
 2. Graphs

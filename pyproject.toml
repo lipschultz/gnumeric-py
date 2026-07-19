@@ -12,6 +12,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
 ]
 dependencies = [
     "lxml>=6.1.1,<7",
@@ -25,6 +28,9 @@ dev = [
     "pre-commit>=4.0.0,<5",
     "pytest-cov>=7.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/lipschultz/gnumeric-py"
 
 [tool.uv]
 default-groups = "all"
