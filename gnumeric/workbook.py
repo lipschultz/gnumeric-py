@@ -409,9 +409,9 @@ class Workbook:
 
         Handles both uncompressed (`.xml`) and compressed (`.gnumeric`) Gnumeric files.
         """
-        filepath = str(filepath)
+        filepath = Path(filepath).expanduser()
 
-        if filepath.lower().endswith('.xml'):
+        if filepath.suffix.lower() == '.xml':
             open_method = open
         else:
             open_method = gzip.open
